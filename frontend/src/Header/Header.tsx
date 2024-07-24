@@ -1,18 +1,19 @@
 import  './Header.css'
+import React from "react";
 
-const Header = () => {
+const Header: React.FC = () => {
     return(
         <div className="header">
-                Strona głowna
+            <a href='/'>Strona główna</a>
             <div className="headerSites">
                 <div className="block">
                     Podstrona 1
                 </div>
                 <div className="block">
-                    Podstrona 2
+                    <a href='/login'>Zaloguj się</a>
                 </div>
                 <div className="block">
-                    Podstrona 3
+                    <a href='/plans'>Plany</a>
                 </div>
                 <div className="block">
                     Podstrona 4

@@ -1,6 +1,10 @@
-const Block = () =>{
-    return(
+import React from "react";
 
+const Block: React.FC = () => {
+    return(
+    <>
+    elo
+    </>
     );
 }
 
