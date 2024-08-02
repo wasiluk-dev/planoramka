@@ -1,0 +1,23 @@
+.plansGrid{
+    padding-top: 0.5em;
+    display: grid;
+    grid-template-columns: 5% auto auto auto auto auto auto auto auto;
+    text-align: center;
+    column-gap: 1em;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+.titleGrid{
+    background-color: lightgray;
+}
+
+.faculty{
+    background-color: gray;
+    grid-column-start: 9;
+    grid-row-start: 1;
+    grid-row-end: 6;
+}
+.time{
+    grid-row-start: 1;
+    grid-row-end: 6;
+}

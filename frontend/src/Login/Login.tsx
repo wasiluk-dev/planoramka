@@ -1,7 +1,36 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {create} from "node:domain";
+import apiService from "../../services/apiService.tsx";
+
+interface CreateUser{
+    username:string;
+    password:string;
+}
 
 const Login: React.FC = () =>{
+
+
+    useEffect(() => {
+        const button = document.getElementById('registerButton');
+        const handleClick = () => {
+            register();
+        };
+
+        button?.addEventListener('click', handleClick);
+
+        return () => {
+            button?.removeEventListener('click', handleClick);
+        };
+    }, []);
+
+
+
+
     let ulogin: string | null = null;
+    const [registerData, setRegisterData] = useState<CreateUser>({
+        username: "",
+        password: "",
+    });
     let pass: string | null = null;
 
     const login = () => {
@@ -17,18 +46,29 @@ const Login: React.FC = () =>{
         console.log(pass);
     }
 
-    const register = () =>{
+    const register = () => {
         const uloginElement = document.getElementById('login') as HTMLInputElement | null;
         const passElement = document.getElementById('pass') as HTMLInputElement | null;
-        //jeśli istnieje to weź wartość name i pass
-        if (uloginElement && uloginElement.value && passElement && passElement.value) {
-            ulogin= uloginElement.value;
-            pass= passElement.value;
+
+        if (uloginElement?.value && passElement?.value) {
+            const newRegisterData = {
+                username: uloginElement.value,
+                password: passElement.value,
+            };
+
+            setRegisterData(prevState => {
+                const updatedState = {
+                    ...prevState,
+                    ...newRegisterData,
+                };
+                apiService.createUser(updatedState);
+                return updatedState;
+            });
+        } else {
+            throw new Error("Błąd w rejestracji");
         }
-        console.log("Rejestracja:");
-        console.log(ulogin);
-        console.log(pass);
-    }
+    };
+
  return(
      <>
          <form>
@@ -44,7 +84,7 @@ const Login: React.FC = () =>{
              <input type="email" id="email" name="email"/>
          </form>
          <button name='login' onClick={login}>Zaloguj się</button>
-         <button name='register' onClick={register}>Zarejestruj się</button>
+         <button name='register' id="registerButton">Zarejestruj się</button>
      </>
  )
 }
