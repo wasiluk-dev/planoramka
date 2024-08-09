@@ -10,7 +10,6 @@
     display: flex;
     border: 2px solid black;
     width: 75%;
-    min-height: 75vh;
     padding: 1rem;
     justify-content: space-evenly;
 }
