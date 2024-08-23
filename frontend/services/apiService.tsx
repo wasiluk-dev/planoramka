@@ -2,25 +2,13 @@ const baseUrl :String = 'http://localhost:3000';
 const  myHeaders = new Headers();
 myHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
 
-interface User{
-    _id:number;
-    username:string;
-    password:string;
-    type: number;
-    __v: number;
-}
-
-interface CreateUser{
-    username:string;
-    password:string;
-}
-
-interface CreateUserSecundo{
-    username:string;
-    password:string;
-    email:string;
-    name:string;
-    surname:string;
+type User = {
+    username: string;
+    password: string;
+    email: string;
+    name?: string;
+    surname?: string;
+    type?: number;
 }
 
 const apiService = {
@@ -36,7 +24,7 @@ const apiService = {
 
     createUser: async (registerdata: CreateUser): Promise<void> => {
 
-        const dane  :CreateUserSecundo = {
+        const dane : User = {
             username:registerdata.username,
             password:registerdata.password,
             email:"email@gmail.com",

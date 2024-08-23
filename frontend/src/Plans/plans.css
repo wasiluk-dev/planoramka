@@ -1,15 +1,13 @@
-.main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem 4rem;
+table{
+    border: #125801 solid 2px;
+    td{
+        border: lightcoral solid 2px;
+        min-width: 54px;
+        height: 22px;
+    }
 }
-
-.container {
-    display: flex;
-    border: 2px solid black;
-    width: 75%;
-    padding: 1rem;
-    justify-content: space-evenly;
+#ugabuga{
+    background-color: black;
+    min-height: 30px;
+    width: 100px;
 }

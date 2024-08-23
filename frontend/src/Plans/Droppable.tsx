@@ -16,7 +16,7 @@ export const Droppable: React.FC<DroppableProps> = (props) => {
     };
 
     return (
-        <div ref={setNodeRef} style={style}>
+        <div ref={setNodeRef} style={style} id={props.id}>
             {props.children}
         </div>
     );
