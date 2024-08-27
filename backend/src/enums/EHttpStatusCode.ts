@@ -76,7 +76,7 @@ enum EHttpStatusCode {
     MultiStatus = 207,
 
     /**
-     * The members of a DAV binding have already been enumerated in a preceding part of the (multistatus) response,
+     * The members of a DAV binding have already been enumerated in a preceding part of the (multi-status) response,
      * and are not being included again.
      */
     AlreadyReported = 208,
