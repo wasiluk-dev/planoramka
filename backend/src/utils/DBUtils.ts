@@ -1,49 +1,42 @@
-import { Document, HydratedDocument, Model } from 'mongoose';
-
-import DBResult from '../types/DBResult';
-import EHttpStatusCode from '../enums/EHttpStatusCode';
+import { DeleteResult } from 'mongodb';
+import { Document, FilterQuery, HydratedDocument, Model } from 'mongoose';
 
 export default class DBUtils {
-    private static validate<T>(doc: Array<HydratedDocument<T>> | HydratedDocument<T> | null): DBResult<T> {
-        if (!doc) return { code: EHttpStatusCode.NotFound };
-        if (doc instanceof Array && doc.length === 1) return { code: EHttpStatusCode.Ok, body: doc[0] };
-        return { code: EHttpStatusCode.Ok, body: doc };
-    }
-
-    static async find<T extends Document>(model: Model<T>, id?: string): Promise<DBResult<T>> {
-        return await model.find(id ? { _id: id } : {}).exec()
-            .then((doc: Array<HydratedDocument<T>>): DBResult<T> => {
-                return this.validate(doc);
+    static async find<T>(model: Model<T>, filter: FilterQuery<T>): Promise<Array<HydratedDocument<T>>> {
+        return await model.find(filter).exec()
+            .then((docs: Array<HydratedDocument<T>>) => {
+                return docs;
             })
             .catch((err: string) => {
                 throw new Error(err);
             });
     }
 
-    static async create<T extends Document>(model: Model<T>, body: T): Promise<DBResult<T>> {
-        return new model(body).save()
-            .then((doc: HydratedDocument<T>): DBResult<T> => {
-                return this.validate(doc);
+    static async create<T extends Document>(model: Model<T>, document: T): Promise<HydratedDocument<T>> {
+        return new model(document).save()
+            .then((doc: HydratedDocument<T>) => {
+                return doc;
             })
             .catch((err: string) => {
                 throw new Error(err);
             });
     }
 
-    static async update<T extends Document>(model: Model<T>, id: string, update: Partial<T>): Promise<DBResult<T>> {
-        return await model.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec()
-            .then((updatedDoc: HydratedDocument<T> | null): DBResult<T> => {
-                return this.validate(updatedDoc);
+    // TODO: implement validation
+    static async update<T>(model: Model<T>, filter: FilterQuery<T>, update: Partial<T>) {
+        return await model.updateMany(filter, update).exec()
+            .then((result) => {
+                return result;
             })
             .catch((err: string) => {
                 throw new Error(err);
             });
     }
 
-    static async delete<T extends Document>(model: Model<T>, id: string): Promise<DBResult<T>> {
-        return await model.findByIdAndDelete(id).exec()
-            .then((deletedDoc: HydratedDocument<T> | null): DBResult<T> => {
-                return this.validate(deletedDoc);
+    static async delete<T>(model: Model<T>, filter: FilterQuery<T>): Promise<DeleteResult> {
+        return await model.deleteMany(filter).exec()
+            .then((result: DeleteResult) => {
+                return result;
             })
             .catch((err: string) => {
                 throw new Error(err);
