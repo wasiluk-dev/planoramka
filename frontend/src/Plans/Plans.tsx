@@ -13,16 +13,23 @@ type Obiekt = {
     name: string,
     x: number,
     y: number,
-    isset?: boolean
+    isset: boolean
 };
+
+let data: Array<Obiekt> = [
+    { id: 'Englisz', name: 'Englisz', x: 0, y: 0, isset: true },
+    { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
+    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
+
+];
 
 const Plans: React.FC = () => {
     // Initialize a 7x7 grid with empty slots
     const initialGrid: Array<Array<Obiekt | null>> = Array(7)
         .fill(null)
         .map(() => Array(7).fill(null));
-    initialGrid[0][0] = { id: 'Englisz', name: 'Englisz', x: 0, y: 0 };
-    initialGrid[1][1] = { id: 'Polish', name: 'Polish', x: 1, y: 1 };
+    initialGrid[0][0] = data[0]
+    initialGrid[1][1] = data[1]
 
     const [grid, setGrid] = useState(initialGrid);
 
@@ -60,6 +67,7 @@ const Plans: React.FC = () => {
         if (fromRow === toRow && fromCol === toCol) {
             //obsługa rzeczy spoza tabeli tutaj
             console.log("same place noobie")
+            console.log(grid)
             return; // Do nothing if the item is dropped in the same place
         }
         const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
@@ -81,6 +89,7 @@ const Plans: React.FC = () => {
                 console.log(active.data.current)
                 // @ts-ignore
             }else if(active.data.current.isset == false){
+                console.log("isset = false")
                 // @ts-ignore
                 active.data.current.x = toRow;
                 // @ts-ignore
@@ -116,9 +125,14 @@ const Plans: React.FC = () => {
     return (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <Droppable id='ugabuga'>
-                <Draggable id={'jp'} name={'Dżapanizz'} x={-1} y={-1} isset={false}>
-                    Dżapanizz
-                </Draggable>
+                {/*<Draggable id={'jp'} name={'Dżapanizz'} x={-1} y={-1} isset={false}>*/}
+                {/*    Dżapanizz*/}
+                {/*</Draggable>*/}
+                {data.filter(item => !item.isset).map(item => (
+                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} key={item.id}>
+                        {item.name}
+                    </Draggable>
+                ))}
             </Droppable>
             <table>
                 <tbody>
