@@ -17,19 +17,46 @@ type Obiekt = {
 };
 
 let data: Array<Obiekt> = [
-    { id: 'Englisz', name: 'Englisz', x: 0, y: 0, isset: true },
+    { id: 'Englisz', name: 'Englisz', x: 0, y: 5, isset: true },
     { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
     { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
 
 ];
 
+
 const Plans: React.FC = () => {
+
+    const [lessons, setLessons] = useState(data)
+
+    // Function to check for an object with specific x and y coordinates
+    const checkCoordinates = (x: number, y: number) => {
+        const foundObject = lessons.find(item => item.x === x && item.y === y);
+
+        if (foundObject) {
+            // If an object is found, do something with it
+            console.log(`Found object: ${foundObject.name} at coordinates (${x}, ${y})`);
+            return true;
+
+            // Example action: Update its `isset` property
+        } else {
+            console.log(`No object found at coordinates (${x}, ${y})`);
+            return false;
+        }
+    };
+
     // Initialize a 7x7 grid with empty slots
     const initialGrid: Array<Array<Obiekt | null>> = Array(7)
         .fill(null)
         .map(() => Array(7).fill(null));
-    initialGrid[0][0] = data[0]
-    initialGrid[1][1] = data[1]
+    data.forEach(item => {
+        const { x, y } = item;
+
+        // Check if x and y are within the bounds of the grid
+        if (x >= 0 && x < 7 && y >= 0 && y < 7) {
+            initialGrid[item.x][item.y] = item; // Place the item at the correct position
+        }
+    });
+
 
     const [grid, setGrid] = useState(initialGrid);
 
@@ -49,9 +76,7 @@ const Plans: React.FC = () => {
 
         //Nie wiem czemu to tu tak działa, ale działa więc iks de
         let [toRow, toCol] = toId.split('_').map(Number);
-        console.log(toId);
         if(toId.includes('ugabuga')){
-            console.log("Zawiera uga")
             toRow = -1;
             toCol = -1;
         }
@@ -67,35 +92,40 @@ const Plans: React.FC = () => {
         if (fromRow === toRow && fromCol === toCol) {
             //obsługa rzeczy spoza tabeli tutaj
             console.log("same place noobie")
-            console.log(grid)
             return; // Do nothing if the item is dropped in the same place
         }
         const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
         //właściwa funckja podmiany pól etc.
         // @ts-ignore
         if(active.data.current.isset == false || toId.includes('ugabuga')){
-            console.log("TAAAAAAK");
-            console.log(active)
             if( toId.includes('ugabuga')){
-                let essa = document.getElementById("ugabuga");
-                let essa_dwa = document.getElementById(active.data.current.id as string);
-                essa.appendChild(essa_dwa)
-                console.log(active.data.current.x)
-                grid[active.data.current.x][active.data.current.y] = null;
-                // setGrid(newGrid)
-                active.data.current.isset = false;
-                active.data.current.x = -1;
-                active.data.current.y = -1;
+                setLessons(prevData =>
+                    prevData.map(item =>
+                        item.id === active.data.current.id
+                            ? { ...item, isset: !item.isset, x: -1, y: -1} // Toggle the `isset` value
+                            : item
+                    )
+                );
+                newGrid[active.data.current.x][active.data.current.y] = null;
+                setGrid(newGrid)
                 console.log(active.data.current)
                 // @ts-ignore
             }else if(active.data.current.isset == false){
                 console.log("isset = false")
+                if(checkCoordinates(toRow, toCol)){
+                    return;
+                }
                 // @ts-ignore
                 active.data.current.x = toRow;
                 // @ts-ignore
                 active.data.current.y = toCol;
-                // @ts-ignore
-                document.getElementById(active.data.current.id).remove()
+                setLessons(prevData =>
+                    prevData.map(item =>
+                        item.id === active.data.current.id
+                            ? { ...item, isset: !item.isset, x:toRow, y:toCol } // Toggle the `isset` value
+                            : item
+                    )
+                );
                 // @ts-ignore
                 newGrid[toRow][toCol] = active.data.current;
                 setGrid(newGrid);
@@ -106,11 +136,14 @@ const Plans: React.FC = () => {
             // Prevent placing more than one item in a slot
             if (grid[toRow][toCol] === null) {
                 console.log("Setuje")
+                setLessons(prevData =>
+                    prevData.map(item =>
+                        item.id === active.data.current.id
+                            ? { ...item, x:toRow, y:toCol }
+                            : item
+                    )
+                );
                 // Move the item to the new slot
-                // @ts-ignore
-                active.data.current.x = toRow;
-                // @ts-ignore
-                active.data.current.y = toCol;
                 // @ts-ignore
                 newGrid[toRow][toCol] = active.data.current;
                 newGrid[fromRow][fromCol] = null;
@@ -125,10 +158,7 @@ const Plans: React.FC = () => {
     return (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <Droppable id='ugabuga'>
-                {/*<Draggable id={'jp'} name={'Dżapanizz'} x={-1} y={-1} isset={false}>*/}
-                {/*    Dżapanizz*/}
-                {/*</Draggable>*/}
-                {data.filter(item => !item.isset).map(item => (
+                {lessons.filter(item => !item.isset).map(item => (
                     <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} key={item.id}>
                         {item.name}
                     </Draggable>
