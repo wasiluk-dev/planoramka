@@ -62,6 +62,7 @@ const Plans: React.FC = () => {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        console.log(active.data.current)
         if (!over) {
             return;
         }
@@ -95,64 +96,47 @@ const Plans: React.FC = () => {
             return; // Do nothing if the item is dropped in the same place
         }
         const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
-        //właściwa funckja podmiany pól etc.
-        // @ts-ignore
-        if(active.data.current.isset == false || toId.includes('ugabuga')){
-            if( toId.includes('ugabuga')){
-                setLessons(prevData =>
-                    prevData.map(item =>
-                        item.id === active.data.current.id
-                            ? { ...item, isset: !item.isset, x: -1, y: -1} // Toggle the `isset` value
-                            : item
-                    )
-                );
-                newGrid[active.data.current.x][active.data.current.y] = null;
-                setGrid(newGrid)
-                console.log(active.data.current)
-                // @ts-ignore
-            }else if(active.data.current.isset == false){
-                console.log("isset = false")
-                if(checkCoordinates(toRow, toCol)){
-                    return;
-                }
-                // @ts-ignore
-                active.data.current.x = toRow;
-                // @ts-ignore
-                active.data.current.y = toCol;
-                setLessons(prevData =>
-                    prevData.map(item =>
-                        item.id === active.data.current.id
-                            ? { ...item, isset: !item.isset, x:toRow, y:toCol } // Toggle the `isset` value
-                            : item
-                    )
-                );
-                // @ts-ignore
-                newGrid[toRow][toCol] = active.data.current;
-                setGrid(newGrid);
-            }
-        }else{
-            //tutaj obsługa dragów tlyko w obrębie tabeli
 
-            // Prevent placing more than one item in a slot
-            if (grid[toRow][toCol] === null) {
-                console.log("Setuje")
-                setLessons(prevData =>
-                    prevData.map(item =>
-                        item.id === active.data.current.id
-                            ? { ...item, x:toRow, y:toCol }
+        const draggedItem = lessons.find(item => item.id === active.id);
+
+        if (!draggedItem) return; // Exit if no item is found
+
+        if (draggedItem.isset === false || toId.includes('ugabuga')) {
+            if (toId.includes('ugabuga')) {
+                setLessons(prevLessons =>
+                    prevLessons.map(item =>
+                        item.id === draggedItem.id
+                            ? { ...item, isset: false, x: -1, y: -1 }
                             : item
                     )
                 );
-                // Move the item to the new slot
-                // @ts-ignore
-                newGrid[toRow][toCol] = active.data.current;
-                newGrid[fromRow][fromCol] = null;
-                setGrid(newGrid);
-                console.log(newGrid)
+                newGrid[draggedItem.x][draggedItem.y] = null;
+            } else if (draggedItem.isset === false) {
+                if (checkCoordinates(toRow, toCol)) return;
+
+                const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
+                setLessons(prevLessons =>
+                    prevLessons.map(item =>
+                        item.id === draggedItem.id ? updatedItem : item
+                    )
+                );
+                newGrid[toRow][toCol] = updatedItem;
+            }
+        } else {
+            if (grid[toRow][toCol] === null) {
+                const updatedItem = { ...draggedItem, x: toRow, y: toCol };
+                setLessons(prevLessons =>
+                    prevLessons.map(item =>
+                        item.id === draggedItem.id ? updatedItem : item
+                    )
+                );
+                newGrid[toRow][toCol] = updatedItem;
+                newGrid[draggedItem.x][draggedItem.y] = null;
             }
         }
-        console.log(active.data.current)
-        console.log(document.getElementById("ugabuga"))
+
+        setGrid(newGrid); // Update the grid state with the new grid
+        console.log(grid)
     };
 
     return (
