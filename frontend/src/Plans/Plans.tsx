@@ -7,6 +7,7 @@ import {
 import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
 import './plans.css'
+import PlanDay from "./PlanDay.tsx";
 
 type Obiekt = {
     id: string,
@@ -140,34 +141,37 @@ const Plans: React.FC = () => {
     };
 
     return (
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <Droppable id='ugabuga'>
-                {lessons.filter(item => !item.isset).map(item => (
-                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} key={item.id}>
-                        {item.name}
-                    </Draggable>
-                ))}
-            </Droppable>
-            <table>
-                <tbody>
-                {grid.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                        {row.map((item, colIndex) => (
-                            <td key={colIndex}>
-                                <Droppable id={`${rowIndex}_${colIndex}`}>
-                                    {item && (
-                                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={true}>
-                                            {item.name}
-                                        </Draggable>
-                                    )}
-                                </Droppable>
-                            </td>
-                        ))}
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-        </DndContext>
+        <div className="p-3 mb-2 bg-secondary">
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <Droppable id='ugabuga'>
+                    {lessons.filter(item => !item.isset).map(item => (
+                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} key={item.id}>
+                            {item.name}
+                        </Draggable>
+                    ))}
+                </Droppable>
+                <table>
+                    <tbody>
+                    {grid.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                            {row.map((item, colIndex) => (
+                                <td key={colIndex}>
+                                    <Droppable id={`${rowIndex}_${colIndex}`}>
+                                        {item && (
+                                            <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={true}>
+                                                {item.name}
+                                            </Draggable>
+                                        )}
+                                    </Droppable>
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </DndContext>
+            <PlanDay/>
+        </div>
     );
 };
 
