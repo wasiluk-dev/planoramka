@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     DndContext,
     closestCenter,
@@ -6,8 +6,7 @@ import {
 } from '@dnd-kit/core';
 import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
-import './plans.css'
-import PlanDay from "./PlanDay.tsx";
+import './plans.css';
 
 type Obiekt = {
     id: string,
@@ -21,86 +20,107 @@ let data: Array<Obiekt> = [
     { id: 'Englisz', name: 'Englisz', x: 0, y: 5, isset: true },
     { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
     { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
-
 ];
 
+let data2: Array<Obiekt> = [
+    { id: 'Englisz', name: 'Englisz', x: 0, y: 5, isset: true },
+    { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
+    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
+];
+
+let data3: Array<Obiekt> = [
+    { id: 'Englisz', name: 'Englisz', x: 0, y: 0, isset: true },
+    { id: 'Polish', name: 'Polish', x: 1, y: 5, isset: true },
+    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
+];
+
+const kierunki: { [key: number]: { [key: number]: string } } = {
+    1: {
+        1: 'K1_1',
+        2: 'K1_2',
+        3: 'K1_3'
+    },
+    2: {
+        1: 'K2_1',
+        2: 'K2_2',
+        3: 'K2_3'
+    },
+    3: {
+        1: 'K3_1',
+        2: 'K3_2',
+        3: 'K3_3'
+    }
+};
 
 const Plans: React.FC = () => {
+    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
+    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
 
-    const [lessons, setLessons] = useState(data)
+    const handleWydzialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedWydzial(event.target.value);
+        setSelectedKierunek("");
+    };
 
-    // Function to check for an object with specific x and y coordinates
-    const checkCoordinates = (x: number, y: number) => {
-        const foundObject = lessons.find(item => item.x === x && item.y === y);
+    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = event.target.value;
+        setSelectedKierunek(selectedValue);
 
-        if (foundObject) {
-            // If an object is found, do something with it
-            console.log(`Found object: ${foundObject.name} at coordinates (${x}, ${y})`);
-            return true;
-
-            // Example action: Update its `isset` property
-        } else {
-            console.log(`No object found at coordinates (${x}, ${y})`);
-            return false;
+        if (selectedValue === '3') {  // Assuming '3' is the key for 'K3_3'
+            setLessons(data3);
         }
     };
 
-    // Initialize a 7x7 grid with empty slots
-    const initialGrid: Array<Array<Obiekt | null>> = Array(7)
-        .fill(null)
-        .map(() => Array(7).fill(null));
-    data.forEach(item => {
-        const { x, y } = item;
+    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki[parseInt(selectedWydzial)]) : [];
 
-        // Check if x and y are within the bounds of the grid
-        if (x >= 0 && x < 7 && y >= 0 && y < 7) {
-            initialGrid[item.x][item.y] = item; // Place the item at the correct position
-        }
-    });
+    const [lessons, setLessons] = useState(data);
+    const [grid, setGrid] = useState<Array<Array<Obiekt | null>>>([]);
 
+    useEffect(() => {
+        const updatedGrid: Array<Array<Obiekt | null>> = Array(7)
+            .fill(null)
+            .map(() => Array(7).fill(null));
 
-    const [grid, setGrid] = useState(initialGrid);
+        lessons.forEach(item => {
+            const { x, y } = item;
+            if (x >= 0 && x < 7 && y >= 0 && y < 7) {
+                updatedGrid[x][y] = item;
+            }
+        });
+
+        setGrid(updatedGrid);
+    }, [lessons]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        console.log(active.data.current)
+        console.log(active.data.current);
         if (!over) {
             return;
         }
-        // Ensure IDs are strings and split correctly
-        // const fromId = active.id as string;
-        const toId = over.id as string;
 
-        // @ts-ignore
+        const toId = over.id as string;
         const fromRow = active.data.current.x;
-        // @ts-ignore
         const fromCol = active.data.current.y;
 
-        //Nie wiem czemu to tu tak działa, ale działa więc iks de
         let [toRow, toCol] = toId.split('_').map(Number);
-        if(toId.includes('ugabuga')){
+        if (toId.includes('ugabuga')) {
             toRow = -1;
             toCol = -1;
         }
 
-
-        //sprawdzenie czy takie pola w ogóle są
         if (isNaN(fromRow) || isNaN(fromCol) || isNaN(toRow) || isNaN(toCol)) {
-            console.log("AjDi not walid")
-
-            return; // Exit if the IDs are not valid
+            console.log("AjDi not walid");
+            return;
         }
-        console.log(fromRow)
+
         if (fromRow === toRow && fromCol === toCol) {
-            //obsługa rzeczy spoza tabeli tutaj
-            console.log("same place noobie")
-            return; // Do nothing if the item is dropped in the same place
+            console.log("same place noobie");
+            return;
         }
-        const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
 
+        const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
         const draggedItem = lessons.find(item => item.id === active.id);
 
-        if (!draggedItem) return; // Exit if no item is found
+        if (!draggedItem) return;
 
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
             if (toId.includes('ugabuga')) {
@@ -113,7 +133,7 @@ const Plans: React.FC = () => {
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
             } else if (draggedItem.isset === false) {
-                if (checkCoordinates(toRow, toCol)) return;
+                if (grid[toRow][toCol]) return;
 
                 const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
                 setLessons(prevLessons =>
@@ -131,13 +151,11 @@ const Plans: React.FC = () => {
                         item.id === draggedItem.id ? updatedItem : item
                     )
                 );
-                newGrid[toRow][toCol] = updatedItem;
                 newGrid[draggedItem.x][draggedItem.y] = null;
             }
         }
 
-        setGrid(newGrid); // Update the grid state with the new grid
-        console.log(grid)
+        setGrid(newGrid);
     };
 
     return (
@@ -170,10 +188,43 @@ const Plans: React.FC = () => {
                     </tbody>
                 </table>
             </DndContext>
-            <PlanDay/>
+            <div className="bg-secondary col-2">
+                <select
+                    className="form-select"
+                    aria-label="Default select example"
+                    value={selectedWydzial}
+                    onChange={handleWydzialChange}
+                >
+                    <option value="" disabled hidden>Wybierz wydział</option>
+                    <option value="1">Wydział 1</option>
+                    <option value="2">Wydział 2</option>
+                    <option value="3">Wydział 3</option>
+                </select>
+
+                {selectedWydzial && (
+                    <div className="mt-2">
+                        <select
+                            className="form-select"
+                            aria-label="Default select example"
+                            value={selectedKierunek}
+                            onChange={handleKierunekChange}
+                        >
+                            <option value="" disabled hidden>Wybierz kierunek</option>
+                            {kierunkiOptions.map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {selectedKierunek && (
+                    <div className="mt-2">
+                        <p>Wybrano: Wydział {selectedWydzial}, Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
-
 
 export default Plans;

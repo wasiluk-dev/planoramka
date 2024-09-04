@@ -21,22 +21,6 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 
 const PlanDay: React.FC = () => {
     // State to hold the selected department (wydział) and the selected kierunek
-    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
-    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
-
-    // Function to handle selection change for department
-    const handleWydzialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedWydzial(event.target.value);
-        setSelectedKierunek(""); // Reset kierunek when wydział changes
-    };
-
-    // Function to handle selection change for kierunek
-    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedKierunek(event.target.value);
-    };
-
-    // Get the kierunki options based on selectedWydzial
-    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki[parseInt(selectedWydzial)]) : [];
 
     return (
         <div className="bg-secondary col-2">
