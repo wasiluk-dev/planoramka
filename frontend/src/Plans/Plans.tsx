@@ -31,7 +31,8 @@ let data2: Array<Obiekt> = [
 let data3: Array<Obiekt> = [
     { id: 'Englisz', name: 'Englisz', x: 0, y: 0, isset: true },
     { id: 'Polish', name: 'Polish', x: 1, y: 5, isset: true },
-    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
+    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false },
+    { id: 'Rusrus', name: 'Rusrus', x: -1, y: -1, isset: false }
 ];
 
 const kierunki: { [key: number]: { [key: number]: string } } = {
