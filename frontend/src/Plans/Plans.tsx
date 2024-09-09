@@ -163,7 +163,9 @@ const Plans: React.FC = () => {
 
     return (
         <>
-            <div className="bg-secondary col-2 text-center mx-auto mt-4" style={{ height: '130px' }}>
+            <h1 className='text-center'> PLAN ZAJĘĆ</h1>
+        <div className='d-flex flex-row p-3 mx-3'>
+            <div className="bg-secondary text-center w-15">
                 <select
                     className="form-select"
                     aria-label="Default select example"
@@ -177,7 +179,7 @@ const Plans: React.FC = () => {
                 </select>
 
                 {selectedWydzial && (
-                    <div className="mt-2">
+                    <div className="">
                         <select
                             className="form-select"
                             aria-label="Default select example"
@@ -194,23 +196,13 @@ const Plans: React.FC = () => {
 
                 {selectedKierunek && (
                     <div className="mt-2">
-                        <p>Wybrano: Wydział {selectedWydzial},
-                            Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>
+                        {/*<p>Wybrano: Wydział {selectedWydzial},*/}
+                        {/*    Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>*/}
                     </div>
                 )}
             </div>
-            <div className="p-3 mb-1 bg-secondary">
+            <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <div>
-                        <Droppable id='ugabuga'>
-                            {lessons.filter(item => !item.isset).map(item => (
-                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}
-                                           key={item.id}>
-                                    {item.name}
-                                </Draggable>
-                            ))}
-                        </Droppable>
-                    </div>
                     <table className="table table-striped table-hover table-bordered border-primary">
                         {/*<thead>*/}
                         {/*<tr  className="table-dark">*/}
@@ -240,8 +232,19 @@ const Plans: React.FC = () => {
                         ))}
                         </tbody>
                     </table>
+                    <div className='flex-sm-grow-1 ms-5 w-15'>
+                        <Droppable id='ugabuga'>
+                            {lessons.filter(item => !item.isset).map(item => (
+                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}
+                                           key={item.id}>
+                                    {item.name}
+                                </Draggable>
+                            ))}
+                        </Droppable>
+                    </div>
                 </DndContext>
             </div>
+        </div>
         </>
     );
 };
