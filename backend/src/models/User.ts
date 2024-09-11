@@ -3,7 +3,7 @@ import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Sche
 
 import EUserType from '../enums/EUserType';
 import Base from './Base';
-import { CourseSchema } from './courses/Course';
+import Course from './courses/Course';
 
 export const UserSchema = new Schema({
     username: {
@@ -17,24 +17,38 @@ export const UserSchema = new Schema({
         required: true,
         minLength: 8,
     },
-    name: String,
-    surname: String,
-    email: {
+    firstName: {
         type: String,
-        index: {
-            unique: true,
-            sparse: true,
-        },
         required: true,
-        // match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, TODO: choose a sensible regex
     },
-    type: {
+    middleName: {
+        type: String,
+    },
+    lastName: {
+        type: String,
+        required: true,
+    },
+    // title: {
+    //     type: Number,
+    //     enum: EUserTitle,
+    // },
+    // email: {
+    //     type: String,
+    //     index: {
+    //         unique: true,
+    //         sparse: true,
+    //     },
+    //     required: true,
+    //     // match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, TODO: choose a sensible regex
+    // },
+    courses: [{
+        type: Schema.Types.ObjectId,
+        ref: new Course().name,
+    }],
+    role: {
         type: Number,
         enum: EUserType,
         default: EUserType.Student,
-    },
-    courses: {
-        type: [CourseSchema],
     },
 });
 

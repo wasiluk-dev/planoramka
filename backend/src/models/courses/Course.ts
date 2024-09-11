@@ -1,9 +1,10 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
-import EMonth from '../../enums/EMonth';
+import ECourseCycle from '../../enums/ECourseCycle';
+import ECourseDegree from '../../enums/ECourseDegree';
+import ECourseMode from '../../enums/ECourseMode';
 import Base from '../Base';
-import { CourseTypeSchema } from './CourseType';
-import { SemesterSchema } from './Semester';
+import Semester from './Semester';
 
 // INF1 | Informatyka | I stopnia | inżynierskie | stacjonarne | 2021 | (9)
 export const CourseSchema = new Schema({
@@ -15,25 +16,36 @@ export const CourseSchema = new Schema({
         type: String,
         required: true,
     },
-    type: CourseTypeSchema,
-    startYear: {
+    specialization: {
         type: String,
-        validate: /[0-9]{4}/,
+    },
+    cycle: {
+        type: Number,
+        enum: ECourseCycle,
         required: true,
     },
-    startMonth: {
+    degree: {
         type: Number,
-        enum: EMonth,
+        enum: ECourseDegree,
         required: true,
+    },
+    mode: {
+        type: Number,
+        enum: ECourseMode,
+        required: true,
+    },
+    startDate: {
+        type: Date,
     },
     semesterCount: {
         type: Number,
         required: true,
     },
     semesters: {
-        type: [SemesterSchema],
+        type: [Schema.Types.ObjectId],
+        ref: new Semester().name,
     },
-})
+});
 
 class Course extends Base<HydratedDocumentFromSchema<typeof CourseSchema>> {
     constructor() {

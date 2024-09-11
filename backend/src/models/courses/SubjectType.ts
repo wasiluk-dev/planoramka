@@ -6,13 +6,12 @@ import Base from '../Base';
 // Lab | Laboratorium | (#FF0000)
 // Sem | Seminarium | (#0000FF)
 export const SubjectTypeSchema = new Schema({
-    acronym: {
-        type: String,
-        required: true,
-    },
     name: {
         type: String,
         required: true,
+    },
+    acronym: {
+        type: String,
     },
     color: {
         type: String,

@@ -1,9 +1,10 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { BuildingSchema } from './Building';
+import Course from '../courses/Course';
+import Building from './Building';
 
-// WI | Wydział Informatyki | [Budynek A, Budynek B, Budynek C]
+// WI | Wydział Informatyki | [Informatyka, Informatyka i ekonometria] | [Budynek A, Budynek B, Budynek C]
 export const FacultySchema = new Schema({
     acronym: {
         type: String,
@@ -13,9 +14,14 @@ export const FacultySchema = new Schema({
         type: String,
         required: true,
     },
-    buildings: {
-        type: [BuildingSchema],
+    courses: {
+        type: Schema.Types.ObjectId,
+        ref: new Course().name,
     },
+    buildings: [{
+        type: Schema.Types.ObjectId,
+        ref: new Building().name,
+    }],
 });
 
 class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {

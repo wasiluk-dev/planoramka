@@ -1,7 +1,7 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { RoomTypeSchema } from './RoomType';
+import RoomType from './RoomType';
 
 // A030 | <Sala wykładowa> | 60
 export const RoomSchema = new Schema({
@@ -10,7 +10,8 @@ export const RoomSchema = new Schema({
         required: true,
     },
     type: {
-        type: RoomTypeSchema,
+        type: Schema.Types.ObjectId,
+        ref: new RoomType().name,
     },
     capacity: {
         type: Number,

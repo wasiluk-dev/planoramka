@@ -1,10 +1,18 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { SubjectSchema } from './Subject';
+import ElectiveSubject from './ElectiveSubject';
+import Subject from './Subject';
 
 export const SemesterSchema = new Schema({
-    subjects: [SubjectSchema],
+    subjects: [{
+        type: Schema.Types.ObjectId,
+        ref: new Subject().name,
+    }],
+    electiveSubjects: [{
+        type: Schema.Types.ObjectId,
+        ref: new ElectiveSubject().name,
+    }],
 });
 
 class Semester extends Base<HydratedDocumentFromSchema<typeof SemesterSchema>> {
