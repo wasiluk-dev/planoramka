@@ -11,10 +11,22 @@ export const Droppable: React.FC<DroppableProps> = (props) => {
     const { isOver, setNodeRef } = useDroppable({
         id: props.id,
     });
-    const style = {
-        opacity: isOver ? 1 : 0.5,
-    };
+    let style
+    if(props.id == 'ugabuga'){
+        style = {
+            opacity: isOver ? 0.6 : 1,
+            width: '100px',
+            minHeight: '100px',
+            display: 'inline',
+            backgroundColor: 'green',
+            }
 
+    }else {
+        style = {
+            opacity: isOver ? 0.6 : 1,
+        };
+
+    }
     return (
         <div ref={setNodeRef} style={style} id={props.id}>
             {props.children}

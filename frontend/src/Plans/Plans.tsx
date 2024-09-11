@@ -99,7 +99,9 @@ const Plans: React.FC = () => {
         }
 
         const toId = over.id as string;
+        // @ts-ignore
         const fromRow = active.data.current.x;
+        // @ts-ignore
         const fromCol = active.data.current.y;
 
         let [toRow, toCol] = toId.split('_').map(Number);
@@ -160,36 +162,10 @@ const Plans: React.FC = () => {
     };
 
     return (
-        <div className="p-3 mb-2 bg-secondary">
-            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <Droppable id='ugabuga'>
-                    {lessons.filter(item => !item.isset).map(item => (
-                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} key={item.id}>
-                            {item.name}
-                        </Draggable>
-                    ))}
-                </Droppable>
-                <table>
-                    <tbody>
-                    {grid.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                            {row.map((item, colIndex) => (
-                                <td key={colIndex}>
-                                    <Droppable id={`${rowIndex}_${colIndex}`}>
-                                        {item && (
-                                            <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={true}>
-                                                {item.name}
-                                            </Draggable>
-                                        )}
-                                    </Droppable>
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </DndContext>
-            <div className="bg-secondary col-2">
+        <>
+            <h1 className='text-center'> PLAN ZAJĘĆ</h1>
+        <div className='d-flex flex-row p-3 mx-3'>
+            <div className="bg-secondary text-center w-15">
                 <select
                     className="form-select"
                     aria-label="Default select example"
@@ -203,7 +179,7 @@ const Plans: React.FC = () => {
                 </select>
 
                 {selectedWydzial && (
-                    <div className="mt-2">
+                    <div className="">
                         <select
                             className="form-select"
                             aria-label="Default select example"
@@ -220,11 +196,56 @@ const Plans: React.FC = () => {
 
                 {selectedKierunek && (
                     <div className="mt-2">
-                        <p>Wybrano: Wydział {selectedWydzial}, Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>
+                        {/*<p>Wybrano: Wydział {selectedWydzial},*/}
+                        {/*    Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>*/}
                     </div>
                 )}
             </div>
+            <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <table className="table table-striped table-hover table-bordered border-primary">
+                        {/*<thead>*/}
+                        {/*<tr  className="table-dark">*/}
+                        {/*    <th scope="col">Pon</th>*/}
+                        {/*    <th scope="col">Wt</th>*/}
+                        {/*    <th scope="col">Śr</th>*/}
+                        {/*    <th scope="col">i tak dalej :v</th>*/}
+                        {/*</tr>*/}
+                        {/*</thead>*/}
+                        <tbody>
+                        {grid.map((row, rowIndex) => (
+                            <tr key={rowIndex} className="table-dark">
+                                <th scope="col" className='col-1'>{rowIndex + 1}</th>
+                                {row.map((item, colIndex) => (
+                                    <td key={colIndex} className="table-dark col-1 text-center" scope="col">
+                                        <Droppable id={`${rowIndex}_${colIndex}`}>
+                                            {item && (
+                                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                           isset={true}>
+                                                    {item.name}
+                                                </Draggable>
+                                            )}
+                                        </Droppable>
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                    <div className='flex-sm-grow-1 ms-5 w-15'>
+                        <Droppable id='ugabuga'>
+                            {lessons.filter(item => !item.isset).map(item => (
+                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}
+                                           key={item.id}>
+                                    {item.name}
+                                </Draggable>
+                            ))}
+                        </Droppable>
+                    </div>
+                </DndContext>
+            </div>
         </div>
+        </>
     );
 };
 

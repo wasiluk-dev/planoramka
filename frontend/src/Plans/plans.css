@@ -1,13 +1,11 @@
 table{
-    border: #125801 solid 2px;
     td{
-        border: lightcoral solid 2px;
-        min-width: 54px;
-        height: 22px;
     }
 }
 #ugabuga{
     background-color: black;
-    min-height: 30px;
-    width: 100px;
 }
+
+/*.w-15{*/
+/*    width: 15%;*/
+/*}*/
