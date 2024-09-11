@@ -1,10 +1,10 @@
 import { HydratedDocumentFromSchema } from 'mongoose';
 
-import Class from '../../models/timetable/Class';
+import Class, { ClassSchema } from '../../models/timetable/Class';
 import BaseController from '../BaseController';
 
 const base = new Class();
-class ClassController extends BaseController<HydratedDocumentFromSchema<typeof base.schema>> {
+class ClassController extends BaseController<HydratedDocumentFromSchema<typeof ClassSchema>> {
     constructor() {
         super(base);
     }
