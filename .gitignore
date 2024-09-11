@@ -101,9 +101,8 @@ dist
 # vuepress build output
 .vuepress/dist
 
-# vuepress v2.x temp and cache directory
+# vuepress v2.x temp directory
 .temp
-.cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -129,3 +128,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# SSL private key
+**/ssl/key.pem
