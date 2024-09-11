@@ -10,8 +10,8 @@ export const ClassSchema = new Schema({
     subject: {
         type: SubjectSchema,
     },
-    subjectType: {
-        type: SubjectTypeSchema,
+    classType: {
+        type: ClassTypeSchema,
     },
     room: {
         type: RoomSchema,
