@@ -1,11 +1,11 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { RoomSchema } from './Room';
+import Room from './Room';
 
-// <Wydział Informatyki> | A | Budynek A | Wiejska 45A, 15-XXX Białystok, Polska | true | true | [101, 102, 103...]
-// <Wydział Informatyki> | B | Budynek B | Wiejska 45B, 15-XXX Białystok, Polska | (false) | (false) | [B01, B02, B03...]
-// <Wydział Informatyki> | C | Budynek C | Wiejska 45C, 15-XXX Białystok, Polska | (false) | (false) | [001, 002, 003...]
+// A | Budynek A | Wiejska 45A, 15-351 Białystok, Polska | true | true | [101, 102, 103...]
+// B | Budynek B | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [B01, B02, B03...]
+// C | Budynek C | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [001, 002, 003...]
 export const BuildingSchema = new Schema({
     acronym: {
         type: String,
@@ -19,17 +19,18 @@ export const BuildingSchema = new Schema({
         type: String,
         required: true,
     },
-    hasDeanOffice: {
-        type: Boolean,
-        default: false,
-    },
-    hasRectorOffice: {
-        type: Boolean,
-        default: false,
-    },
-    rooms: {
-        type: [RoomSchema],
-    },
+    // hasDeanOffice: {
+    //     type: Boolean,
+    //     default: false,
+    // },
+    // hasRectorOffice: {
+    //     type: Boolean,
+    //     default: false,
+    // },
+    rooms: [{
+        type: Schema.Types.ObjectId,
+        ref: new Room().name,
+    }],
 });
 
 class Building extends Base<HydratedDocumentFromSchema<typeof BuildingSchema>> {

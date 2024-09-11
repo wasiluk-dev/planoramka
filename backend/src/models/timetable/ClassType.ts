@@ -5,14 +5,13 @@ import Base from '../Base';
 // W | Wykład | (#00FF00)
 // Lab | Laboratorium | (#FF0000)
 // Sem | Seminarium | (#0000FF)
-export const SubjectTypeSchema = new Schema({
-    acronym: {
-        type: String,
-        required: true,
-    },
+export const ClassTypeSchema = new Schema({
     name: {
         type: String,
         required: true,
+    },
+    acronym: {
+        type: String,
     },
     color: {
         type: String,
@@ -20,10 +19,10 @@ export const SubjectTypeSchema = new Schema({
     },
 });
 
-class SubjectType extends Base<HydratedDocumentFromSchema<typeof SubjectTypeSchema>> {
+class ClassType extends Base<HydratedDocumentFromSchema<typeof ClassTypeSchema>> {
     constructor() {
-        super('SubjectType', SubjectTypeSchema);
+        super('ClassType', ClassTypeSchema);
     }
 }
 
-export default SubjectType;
+export default ClassType;

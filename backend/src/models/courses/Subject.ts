@@ -1,17 +1,12 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { SubjectTypeSchema } from './SubjectType';
+import ClassType from '../timetable/ClassType';
 
 // INF1PPR | BSK | Bezpieczeństwo sieci komputerowych | [Wykład, Ćwiczenia]
 // INZ1PEI | PEiE | Podstawy elektroniki i elektrotechniki | [Wykład, Laboratorium]
 export const SubjectSchema = new Schema({
     code: {
-        type: String,
-        unique: true,
-        required: true,
-    },
-    acronym: {
         type: String,
         required: true,
     },
@@ -19,10 +14,24 @@ export const SubjectSchema = new Schema({
         type: String,
         required: true,
     },
-    types: {
-        type: [SubjectTypeSchema],
-        required: true,
+    shortName: {
+        type: String,
     },
+    isElective: {
+        type: Boolean,
+        default: false,
+    },
+    targetedSemesters: {
+        type: [Number],
+        min: 1,
+        validate: {
+            validator: Number.isInteger,
+        },
+    },
+    types: [{
+        type: Schema.Types.ObjectId,
+        ref: new ClassType().name,
+    }],
 });
 
 class Subject extends Base<HydratedDocumentFromSchema<typeof SubjectSchema>> {

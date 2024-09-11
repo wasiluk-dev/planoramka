@@ -1,10 +1,10 @@
 import { HydratedDocumentFromSchema } from 'mongoose';
 
-import Semester from '../../models/courses/Semester';
+import Semester, { SemesterSchema } from '../../models/courses/Semester';
 import BaseController from '../BaseController';
 
 const base = new Semester();
-class SemesterController extends BaseController<HydratedDocumentFromSchema<typeof base.schema>> {
+class SemesterController extends BaseController<HydratedDocumentFromSchema<typeof SemesterSchema>> {
     constructor() {
         super(base);
     }

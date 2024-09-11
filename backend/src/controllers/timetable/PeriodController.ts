@@ -1,10 +1,10 @@
 import { HydratedDocumentFromSchema } from 'mongoose';
 
-import Period from '../../models/timetable/Period';
+import Period, { PeriodSchema } from '../../models/timetable/Period';
 import BaseController from '../BaseController';
 
 const base = new Period();
-class PeriodController extends BaseController<HydratedDocumentFromSchema<typeof base.schema>> {
+class PeriodController extends BaseController<HydratedDocumentFromSchema<typeof PeriodSchema>> {
     constructor() {
         super(base);
     }
