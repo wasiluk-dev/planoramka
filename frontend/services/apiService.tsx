@@ -131,11 +131,41 @@ type Faculties = {
 const apiService = {
     //Test Api - userzy
     getTestPerson: async (): Promise<User | null> => {
-        const response : Response = await fetch(baseUrl + '/periods');
+        const response : Response = await fetch(baseUrl + '/users');
         if (!response.ok) {
             return null;
         }
 
+        return await response.json();
+    },
+
+    getCourses: async (): Promise<Courses | null> => {
+        const response : Response = await fetch(baseUrl + '/courses');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+    getSemesters: async (): Promise<Courses | null> => {
+        const response : Response = await fetch(baseUrl + '/semesters');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+    getElecviteSubjects: async (): Promise<Courses | null> => {
+        const response : Response = await fetch(baseUrl + '/electiveSubjects');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+
+    getTimeTables: async (): Promise<Courses | null> => {
+        const response : Response = await fetch(baseUrl + '/timeTables');
+        if (!response.ok) {
+            return null;
+        }
         return await response.json();
     },
 
