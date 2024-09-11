@@ -16,7 +16,7 @@ const Header: React.FC = () => {
                     <a href='/plans'>Plany</a>
                 </div>
                 <div className="block">
-                    Podstrona 4
+                    <a href='/create'>Creation Panel</a>
                 </div>
             </div>
         </div>
