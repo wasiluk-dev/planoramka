@@ -1,12 +1,12 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import { ClassSchema } from './Class';
+import Class from './Class';
 
-const TimetableSchema = new Schema({
+export const TimetableSchema = new Schema({
     classes: {
-        type: [ClassSchema],
-        required: true,
+        type: Schema.Types.ObjectId,
+        ref: new Class().name,
     },
 });
 

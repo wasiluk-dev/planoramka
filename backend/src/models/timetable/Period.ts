@@ -7,14 +7,15 @@ import Base from '../Base';
 // [0, 1, 2, 3, 4] | 09:30 | 10:15 | (false)
 // [5, 6] | 08:00 | 08:45 | (false)
 export const PeriodSchema = new Schema({
-    weekdays: {
-        type: [{
-            type: Number,
-            min: 0,
-            max: 6,
-        }],
+    weekdays: [{
+        type: Number,
         required: true,
-    },
+        min: 0,
+        max: 6,
+        validate: {
+            validator: Number.isInteger,
+        },
+    }],
     startTime: {
         type: String,
         validate: /[0-9]{2}:[0-9]{2}/,

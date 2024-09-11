@@ -47,6 +47,9 @@ abstract class Base<T extends Document> {
     get schema(): Schema<T> {
         return this._schema;
     }
+    get model(): Model<T> {
+        return this._model;
+    }
 }
 
 export default Base;
