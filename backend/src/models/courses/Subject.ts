@@ -1,7 +1,7 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
-import SubjectType from './SubjectType';
+import ClassType from '../timetable/ClassType';
 
 // INF1PPR | BSK | Bezpieczeństwo sieci komputerowych | [Wykład, Ćwiczenia]
 // INZ1PEI | PEiE | Podstawy elektroniki i elektrotechniki | [Wykład, Laboratorium]
@@ -30,7 +30,7 @@ export const SubjectSchema = new Schema({
     },
     types: [{
         type: Schema.Types.ObjectId,
-        ref: new SubjectType().name,
+        ref: new ClassType().name,
     }],
 });
 
