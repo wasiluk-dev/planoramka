@@ -8,6 +8,7 @@ import Login from "./Login/Login.tsx";
 import NotFound from "./NotFound.tsx";
 import Home from "./Home/Home.tsx";
 import Plans from "./Plans/Plans.tsx";
+import CreatePanel from "./Panel/CreatePanel.tsx";
 
 const App: React.FC = () => {
     return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
             <Header/>
             <BrowserRouter>
                 <Routes>
+                    <Route path='create' element={<CreatePanel/>}/>
                     <Route path='/' element={<Home/>} />
                     <Route path='/plans' element={<Plans/>} />
                     <Route path='login' element={<Login/>} />

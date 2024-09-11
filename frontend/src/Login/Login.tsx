@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from "react";
-import {create} from "node:domain";
 import apiService from "../../services/apiService.tsx";
 
 interface CreateUser{
@@ -83,7 +82,7 @@ const Login: React.FC = () =>{
              <label htmlFor="email">Email:</label><br/>
              <input type="email" id="email" name="email"/>
          </form>
-         <button name='login' onClick={login}>Zaloguj się</button>
+         {/*<button name='login' onClick={login}>Zaloguj się</button>*/}
          <button name='register' id="registerButton">Zarejestruj się</button>
      </>
  )
