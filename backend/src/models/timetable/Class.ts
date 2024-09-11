@@ -2,8 +2,8 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
 import { SubjectSchema } from '../courses/Subject';
-import { SubjectTypeSchema } from '../courses/SubjectType';
 import { RoomSchema } from '../faculty/Room';
+import { ClassTypeSchema } from './ClassType';
 import { PeriodSchema } from './Period';
 
 export const ClassSchema = new Schema({
