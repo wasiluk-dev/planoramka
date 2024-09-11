@@ -21,13 +21,13 @@ export const SubjectSchema = new Schema({
         type: Boolean,
         default: false,
     },
-    targetedSemesters: {
-        type: [Number],
+    targetedSemesters: [{
+        type: Number,
         min: 1,
         validate: {
             validator: Number.isInteger,
         },
-    },
+    }],
     types: [{
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,

@@ -14,7 +14,6 @@ export const UserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         minLength: 8,
     },
     firstName: {
@@ -28,19 +27,6 @@ export const UserSchema = new Schema({
         type: String,
         required: true,
     },
-    // title: {
-    //     type: Number,
-    //     enum: EUserTitle,
-    // },
-    // email: {
-    //     type: String,
-    //     index: {
-    //         unique: true,
-    //         sparse: true,
-    //     },
-    //     required: true,
-    //     // match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, TODO: choose a sensible regex
-    // },
     courses: [{
         type: Schema.Types.ObjectId,
         ref: new Course().name,
@@ -56,7 +42,7 @@ class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {
         super('User', UserSchema);
         this.schema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
-            if (!this.isModified('password')) return next();
+            if (!this.password || !this.isModified('password')) return next();
 
             argon2.hash(this.password)
                 .then((hashedPassword: string) => {
