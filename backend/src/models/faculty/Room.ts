@@ -7,7 +7,9 @@ import RoomType from './RoomType';
 export const RoomSchema = new Schema({
     number: {
         type: String,
-        required: true,
+    },
+    numberSecondary: {
+        type: String,
     },
     type: {
         type: Schema.Types.ObjectId,

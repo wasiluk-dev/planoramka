@@ -27,7 +27,6 @@ export const CourseSchema = new Schema({
     degree: {
         type: Number,
         enum: ECourseDegree,
-        required: true,
     },
     mode: {
         type: Number,
