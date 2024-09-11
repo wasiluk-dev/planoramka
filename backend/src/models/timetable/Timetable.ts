@@ -4,10 +4,10 @@ import Base from '../Base';
 import Class from './Class';
 
 export const TimetableSchema = new Schema({
-    classes: {
+    classes: [{
         type: Schema.Types.ObjectId,
         ref: new Class().name,
-    },
+    }],
 });
 
 class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
