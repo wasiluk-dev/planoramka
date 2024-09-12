@@ -14,6 +14,9 @@ export const RoomSchema = new Schema({
     type: {
         type: Schema.Types.ObjectId,
         ref: new RoomType().name,
+        autopopulate: {
+            select: 'name',
+        },
     },
     capacity: {
         type: Number,

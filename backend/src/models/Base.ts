@@ -1,5 +1,6 @@
 import { DeleteResult } from 'mongodb';
 import { Document, FilterQuery, model, Model, Schema } from 'mongoose';
+import mongoose_autopopulate from 'mongoose-autopopulate';
 import uniqueValidator from 'mongoose-unique-validator';
 
 import DBUtils from '../utils/DBUtils';
@@ -11,10 +12,22 @@ abstract class Base<T extends Document> {
 
     protected constructor(name: string, schema: Schema<T>) {
         this._name = name;
-        this._schema = schema;
-        this._model = model<T>(this._name, this._schema);
 
+        this._schema = schema;
+        this._schema.set('id', false);
+        this._schema.set('toJSON', {
+            versionKey: false,
+            virtuals: true,
+        });
+        this._schema.set('toObject', {
+            versionKey: false,
+            virtuals: true,
+        });
+
+        this._schema.plugin(mongoose_autopopulate);
         this._schema.plugin(uniqueValidator);
+
+        this._model = model<T>(this._name, this._schema);
     }
 
     find = (filter: FilterQuery<T> = {}) =>

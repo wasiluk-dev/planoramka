@@ -19,6 +19,7 @@ export const TimetableSchema = new Schema({
     classes: [{
         type: Schema.Types.ObjectId,
         ref: new Class().name,
+        autopopulate: true,
     }],
 });
 
