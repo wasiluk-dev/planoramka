@@ -3,7 +3,7 @@ import { Document, FilterQuery, HydratedDocument, Model } from 'mongoose';
 
 export default class DBUtils {
     static async find<T>(model: Model<T>, filter: FilterQuery<T>): Promise<Array<HydratedDocument<T>>> {
-        return await model.find(filter).exec()
+        return await model.find(filter).select('-__v').exec()
             .then((docs: Array<HydratedDocument<T>>) => {
                 return docs;
             })

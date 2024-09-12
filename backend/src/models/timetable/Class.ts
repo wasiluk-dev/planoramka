@@ -11,15 +11,23 @@ export const ClassSchema = new Schema({
     organizer: {
         type: Schema.Types.ObjectId,
         ref: new User().name,
+        autopopulate: {
+            // need to select fields with the data (first/middle/last) for the virtual (full) to work properly
+            select: 'firstName middleName lastName fullName', // TODO: add title later
+        },
         required: true,
     },
     subject: {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
+        autopopulate: {
+            select: 'name shortName',
+        },
     },
     classType: {
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
+        autopopulate: true,
     },
     studentGroups: [{
         type: Number,
@@ -31,11 +39,13 @@ export const ClassSchema = new Schema({
     room: {
         type: Schema.Types.ObjectId,
         ref: new Room().name,
+        autopopulate: true,
         required: true,
     },
     periods: [{
         type: Schema.Types.ObjectId,
         ref: new Period().name,
+        autopopulate: true,
         required: true,
     }],
 });
