@@ -38,6 +38,15 @@ export const UserSchema = new Schema({
     },
 });
 
+UserSchema.virtual('fullName')
+    .get(function() {
+        if (!this.firstName && !this.middleName && !this.lastName) {
+            return null;
+        }
+
+        return `${this.firstName}${(this.middleName) ? ` ${this.middleName}` : ''} ${this.lastName}`;
+    });
+
 class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {
         super('User', UserSchema);
