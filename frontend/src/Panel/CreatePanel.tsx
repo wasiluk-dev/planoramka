@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import apiService from "../../services/apiService.tsx";
 
 type Users ={
@@ -76,9 +76,14 @@ type RoomTypes ={
 type TimeTables ={
     //TODO: check this shit sometimes
     _id: string;
-    semester: string; //odniesienie do semestru (WOW)
-    targetedsemester: number;
-    classes: Array<string>; //odniesienie do przdmiotów
+    classType: Array<string>;
+    organizer: Array<string | Array<string>>;
+    periods: string | null;
+    room: Array<string>;
+    studentGroups: Array<number>;
+    subject: Array<string>;
+
+
 }
 
 type Classes ={
@@ -116,6 +121,17 @@ type Faculties = {
 }
 
 const CreatePanel: React.FC = () => {
+    const [timeTables, setTimeTables] = useState<TimeTables[] | null>(null);
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getTimeTables()
+            setTimeTables(data); // Store fetched time tables in state
+        };
+
+        fetchData();
+    }, []);
+
+
     return (
         <div className="container">
             <div className="row">

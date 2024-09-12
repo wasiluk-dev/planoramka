@@ -1,3 +1,5 @@
+import * as dataType from "../../services/databaseTypes.tsx";
+
 const baseUrl :string = 'https://127.0.0.1:3000';
 const  myHeaders = new Headers();
 myHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
@@ -87,9 +89,14 @@ type RoomTypes ={
 type TimeTables ={
     //TODO: check this shit sometimes
     _id: string;
-    semester: string; //odniesienie do semestru (WOW)
-    targetedsemester: number;
-    classes: Array<string>; //odniesienie do przdmiotów
+    classType: Array<string>;
+    organizer: Array<string | Array<string>>;
+    periods: string | null;
+    room: Array<string>;
+    studentGroups: Array<number>;
+    subject: Array<string>;
+
+
 }
 
 type Classes ={
@@ -161,7 +168,7 @@ const apiService = {
         return await response.json();
     },
 
-    getTimeTables: async (): Promise<Courses | null> => {
+    getTimeTables: async (): Promise<dataType.TimeTables | null> => {
         const response : Response = await fetch(baseUrl + '/timeTables');
         if (!response.ok) {
             return null;

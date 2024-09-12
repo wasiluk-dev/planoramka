@@ -7,6 +7,10 @@ import {
 import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
 import './plans.css';
+import apiService from "../../services/apiService.tsx";
+import * as dataType from "../../services/databaseTypes.tsx";
+
+
 
 type Obiekt = {
     id: string,
@@ -54,6 +58,18 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 };
 
 const Plans: React.FC = () => {
+
+    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);
+    // Fetch data from API when component mounts
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getTimeTables();
+            setTimeTables(data); // Store fetched time tables in state
+        };
+
+        fetchData();
+    }, []);
+
     const [selectedWydzial, setSelectedWydzial] = useState<string>("");
     const [selectedKierunek, setSelectedKierunek] = useState<string>("");
 
@@ -161,6 +177,8 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
+    console.log(timeTables)
+
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -245,6 +263,28 @@ const Plans: React.FC = () => {
                 </DndContext>
             </div>
         </div>
+            {timeTables.map((timeTable) => (
+                <div key={timeTable._id}>
+                    <h2>Semester {timeTable.targetedSemester}</h2>
+                    {timeTable.classes.map((cls) => (
+                        <div key={cls._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>
+                            <h3>
+                                {cls.subject.name} ({cls.subject.shortName}) - {cls.classType.name} ({cls.classType.acronym})
+                            </h3>
+                            <p>Organizer: {cls.organizer.fullName}</p>
+                            <p>Room: {cls.room.roomNumber}</p>
+                            <h4>Periods:</h4>
+                            <ul>
+                                {cls.periods.map((period) => (
+                                    <li key={period._id}>
+                                        Days: {period.weekdays.join(', ')} | Start: {period.startTime} | End: {period.endTime}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+            ))}
         </>
     );
 };
