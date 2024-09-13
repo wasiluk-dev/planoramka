@@ -22,10 +22,10 @@
 
     export type Periods = {
         _id: string;
+        weekdays: Array<number>;
+        startTime: string;
         endTime: string;
         isBreak: boolean;
-        startTime: string;
-        weekdays: Array<number>;
     }
 
     export type RoomType = {

@@ -9,6 +9,7 @@ import Droppable from "./Droppable.tsx";
 import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
+import {type} from "node:os";
 
 
 
@@ -59,12 +60,21 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 
 const Plans: React.FC = () => {
 
-    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);
-    // Fetch data from API when component mounts
+    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
+    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
             setTimeTables(data); // Store fetched time tables in state
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getPeriods();
+            setPeriods(data); // Store fetched time tables in state
         };
 
         fetchData();
@@ -222,18 +232,14 @@ const Plans: React.FC = () => {
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <table className="table table-striped table-hover table-bordered border-primary">
-                        {/*<thead>*/}
-                        {/*<tr  className="table-dark">*/}
-                        {/*    <th scope="col">Pon</th>*/}
-                        {/*    <th scope="col">Wt</th>*/}
-                        {/*    <th scope="col">Śr</th>*/}
-                        {/*    <th scope="col">i tak dalej :v</th>*/}
-                        {/*</tr>*/}
-                        {/*</thead>*/}
                         <tbody>
                         {grid.map((row, rowIndex) => (
                             <tr key={rowIndex} className="table-dark">
-                                <th scope="col" className='col-1'>{rowIndex + 1}</th>
+                                <th scope="col" className='col-1'>{periods ?  (
+                                    <p>{periods[rowIndex].startTime}</p>  // Accessing the first item's startTime
+                                ) : (
+                                    <p>Loading...</p>
+                                )}</th>
                                 {row.map((item, colIndex) => (
                                     <td key={colIndex} className="table-dark col-1 text-center" scope="col">
                                         <Droppable id={`${rowIndex}_${colIndex}`}>
@@ -263,28 +269,6 @@ const Plans: React.FC = () => {
                 </DndContext>
             </div>
         </div>
-            {timeTables.map((timeTable) => (
-                <div key={timeTable._id}>
-                    <h2>Semester {timeTable.targetedSemester}</h2>
-                    {timeTable.classes.map((cls) => (
-                        <div key={cls._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>
-                            <h3>
-                                {cls.subject.name} ({cls.subject.shortName}) - {cls.classType.name} ({cls.classType.acronym})
-                            </h3>
-                            <p>Organizer: {cls.organizer.fullName}</p>
-                            <p>Room: {cls.room.roomNumber}</p>
-                            <h4>Periods:</h4>
-                            <ul>
-                                {cls.periods.map((period) => (
-                                    <li key={period._id}>
-                                        Days: {period.weekdays.join(', ')} | Start: {period.startTime} | End: {period.endTime}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-            ))}
         </>
     );
 };

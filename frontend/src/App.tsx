@@ -9,6 +9,8 @@ import NotFound from "./NotFound.tsx";
 import Home from "./Home/Home.tsx";
 import Plans from "./Plans/Plans.tsx";
 import CreatePanel from "./Panel/CreatePanel.tsx";
+import ReadyPlan from "./Plans/PlansRDY/ReadyPlan.tsx";
+import Footer from "./Footer/Footer.tsx";
 
 const App: React.FC = () => {
     return (
@@ -21,8 +23,10 @@ const App: React.FC = () => {
                     <Route path='/plans' element={<Plans/>} />
                     <Route path='login' element={<Login/>} />
                     <Route path='*' element={<NotFound/>} />
+                    <Route path='rdy' element={<ReadyPlan/>} />
                 </Routes>
             </BrowserRouter>
+            <Footer/>
         </>
     );
 };
