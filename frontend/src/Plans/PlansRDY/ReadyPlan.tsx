@@ -59,7 +59,7 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 
 const  ReadyPlan: React.FC = () => {
 
-    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
+    const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
     useEffect(() => {
         const fetchData = async () => {

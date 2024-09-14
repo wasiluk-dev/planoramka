@@ -12,6 +12,12 @@
     _id: string;
     }
 
+    export type Schedule = {
+    _id: string;
+    weekdays: Array<number>;
+    periods: Periods;
+    }
+
     export type Organizer = {
     _id: string;
     fristName: string;
@@ -45,16 +51,35 @@
     export type Subject = {
     _id: string;
     name: string;
+    code: string;
     shortName: string;
+    isElective: boolean;
+    targetedSemesters: Array<number>;
+    classTypes: Array<ClassType>;
+    }
+
+    export type Classes = {
+        _id: string;
+        organizer: string;
+        subject: string;
+        classType: string;
+        studentGroups: Array<number>;
+        periodBlocks: Array<number>;
+        room: string;
+    }
+
+    export type Semesters = {
+        _id: string;
+        courseCode: string;
+        number: number;
+        subjectCount: number;
+        subjects: Array<Subject>;
     }
 
   export type TimeTables ={
-        //TODO: check this shit sometimes
         _id: string;
-        classType: ClassType;
-        organizer: Organizer;
-        periods: Array<Periods>;
-        room: Room;
-        studentGroups: Array<number>;
-        subject: Subject;
+        semester: Semesters;
+        targetedSemester: number;
+        schedules: Schedule;
+        classes: Classes;
     }

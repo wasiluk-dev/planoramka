@@ -9,7 +9,6 @@ import Droppable from "./Droppable.tsx";
 import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
-import {type} from "node:os";
 
 
 
