@@ -8,7 +8,8 @@ import RoomRoutes from './faculty/RoomRoutes';
 import RoomTypeRoutes from './faculty/RoomTypeRoutes';
 import ClassRoutes from './timetable/ClassRoutes';
 import ClassTypeRoutes from './timetable/ClassTypeRoutes';
-import PeriodRoutes from './timetable/PeriodController';
+import PeriodRoutes from './timetable/PeriodRoutes';
+import ScheduleRoutes from './timetable/ScheduleRoutes';
 import TimetableRoutes from './timetable/TimetableRoutes';
 import UserRoutes from './UserRoutes.js';
 
@@ -28,6 +29,7 @@ const routes = {
     ClassRoutes,
     ClassTypeRoutes,
     PeriodRoutes,
+    ScheduleRoutes,
     TimetableRoutes,
 };
 
