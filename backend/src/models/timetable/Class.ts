@@ -5,7 +5,6 @@ import Subject from '../courses/Subject';
 import Room from '../faculty/Room';
 import User from '../User';
 import ClassType from './ClassType';
-import Period from './Period';
 
 export const ClassSchema = new Schema({
     organizer: {
@@ -36,18 +35,20 @@ export const ClassSchema = new Schema({
             validator: Number.isInteger,
         },
     }],
+    periodBlocks: [{
+        type: Number,
+        required: true,
+        min: 1,
+        validate: {
+            validator: Number.isInteger,
+        },
+    }],
     room: {
         type: Schema.Types.ObjectId,
         ref: new Room().name,
         autopopulate: true,
         required: true,
     },
-    periods: [{
-        type: Schema.Types.ObjectId,
-        ref: new Period().name,
-        autopopulate: true,
-        required: true,
-    }],
 });
 
 class Class extends Base<HydratedDocumentFromSchema<typeof ClassSchema>> {
