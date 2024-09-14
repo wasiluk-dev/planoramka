@@ -2,10 +2,10 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
 
-// [0, 1, 2, 3, 4] | 08:30 | 09:15 | (false)
-// [0, 1, 2, 3, 4] | 09:15 | 09:30 | true
-// [0, 1, 2, 3, 4] | 09:30 | 10:15 | (false)
-// [5, 6] | 08:00 | 08:45 | (false)
+// 1 | 1 | 08:30 | 09:15
+// 2 | 2 | 09:15 | 09:30
+// 3 | 3 | 09:30 | 10:15
+// 6 | 1 | 08:00 | 08:45
 export const PeriodSchema = new Schema({
     weekdays: [{
         type: Number,
@@ -16,6 +16,14 @@ export const PeriodSchema = new Schema({
             validator: Number.isInteger,
         },
     }],
+    order: {
+        type: Number,
+        required: true,
+        min: 1,
+        validate: {
+            validator: Number.isInteger,
+        },
+    },
     startTime: {
         type: String,
         validate: /[0-9]{2}:[0-9]{2}/,
@@ -26,10 +34,6 @@ export const PeriodSchema = new Schema({
         validate: /[0-9]{2}:[0-9]{2}/,
         required: true,
     },
-    isBreak: {
-        type: Boolean,
-        default: false,
-    }
 });
 
 class Period extends Base<HydratedDocumentFromSchema<typeof PeriodSchema>> {
