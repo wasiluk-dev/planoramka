@@ -21,7 +21,9 @@ export const ScheduleSchema = new Schema({
     periods: [{
         type: Schema.Types.ObjectId,
         ref: new Period().name,
-        autopopulate: true,
+        autopopulate: {
+            select: '-_id -weekdays',
+        },
         required: true,
     }],
 });
