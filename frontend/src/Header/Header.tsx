@@ -7,13 +7,13 @@ const Header: React.FC = () => {
             <a href='/'>Strona główna</a>
             <div className="headerSites">
                 <div className="block">
-                    Podstrona 1
+                    <a href='/rdy'>Test Plan</a>
                 </div>
                 <div className="block">
                     <a href='/login'>Zaloguj się</a>
                 </div>
                 <div className="block">
-                    <a href='/plans'>Plany</a>
+                    <a href='/plans'>Test Kreator</a>
                 </div>
                 <div className="block">
                     <a href='/create'>Creation Panel</a>

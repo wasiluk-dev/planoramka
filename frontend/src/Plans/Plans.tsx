@@ -7,6 +7,10 @@ import {
 import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
 import './plans.css';
+import apiService from "../../services/apiService.tsx";
+import * as dataType from "../../services/databaseTypes.tsx";
+
+
 
 type Obiekt = {
     id: string,
@@ -54,6 +58,27 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 };
 
 const Plans: React.FC = () => {
+
+    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
+    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getTimeTables();
+            setTimeTables(data); // Store fetched time tables in state
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getPeriods();
+            setPeriods(data); // Store fetched time tables in state
+        };
+
+        fetchData();
+    }, []);
+
     const [selectedWydzial, setSelectedWydzial] = useState<string>("");
     const [selectedKierunek, setSelectedKierunek] = useState<string>("");
 
@@ -161,6 +186,8 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
+    console.log(timeTables)
+
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -204,18 +231,14 @@ const Plans: React.FC = () => {
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <table className="table table-striped table-hover table-bordered border-primary">
-                        {/*<thead>*/}
-                        {/*<tr  className="table-dark">*/}
-                        {/*    <th scope="col">Pon</th>*/}
-                        {/*    <th scope="col">Wt</th>*/}
-                        {/*    <th scope="col">Śr</th>*/}
-                        {/*    <th scope="col">i tak dalej :v</th>*/}
-                        {/*</tr>*/}
-                        {/*</thead>*/}
                         <tbody>
                         {grid.map((row, rowIndex) => (
                             <tr key={rowIndex} className="table-dark">
-                                <th scope="col" className='col-1'>{rowIndex + 1}</th>
+                                <th scope="col" className='col-1'>{periods ?  (
+                                    <p>{periods[rowIndex].startTime}</p>  // Accessing the first item's startTime
+                                ) : (
+                                    <p>Loading...</p>
+                                )}</th>
                                 {row.map((item, colIndex) => (
                                     <td key={colIndex} className="table-dark col-1 text-center" scope="col">
                                         <Droppable id={`${rowIndex}_${colIndex}`}>
