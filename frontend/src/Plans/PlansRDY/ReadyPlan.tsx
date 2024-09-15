@@ -26,7 +26,8 @@ const  ReadyPlan: React.FC = () => {
 
     const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
-    const [zajecia, setZajecia] = useState(null)
+    const [zajecia, setZajecia] = useState([])
+    const [groupNumber, setGroupNumber] = useState<number>(0)
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
@@ -36,6 +37,15 @@ const  ReadyPlan: React.FC = () => {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (zajecia.length > 0) {
+            // @ts-ignore
+            const allStudentGroups = zajecia.flatMap((item) => item.studentGroups || []);
+            const uniqueStudentGroups = new Set(allStudentGroups);
+            setGroupNumber(uniqueStudentGroups.size);
+        }
+    }, [zajecia]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -75,12 +85,11 @@ const  ReadyPlan: React.FC = () => {
 
         const updatedGrid: Array<Array<TimeTables | null>> = Array(normal.length)
             .fill(null)
-            .map(() => Array(7).fill(" "));
+            .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
-    }, [normal]);
+    }, [normal, groupNumber]);
 
-    console.log(zajecia)
-
+    console.log(timeTables)
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -122,16 +131,27 @@ const  ReadyPlan: React.FC = () => {
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                         <table className="table table-striped table-hover table-bordered border-primary">
                             <tbody>
+                            <tr className="table-dark">
+                                <th className='text-center'>Godzina</th>
+                                {groupNumber > 0 ? (
+                                    Array.from({ length: groupNumber }, (_, i) => i + 1).map((num) => (
+                                        <th key={num} className='text-center'> Grupa {num}</th>
+                                    ))
+                                ) : (
+                                    <th>Error</th>
+                                )}
+                            </tr>
                             {grid.map((row, rowIndex) => (
-                                <tr key={rowIndex} className="table-dark">
+                                <tr key={rowIndex} className="table-dark text-center">
                                     <th scope="col" className='col-1'>
-                                        {timeTables? (timeTables[0].schedules[1].periods[rowIndex].startTime +" - " +timeTables[0].schedules[1].periods[rowIndex].endTime) : (<p>Loading...</p>)}
+                                        {timeTables? (timeTables[0].schedules[1].periods[rowIndex].startTime +" - " + timeTables[0].schedules[1].periods[rowIndex].endTime) : (<p>Loading...</p>)}
                                     </th>
                                     {row.map((item, colIndex) => (
                                         <td key={colIndex} className="table-dark col-1 text-center" scope="col">
                                             {timeTables ? (zajecia.map((item) => (
                                                 <div key={item._id}>
-                                                    {item.periodBlocks.includes(rowIndex) ? (item.subject.name) : ("")}
+                                                    { // @ts-ignore}
+                                                    }{item.periodBlocks.includes(rowIndex +1 ) && item.studentGroups.includes(colIndex +1) ? (item.subject.name) : ("")}
                                                 </div>
                                             ))) : <p>Loading...</p>}
                                         </td>
@@ -144,20 +164,20 @@ const  ReadyPlan: React.FC = () => {
                         </div>
                 </div>
             </div>
-            {timeTables ? timeTables.map((timeTable) => (
-                <div key={timeTable._id}>
-                    <h2>Semester {timeTable.targetedSemester}</h2>
-                    {timeTable.classes.map((cls) => (
-                        <div key={cls._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>
-                            <h3>
-                                {cls.subject.name} ({cls.subject.shortName}) - {cls.classType.name} ({cls.classType.acronym})
-                            </h3>
-                            <p>Organizer: {cls.organizer.fullName}</p>
-                            <p>Room: {cls.room.roomNumber}</p>
-                        </div>
-                    ))}
-                </div>
-            )) : <h1>Loading...</h1>}
+            {/*{timeTables ? timeTables.map((timeTable) => (*/}
+            {/*    <div key={timeTable._id}>*/}
+            {/*        <h2>Semester {timeTable.targetedSemester}</h2>*/}
+            {/*        {timeTable.classes.map((cls) => (*/}
+            {/*            <div key={cls._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>*/}
+            {/*                <h3>*/}
+            {/*                    {cls.subject.name} ({cls.subject.shortName}) - {cls.classType.name} ({cls.classType.acronym})*/}
+            {/*                </h3>*/}
+            {/*                <p>Organizer: {cls.organizer.fullName}</p>*/}
+            {/*                <p>Room: {cls.room.roomNumber}</p>*/}
+            {/*            </div>*/}
+            {/*        ))}*/}
+            {/*    </div>*/}
+            {/*)) : <h1>Loading...</h1>}*/}
         </>
     );
 };
