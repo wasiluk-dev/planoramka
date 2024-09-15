@@ -28,16 +28,25 @@ export const ClassSchema = new Schema({
         ref: new ClassType().name,
         autopopulate: true,
     },
-    studentGroups: [{
+    periodBlocks: [{
         type: Number,
+        required: true,
         min: 1,
         validate: {
             validator: Number.isInteger,
         },
     }],
-    periodBlocks: [{
+    weekday: {
         type: Number,
         required: true,
+        min: 0,
+        max: 6,
+        validate: {
+            validator: Number.isInteger,
+        },
+    },
+    studentGroups: [{
+        type: Number,
         min: 1,
         validate: {
             validator: Number.isInteger,
