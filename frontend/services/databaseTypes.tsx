@@ -1,7 +1,9 @@
  export type Classdata = {
         classes: Array<TimeTables>;
+        schedules: Array<Schedule>;
         semester: string;
         targetedSemester: number;
+        weekdays: Array<number>;
         _id: string;
     }
 
