@@ -68,6 +68,7 @@
         studentGroups: Array<number>;
         periodBlocks: Array<number>;
         room: string;
+        weekday: number;
     }
 
     export type Semesters = {

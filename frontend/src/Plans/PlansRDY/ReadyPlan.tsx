@@ -1,8 +1,8 @@
 import React, {useState, useEffect, useMemo} from 'react';
-import './../plans.css';
 import apiService from "../../../services/apiService.tsx";
 import * as dataType from "../../../services/databaseTypes.tsx";
 import {Schedule, TimeTables} from "../../../services/databaseTypes.tsx";
+import './planrdy.css'
 
 const kierunki: { [key: number]: { [key: number]: string } } = {
     1: {
@@ -129,12 +129,19 @@ const  ReadyPlan: React.FC = () => {
                     )}
                 </div>
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                        <table className="table table-striped table-hover table-bordered border-primary">
+                        {/*TABELA PIĄTKOWA*/}
+                        <table className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height">
                             <tbody>
+                            <tr className="table-dark text-center">
+                                <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>
+                                    PIĄTEK
+                                </td>
+
+                            </tr>
                             <tr className="table-dark">
                                 <th className='text-center'>Godzina</th>
                                 {groupNumber > 0 ? (
-                                    Array.from({ length: groupNumber }, (_, i) => i + 1).map((num) => (
+                                    Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
                                         <th key={num} className='text-center'> Grupa {num}</th>
                                     ))
                                 ) : (
@@ -143,15 +150,20 @@ const  ReadyPlan: React.FC = () => {
                             </tr>
                             {grid.map((row, rowIndex) => (
                                 <tr key={rowIndex} className="table-dark text-center">
-                                    <th scope="col" className='col-1'>
-                                        {timeTables? (timeTables[0].schedules[1].periods[rowIndex].startTime +" - " + timeTables[0].schedules[1].periods[rowIndex].endTime) : (<p>Loading...</p>)}
+                                    <th scope="col" className='col-2'>
+                                        {timeTables ? (timeTables[0].schedules[0].periods[rowIndex].startTime + " - " + timeTables[0].schedules[0].periods[rowIndex].endTime) : (
+                                            <p>Loading...</p>)}
                                     </th>
                                     {row.map((item, colIndex) => (
-                                        <td key={colIndex} className="table-dark col-1 text-center" scope="col">
+                                        <td key={colIndex} className="table-dark col-3 text-center" scope="col">
                                             {timeTables ? (zajecia.map((item) => (
-                                                <div key={item._id}>
+                                                <div key={item._id} style={{
+                                                    backgroundColor: item.classType.color,
+                                                    color: 'black',
+                                                    fontWeight: 'bold'
+                                                }}>
                                                     { // @ts-ignore}
-                                                    }{item.periodBlocks.includes(rowIndex +1 ) && item.studentGroups.includes(colIndex +1) ? (item.subject.name) : ("")}
+                                                    }{item.periodBlocks.includes(rowIndex + 1) && item.studentGroups.includes(colIndex + 1) && item.weekday == 5 ? (item.subject.name) : ("")}
                                                 </div>
                                             ))) : <p>Loading...</p>}
                                         </td>
@@ -160,24 +172,92 @@ const  ReadyPlan: React.FC = () => {
                             ))}
                             </tbody>
                         </table>
-                        <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
-                        </div>
+                        {/*TABELA Sobotnia*/}
+                        <table className="table table-striped table-hover table-bordered border-primary table-fixed-height">
+                            <tbody>
+                            <tr className="table-dark text-center">
+                                <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>
+                                    Sobota
+                                </td>
+
+                            </tr>
+                            <tr className="table-dark">
+                                <th className='text-center'>Godzina</th>
+                                {groupNumber > 0 ? (
+                                    Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
+                                        <th key={num} className='text-center'> Grupa {num}</th>
+                                    ))
+                                ) : (
+                                    <th>Error</th>
+                                )}
+                            </tr>
+                            {grid.map((row, rowIndex) => (
+                                <tr key={rowIndex} className="table-dark text-center h-100">
+                                    <th scope="col" className='col-2'>
+                                        {timeTables ? (timeTables[0].schedules[1].periods[rowIndex].startTime + " - " + timeTables[0].schedules[1].periods[rowIndex].endTime) : (
+                                            <p>Loading...</p>)}
+                                    </th>
+                                    {row.map((item, colIndex) => (
+                                        <td key={colIndex} className="table-dark col-3 text-center" scope="col">
+                                            {timeTables ? (zajecia.map((item) => (
+                                                <div key={item._id} style={{
+                                                    backgroundColor: item.classType.color,
+                                                    color: 'black',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    { // @ts-ignore}
+                                                    }{item.periodBlocks.includes(rowIndex + 1) && item.studentGroups.includes(colIndex + 1) && item.weekday == 6 ? (item.subject.name) : ("")}
+                                                </div>
+                                            ))) : <p>Loading...</p>}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    {/*TABELA Niedzielna*/}
+                    <table className="table table-striped table-hover table-bordered border-primary table-fixed-height">
+                        <tbody>
+                        <tr className="table-dark text-center">
+                            <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>
+                                Niedziela
+                            </td>
+
+                        </tr>
+                        <tr className="table-dark">
+                            {groupNumber > 0 ? (
+                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
+                                    <th key={num} className='text-center'> Grupa {num}</th>
+                                ))
+                            ) : (
+                                <th>Error</th>
+                            )}
+                        </tr>
+                        {grid.map((row, rowIndex) => (
+                            <tr key={rowIndex} className="table-dark text-center">
+                                {row.map((item, colIndex) => (
+                                    <td key={colIndex} className="table-dark col-3 text-center" scope="col">
+                                        {timeTables ? (zajecia.map((item) => (
+                                            <div key={item._id} style={{
+                                                backgroundColor: item.classType.color,
+                                                color: 'black',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                { // @ts-ignore}
+                                                }{item.periodBlocks.includes(rowIndex + 1) && item.studentGroups.includes(colIndex + 1) && item.weekday == 0 ? (item.subject.name) : ("")}
+                                            </div>
+                                        ))) : <p>Loading...</p>}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
+                    Tutaj bendom szczegóły, szczególiki
                 </div>
             </div>
-            {/*{timeTables ? timeTables.map((timeTable) => (*/}
-            {/*    <div key={timeTable._id}>*/}
-            {/*        <h2>Semester {timeTable.targetedSemester}</h2>*/}
-            {/*        {timeTable.classes.map((cls) => (*/}
-            {/*            <div key={cls._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>*/}
-            {/*                <h3>*/}
-            {/*                    {cls.subject.name} ({cls.subject.shortName}) - {cls.classType.name} ({cls.classType.acronym})*/}
-            {/*                </h3>*/}
-            {/*                <p>Organizer: {cls.organizer.fullName}</p>*/}
-            {/*                <p>Room: {cls.room.roomNumber}</p>*/}
-            {/*            </div>*/}
-            {/*        ))}*/}
-            {/*    </div>*/}
-            {/*)) : <h1>Loading...</h1>}*/}
         </>
     );
 };
