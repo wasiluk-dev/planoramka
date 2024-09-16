@@ -142,7 +142,7 @@ const  ReadyPlan: React.FC = () => {
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                     {/*TABELA PIĄTKOWA*/}
                     <table
-                        className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height w-75">
+                        className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height w-50">
                         <tbody>
                         <tr className="table-dark text-center">
                             <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>
@@ -230,15 +230,13 @@ const  ReadyPlan: React.FC = () => {
 
                                 {/* "Sobota" Data */}
                                 {row.map((item, colIndex) => (
-                                    <td key={`sobota-${colIndex}`} className="table-dark col-2 text-center"
-                                        style={{minWidth: "100px"}} scope="col">
+                                    <td key={`sobota-${colIndex}`} className="table-dark col-2 text-center" scope="col">
                                         {timeTables ? (
                                             zajecia.map((item) => (
                                                 <div key={item._id} style={{
                                                     backgroundColor: item.classType.color,
                                                     color: 'black',
                                                     fontWeight: 'bold',
-                                                    maxHeight: '50px'
                                                 }}>
                                                     {item.periodBlocks.includes(rowIndex + 1) &&
                                                     item.studentGroups.includes(colIndex + 1) &&
@@ -257,15 +255,13 @@ const  ReadyPlan: React.FC = () => {
 
                                 {/* "Niedziela" Data */}
                                 {row.map((item, colIndex) => (
-                                    <td key={`niedziela-${colIndex}`} className="table-dark col-2 text-center"
-                                        style={{minWidth: "100px"}} scope="col">
+                                    <td key={`niedziela-${colIndex}`} className="table-dark col-2 text-center" scope="col">
                                         {timeTables ? (
                                             zajecia.map((item) => (
                                                 <div key={item._id} style={{
                                                     backgroundColor: item.classType.color,
                                                     color: 'black',
                                                     fontWeight: 'bold',
-                                                    maxHeight: '50px'
                                                 }}>
                                                     {item.periodBlocks.includes(rowIndex + 1) &&
                                                     item.studentGroups.includes(colIndex + 1) &&
