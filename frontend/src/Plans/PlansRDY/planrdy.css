@@ -1,0 +1,18 @@
+.table-fixed-height td,
+.table-fixed-height th {
+    min-height: 60px; /* Set the desired height */
+    vertical-align: middle; /* Center content vertically */
+}
+
+.table-fixed-height td,
+.table-fixed-height th {
+    font-size: 0.9rem; /* Adjust font size if needed */
+}
+
+.w-15{
+    width: 15%;
+}
+
+.w-10{
+    width: 10%;
+}
