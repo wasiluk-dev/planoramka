@@ -1,6 +1,6 @@
 .table-fixed-height td,
 .table-fixed-height th {
-    height: 60px; /* Set the desired height */
+    /*height: 60px; !* Set the desired height *!*/
     vertical-align: middle; /* Center content vertically */
 }
 
@@ -11,4 +11,8 @@
 
 .w-15{
     width: 15%;
+}
+
+.w-10{
+    width: 10%;
 }
