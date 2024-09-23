@@ -3,6 +3,7 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 import Base from '../Base';
 import Semester from '../courses/Semester';
 import Class from './Class';
+import ClassType from './ClassType';
 import Schedule from './Schedule';
 
 export const TimetableSchema = new Schema({
@@ -30,6 +31,24 @@ export const TimetableSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Schedule().name,
         autopopulate: true,
+    }],
+    groups: [{
+        _id: false,
+        classType: {
+            type: Schema.Types.ObjectId,
+            ref: new ClassType().name,
+            autopopulate: {
+                select: 'acronym',
+            },
+            required: true,
+        },
+        groupCount: {
+            type: Number,
+            min: 1,
+            validate: {
+                validator: Number.isInteger,
+            },
+        }
     }],
     classes: [{
         type: Schema.Types.ObjectId,
