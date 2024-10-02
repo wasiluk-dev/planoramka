@@ -1,5 +1,6 @@
  export type Classdata = {
         classes: Array<TimeTables>;
+        groups: Array<ClassType>;
         schedules: Array<Schedule>;
         semester: string;
         targetedSemester: number;

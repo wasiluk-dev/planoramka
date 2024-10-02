@@ -255,7 +255,7 @@ const Plans: React.FC = () => {
                         ))}
                         </tbody>
                     </table>
-                    <div className='flex-sm-grow-1 ms-5 w-15'>
+                    <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
                         <Droppable id='ugabuga'>
                             {lessons.filter(item => !item.isset).map(item => (
                                 <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}

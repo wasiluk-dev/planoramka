@@ -100,6 +100,8 @@ const  ReadyPlan: React.FC = () => {
         setGrid(updatedGrid);
     }, [normal, groupNumber]);
 
+
+    const skipRows = Array(groupNumber).fill(0);
     console.log(timeTables)
     return (
         <>
@@ -141,50 +143,106 @@ const  ReadyPlan: React.FC = () => {
                 </div>
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                     {/*TABELA PIĄTKOWA*/}
-                    <table
-                        className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height w-50">
+                    <table className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height w-50">
                         <tbody>
                         <tr className="table-dark text-center">
-                            <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>
+                            <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber + 1}>
                                 PIĄTEK
                             </td>
-
                         </tr>
+
                         <tr className="table-dark">
                             <th className='text-center'>Godzina</th>
                             {groupNumber > 0 ? (
-                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
-                                    <th key={num} className='text-center'> Grupa {num}</th>
+                                Array.from({ length: groupNumber }, (_, i) => i + 1).map((num) => (
+                                    <th key={num} className='text-center'>Grupa {num}</th>
                                 ))
                             ) : (
                                 <th>Error</th>
                             )}
                         </tr>
-                        {grid.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="table-dark text-center">
-                                <th scope="col" className='col-1'>
-                                    {timeTables ? (timeTables[0].schedules[0].periods[rowIndex].startTime + " - " + timeTables[0].schedules[0].periods[rowIndex].endTime) : (
-                                        <p>Loading...</p>)}
-                                </th>
-                                {row.map((item, colIndex) => (
-                                    <td key={colIndex} className="table-dark col-3 text-center" scope="col">
-                                        {timeTables ? (zajecia.map((item) => (
-                                            <div key={item._id} style={{
-                                                backgroundColor: item.classType.color,
-                                                color: 'black',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                { // @ts-ignore}
-                                                }{item.periodBlocks.includes(rowIndex + 1) && item.studentGroups.includes(colIndex + 1) && item.weekday == 5 ? (item.subject.name) : ("")}
-                                            </div>
-                                        ))) : <p>Loading...</p>}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
+
+                        {grid.map((row, rowIndex) => {
+                            return (
+                                <tr key={rowIndex} className="table-dark text-center">
+                                    {/* Time column */}
+                                    <th scope="col" className='col-1'>
+                                        {timeTables ? (
+                                            timeTables[0].schedules[0].periods[rowIndex].startTime + " - " + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                        ) : (
+                                            <p>Loading...</p>
+                                        )}
+                                    </th>
+
+                                    {row.map((item, colIndex) => {
+                                        // If skipRows[colIndex] is greater than 0, it means we need to skip rendering this row for that column
+                                        if (skipRows[colIndex] > 0) {
+                                            skipRows[colIndex]--; // Decrease the skip count for the next row
+                                            return null; // Skip rendering for this column in this row
+                                        }
+
+                                        let rowspan = 1; // Default rowspan is 1
+
+                                        // Check if rowspan needs to be applied for this item based on periodBlocks
+                                        zajecia.forEach((zajecie) => {
+                                            if (
+                                                zajecie.periodBlocks.includes(rowIndex + 1) && // Check if the current period is in periodBlocks
+                                                zajecie.studentGroups.includes(colIndex + 1) && // Check if the group matches
+                                                zajecie.weekday === 5 // Check if the weekday is correct
+                                            ) {
+                                                // Check if there are additional consecutive periods to merge
+                                                let countConsecutivePeriods = 0;
+
+                                                for (let i = rowIndex + 2; i <= grid.length; i++) {
+                                                    if (zajecie.periodBlocks.includes(i)) {
+                                                        countConsecutivePeriods++; // Count how many consecutive periods are in the periodBlocks
+                                                    } else {
+                                                        break; // Stop if there is no consecutive period
+                                                    }
+                                                }
+
+                                                rowspan = countConsecutivePeriods + 1; // Add 1 for the current row
+                                                skipRows[colIndex] = countConsecutivePeriods; // Mark the next rows to be skipped for this column
+                                            }
+                                        });
+
+                                        return (
+                                            <td
+                                                key={colIndex}
+                                                className="table-dark col-3 text-center h-100"
+                                                scope="col"
+                                                rowSpan={rowspan} // Apply the calculated rowspan
+                                            >
+                                                {timeTables ? (
+                                                    zajecia.map((zajecie) => (
+                                                        <div
+                                                            key={zajecie._id}
+                                                            style={{
+                                                                backgroundColor: zajecie.classType.color,
+                                                                color: 'black',
+                                                                fontWeight: 'bold',
+                                                                height: "max-content"
+                                                            }}
+                                                        >
+                                                            {zajecie.periodBlocks.includes(rowIndex + 1) &&
+                                                            zajecie.studentGroups.includes(colIndex + 1) &&
+                                                            zajecie.weekday === 5
+                                                                ? zajecie.subject.name
+                                                                : ''}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p>Loading...</p>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
-                    {/*TABELA Sobotnia*/}
+                    {/*TABELA Sobotnia i Niedzielna*/}
                     <table className="table table-striped table-hover table-bordered border-primary table-fixed-height">
                         <tbody>
                         <tr className="table-dark text-center">
@@ -255,7 +313,8 @@ const  ReadyPlan: React.FC = () => {
 
                                 {/* "Niedziela" Data */}
                                 {row.map((item, colIndex) => (
-                                    <td key={`niedziela-${colIndex}`} className="table-dark col-2 text-center" scope="col">
+                                    <td key={`niedziela-${colIndex}`} className="table-dark col-2 text-center"
+                                        scope="col">
                                         {timeTables ? (
                                             zajecia.map((item) => (
                                                 <div key={item._id} style={{
