@@ -23,14 +23,16 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 };
 
 
+let showCurrentDay: number = 5
+
 const day ={
-    0: "Niedziela",
     1: "Poniedziałek",
     2: "Wtorek",
     3: "Środa",
     4: "Czwartek",
     5: "Piątek",
-    6: "Sobota"
+    6: "Sobota",
+    7: "Niedziela",
 }
 
 const  ReadyPlan: React.FC = () => {
@@ -106,7 +108,7 @@ const  ReadyPlan: React.FC = () => {
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
-            <div className='d-flex flex-row p-3 mx-3'>
+            <div className='d-flex flex-row p-3'>
                 <div className="bg-secondary text-center w-15">
                     <select
                         className="form-select"
@@ -142,19 +144,33 @@ const  ReadyPlan: React.FC = () => {
                     )}
                 </div>
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                    {/*TABELA PIĄTKOWA*/}
-                    <table className="table table-striped table-hover table-bordered border-primary me-4 table-fixed-height w-50">
+                    {/*TABELA ZAJĘCIOWA*/}
+                    <table className="table table-striped table-bordered border-primary me-4 table-fixed-height">
                         <tbody>
                         <tr className="table-dark text-center">
                             <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber + 1}>
-                                PIĄTEK
+                                <div className="d-flex justify-content-center"> {/* Flexbox container */}
+                                    {Object.entries(day).map(([key, value]) => (
+                                        <span
+                                            key={key}
+                                            className="flex-fill text-center me-2" // Flex item
+                                        >
+                                        {key === '5' ? (
+                                            <span className="fw-bold">{value}</span>
+                                        ) : (
+                                            <span className="fw-light">{value}</span> // Changed from "value" to "Nope"
+                                        )}
+                                    </span>
+                                    ))}
+                                </div>
                             </td>
                         </tr>
+
 
                         <tr className="table-dark">
                             <th className='text-center'>Godzina</th>
                             {groupNumber > 0 ? (
-                                Array.from({ length: groupNumber }, (_, i) => i + 1).map((num) => (
+                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
                                     <th key={num} className='text-center'>Grupa {num}</th>
                                 ))
                             ) : (
@@ -165,7 +181,7 @@ const  ReadyPlan: React.FC = () => {
                         {grid.map((row, rowIndex) => {
                             return (
                                 <tr key={rowIndex} className="table-dark text-center">
-                                    {/* Time column */}
+                                {/* Time column */}
                                     <th scope="col" className='col-1'>
                                         {timeTables ? (
                                             timeTables[0].schedules[0].periods[rowIndex].startTime + " - " + timeTables[0].schedules[0].periods[rowIndex].endTime
@@ -242,144 +258,6 @@ const  ReadyPlan: React.FC = () => {
                         })}
                         </tbody>
                     </table>
-                    {/*TABELA Sobotnia i Niedzielna*/}
-                    <table className="table table-striped table-hover table-bordered border-primary table-fixed-height">
-                        <tbody>
-                        <tr className="table-dark text-center">
-                            <td className="table-dark text-center fw-bolder fs-5 w-10" rowSpan={2}>
-                                Godzina
-                            </td>
-                            <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber}>
-                                Sobota
-                            </td>
-                            <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber}>
-                                Niedziela
-                            </td>
-                        </tr>
-
-                        <tr className="table-dark">
-                            {groupNumber > 0 ? (
-                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
-                                    <th key={`sobota-group-${num}`}
-                                        className='text-center col-2'> Grupa {num} (Sobota)</th>
-                                ))
-                            ) : (
-                                <th>Error</th>
-                            )}
-                            {groupNumber > 0 ? (
-                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
-                                    <th key={`niedziela-group-${num}`}
-                                        className='text-center col-2'> Grupa {num} (Niedziela)</th>
-                                ))
-                            ) : (
-                                <th>Error</th>
-                            )}
-                        </tr>
-
-                        {grid.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="table-dark text-center">
-                                <th scope="col" className='col-1'>
-                                    {timeTables ? (
-                                        timeTables[0].schedules[1].periods[rowIndex].startTime + " - " + timeTables[0].schedules[1].periods[rowIndex].endTime
-                                    ) : (
-                                        <p>Loading...</p>
-                                    )}
-                                </th>
-
-                                {/* "Sobota" Data */}
-                                {row.map((item, colIndex) => (
-                                    <td key={`sobota-${colIndex}`} className="table-dark col-2 text-center" scope="col">
-                                        {timeTables ? (
-                                            zajecia.map((item) => (
-                                                <div key={item._id} style={{
-                                                    backgroundColor: item.classType.color,
-                                                    color: 'black',
-                                                    fontWeight: 'bold',
-                                                }}>
-                                                    {item.periodBlocks.includes(rowIndex + 1) &&
-                                                    item.studentGroups.includes(colIndex + 1) &&
-                                                    item.weekday === 6 ? (
-                                                        item.subject.name
-                                                    ) : (
-                                                        ""
-                                                    )}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p>Loading...</p>
-                                        )}
-                                    </td>
-                                ))}
-
-                                {/* "Niedziela" Data */}
-                                {row.map((item, colIndex) => (
-                                    <td key={`niedziela-${colIndex}`} className="table-dark col-2 text-center"
-                                        scope="col">
-                                        {timeTables ? (
-                                            zajecia.map((item) => (
-                                                <div key={item._id} style={{
-                                                    backgroundColor: item.classType.color,
-                                                    color: 'black',
-                                                    fontWeight: 'bold',
-                                                }}>
-                                                    {item.periodBlocks.includes(rowIndex + 1) &&
-                                                    item.studentGroups.includes(colIndex + 1) &&
-                                                    item.weekday === 0 ? (
-                                                        item.subject.name
-                                                    ) : (
-                                                        ""
-                                                    )}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p>Loading...</p>
-                                        )}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-
-
-                    {/*TABELA Niedzielna*/}
-                    {/*<table className="table table-striped table-hover table-bordered border-primary table-fixed-height">*/}
-                    {/*    <tbody>*/}
-                    {/*    <tr className="table-dark text-center">*/}
-                    {/*        <td className="table-dark text-center fw-bolder fs-5" colSpan={3}>*/}
-                    {/*            Niedziela*/}
-                    {/*        </td>*/}
-
-                    {/*    </tr>*/}
-                    {/*    <tr className="table-dark">*/}
-                    {/*        {groupNumber > 0 ? (*/}
-                    {/*            Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (*/}
-                    {/*                <th key={num} className='text-center'> Grupa {num}</th>*/}
-                    {/*            ))*/}
-                    {/*        ) : (*/}
-                    {/*            <th>Error</th>*/}
-                    {/*        )}*/}
-                    {/*    </tr>*/}
-                    {/*    {grid.map((row, rowIndex) => (*/}
-                    {/*        <tr key={rowIndex} className="table-dark text-center">*/}
-                    {/*            {row.map((item, colIndex) => (*/}
-                    {/*                <td key={colIndex} className="table-dark col-3 text-center" scope="col">*/}
-                    {/*                    {timeTables ? (zajecia.map((item) => (*/}
-                    {/*                        <div key={item._id} style={{*/}
-                    {/*                            backgroundColor: item.classType.color,*/}
-                    {/*                            color: 'black',*/}
-                    {/*                            fontWeight: 'bold'*/}
-                    {/*                        }}>*/}
-                    {/*                            { // @ts-ignore}*/}
-                    {/*                            }{item.periodBlocks.includes(rowIndex + 1) && item.studentGroups.includes(colIndex + 1) && item.weekday == 0 ? (item.subject.name) : ("")}*/}
-                    {/*                        </div>*/}
-                    {/*                    ))) : <p>Loading...</p>}*/}
-                    {/*                </td>*/}
-                    {/*            ))}*/}
-                    {/*        </tr>*/}
-                    {/*    ))}*/}
-                    {/*    </tbody>*/}
-                    {/*</table>*/}
                 </div>
                 <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
                     Tutaj bendom szczegóły, szczególiki
