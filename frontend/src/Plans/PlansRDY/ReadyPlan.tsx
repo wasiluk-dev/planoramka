@@ -23,16 +23,16 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
 };
 
 
-let showCurrentDay: number = 5
+let showCurrentDay: number = 6
 
 const day ={
+    0: "Niedziela",
     1: "Poniedziałek",
     2: "Wtorek",
     3: "Środa",
     4: "Czwartek",
     5: "Piątek",
     6: "Sobota",
-    7: "Niedziela",
 }
 
 const  ReadyPlan: React.FC = () => {
@@ -145,23 +145,42 @@ const  ReadyPlan: React.FC = () => {
                 </div>
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                     {/*TABELA ZAJĘCIOWA*/}
-                    <table className="table table-striped table-bordered border-primary me-4 table-fixed-height">
-                        <tbody>
+                    <table className="table table-bordered border-primary me-4 table-fixed-height"
+                           style={{height: '100%'}}>
+                        <tbody style={{height: '100%'}}>
                         <tr className="table-dark text-center">
                             <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber + 1}>
                                 <div className="d-flex justify-content-center"> {/* Flexbox container */}
-                                    {Object.entries(day).map(([key, value]) => (
-                                        <span
-                                            key={key}
+                                    {Object.entries(day)
+                                        .filter(([key]) => key !== '0') // Filter out the entry with key '0'
+                                        .map(([key, value]) => (
+                                            <div
+                                                key={key}
+                                                className="flex-fill text-center me-2" // Flex item
+                                            >
+                                                {key === showCurrentDay.toString() ? (
+                                                    <div className="fw-bold">{value}</div>
+                                                ) : (
+                                                    <div className="fw-light">{value}</div>
+                                                )}
+                                            </div>
+                                        ))
+                                    }
+
+                                    {/* Now display the entry with key '0' at the end */}
+                                    {day['0'] && (
+                                        <div
+                                            key="0"
                                             className="flex-fill text-center me-2" // Flex item
                                         >
-                                        {key === '5' ? (
-                                            <span className="fw-bold">{value}</span>
-                                        ) : (
-                                            <span className="fw-light">{value}</span> // Changed from "value" to "Nope"
-                                        )}
-                                    </span>
-                                    ))}
+                                            {showCurrentDay.toString() === '0' ? (
+                                                <div className="fw-bold">{day['0']}</div>
+                                            ) : (
+                                                <div className="fw-light">{day['0']}</div>
+                                            )}
+                                        </div>
+                                    )}
+
                                 </div>
                             </td>
                         </tr>
@@ -181,10 +200,10 @@ const  ReadyPlan: React.FC = () => {
                         {grid.map((row, rowIndex) => {
                             return (
                                 <tr key={rowIndex} className="table-dark text-center">
-                                {/* Time column */}
-                                    <th scope="col" className='col-1'>
+                                    {/* Time column */}
+                                    <th scope="col" className="col-1">
                                         {timeTables ? (
-                                            timeTables[0].schedules[0].periods[rowIndex].startTime + " - " + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                            timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
                                         ) : (
                                             <p>Loading...</p>
                                         )}
@@ -198,20 +217,31 @@ const  ReadyPlan: React.FC = () => {
                                         }
 
                                         let rowspan = 1; // Default rowspan is 1
+                                        let cellValue = null; // To store the cell value for comparison
 
                                         // Check if rowspan needs to be applied for this item based on periodBlocks
                                         zajecia.forEach((zajecie) => {
                                             if (
                                                 zajecie.periodBlocks.includes(rowIndex + 1) && // Check if the current period is in periodBlocks
                                                 zajecie.studentGroups.includes(colIndex + 1) && // Check if the group matches
-                                                zajecie.weekday === 5 // Check if the weekday is correct
+                                                zajecie.weekday === showCurrentDay // Check if the weekday is correct
                                             ) {
+                                                // Get the value for the cell (for rowspan comparison)
+                                                cellValue = zajecie.subject.name;
+
                                                 // Check if there are additional consecutive periods to merge
                                                 let countConsecutivePeriods = 0;
 
-                                                for (let i = rowIndex + 2; i <= grid.length; i++) {
-                                                    if (zajecie.periodBlocks.includes(i)) {
-                                                        countConsecutivePeriods++; // Count how many consecutive periods are in the periodBlocks
+                                                for (let i = rowIndex + 1; i < grid.length; i++) {
+                                                    const nextZajecie = zajecia.find(
+                                                        (z) =>
+                                                            z.periodBlocks.includes(i + 1) &&
+                                                            z.studentGroups.includes(colIndex + 1) &&
+                                                            z.weekday === showCurrentDay
+                                                    );
+
+                                                    if (nextZajecie && nextZajecie.subject.name === cellValue) {
+                                                        countConsecutivePeriods++; // Count how many consecutive periods have the same value
                                                     } else {
                                                         break; // Stop if there is no consecutive period
                                                     }
@@ -225,28 +255,36 @@ const  ReadyPlan: React.FC = () => {
                                         return (
                                             <td
                                                 key={colIndex}
-                                                className="table-dark col-3 text-center h-100"
+                                                className="table-dark col-3 text-center"
                                                 scope="col"
                                                 rowSpan={rowspan} // Apply the calculated rowspan
                                             >
                                                 {timeTables ? (
-                                                    zajecia.map((zajecie) => (
-                                                        <div
-                                                            key={zajecie._id}
-                                                            style={{
-                                                                backgroundColor: zajecie.classType.color,
-                                                                color: 'black',
-                                                                fontWeight: 'bold',
-                                                                height: "max-content"
-                                                            }}
-                                                        >
-                                                            {zajecie.periodBlocks.includes(rowIndex + 1) &&
+                                                    zajecia.map((zajecie) => {
+                                                        const shouldRender =
+                                                            zajecie.periodBlocks.includes(rowIndex + 1) &&
                                                             zajecie.studentGroups.includes(colIndex + 1) &&
-                                                            zajecie.weekday === 5
-                                                                ? zajecie.subject.name
-                                                                : ''}
-                                                        </div>
-                                                    ))
+                                                            zajecie.weekday === showCurrentDay &&
+                                                            zajecie.subject.name; // Ensure subject name exists
+
+                                                        // Only render the <div> if shouldRender is true
+                                                        return shouldRender ? (
+                                                            <div
+                                                                key={zajecie._id}
+                                                                style={{
+                                                                    backgroundColor: zajecie.classType.color,
+                                                                    color: 'black',
+                                                                    fontWeight: 'bold',
+                                                                    height: '100%', // Ensure the div fills the height of td
+                                                                    display: 'flex', // Add flexbox to ensure the content stretches
+                                                                    alignItems: 'center', // Optional: center the text vertically
+                                                                    justifyContent: 'center', // Optional: center the text horizontally
+                                                                }}
+                                                            >
+                                                                {zajecie.subject.name}
+                                                            </div>
+                                                        ) : null; // Return null if shouldRender is false
+                                                    })
                                                 ) : (
                                                     <p>Loading...</p>
                                                 )}
@@ -268,3 +306,5 @@ const  ReadyPlan: React.FC = () => {
 };
 
 export default ReadyPlan;
+
+//TODO: ogarnąć divy żeby były na całośc i nie było ich 213769; GOdziny zależne do dnia;
