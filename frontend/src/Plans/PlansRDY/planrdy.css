@@ -1,6 +1,6 @@
 .table-fixed-height td,
 .table-fixed-height th {
-    min-height: 60px; /* Set the desired height */
+    min-height: 54px; /* Set the desired height */
     vertical-align: middle; /* Center content vertically */
 }
 
@@ -15,4 +15,59 @@
 
 .w-10{
     width: 10%;
+}
+
+.grupy{
+    margin-bottom: -4px;
+    margin-top: -1px;
+}
+
+.table-equal-rows {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure the table container has full height */
+}
+
+.table-equal-rows tbody {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.table-equal-rows tbody tr {
+    flex-grow: 1; /* Each row will take up an equal amount of available height */
+    display: flex; /* Apply Flexbox to each row */
+}
+
+.table-equal-rows tbody tr td {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    flex-grow: 1; /* Ensure cells within each row expand equally */
+    text-align: center;
+}
+
+.table-equal-rows tbody tr td .cell-content {
+    height: 100%; /* Fill the entire cell height */
+    width: 100%; /* Fill the entire cell width */
+    display: flex; /* Use flexbox to center text */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+
+.table.even {
+    z-index: 2; /* This will be on top */
+}
+
+.table.odd {
+    z-index: 1; /* This will be below */
+}
+
+.table-container {
+    position: relative; /* Allows absolutely positioned children to be placed relative to this element */
+}
+
+.transparent{
+    background-color: transparent;
+    opacity: 0.5;
 }

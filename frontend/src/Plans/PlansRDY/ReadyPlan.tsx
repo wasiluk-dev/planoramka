@@ -22,6 +22,15 @@ const kierunki: { [key: number]: { [key: number]: string } } = {
     }
 };
 
+type ClassTypeHelper ={
+    acronym: string;
+    _id: string;
+}
+
+type GroupInfo = {
+    classType: ClassTypeHelper;
+    groupCount: number;
+}
 
 let showCurrentDay: number = 6
 
@@ -35,17 +44,60 @@ const day ={
     6: "Sobota",
 }
 
+
+////////////////
+type ClassType = {
+    acronym: string;
+    color: string;
+    name: string;
+};
+
+type Organizer = {
+    firstName: string;
+    lastName: string;
+    fullName: string;
+};
+
+type Room = {
+    number: string;
+    numberSecondary: string;
+};
+
+type Subject = {
+    name: string;
+    short: string;
+};
+
+type ClassItem = {
+    classType: ClassType;
+    organizer: Organizer;
+    periodLocks: number[];
+    room: Room;
+    subject: Subject;
+};
+
+interface ClassScheduleProps {
+    classes: ClassItem[];
+    fixedRows?: number;
+}
+/////////////
+
+
+
 const  ReadyPlan: React.FC = () => {
 
     const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
-    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
+    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>([])
     const [zajecia, setZajecia] = useState([])
     const [groupNumber, setGroupNumber] = useState<number>(0)
+    const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>(null)
+    const [maxGroupNumber, setMaxGroupNumber] = useState<number>(0)
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
             setTimeTables(data); // Store fetched time tables in state
             setZajecia(data[0]?.classes)
+            setGroupTypes(data[0]?.groups)
         };
 
         fetchData();
@@ -102,9 +154,38 @@ const  ReadyPlan: React.FC = () => {
         setGrid(updatedGrid);
     }, [normal, groupNumber]);
 
+    useEffect(() => {
+        if (groupTypes && groupTypes.length > 0) {
+            const maxCount = Math.max(...groupTypes.map(group => group.groupCount));
+            setMaxGroupNumber(maxCount);
+        }
+    }, [groupTypes]);
+
 
     const skipRows = Array(groupNumber).fill(0);
     console.log(timeTables)
+    const fixedRows: number = 14
+    const tableData = {
+        W: Array(fixedRows).fill(null),
+        PS: Array(fixedRows).fill(null),
+    };
+    const filteredClasses = zajecia.filter(classItem => classItem.weekday === showCurrentDay);
+    // Populate table data with class items based on acronym and periodLocks
+    filteredClasses.forEach((classItem) => {
+        const { acronym, color } = classItem.classType; // Get classType properties
+        if (tableData[acronym as 'W' | 'PS']) {
+            classItem.periodBlocks.forEach((period) => {
+                if (period <= fixedRows) {
+                    // Store the entire class item for the corresponding period
+                    tableData[acronym as 'W' | 'PS'][period - 1] = {
+                        ...classItem // Spread operator to include the whole classItem object
+                    };
+                }
+            });
+        }
+    });
+
+console.log(tableData)
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -184,24 +265,36 @@ const  ReadyPlan: React.FC = () => {
                                 </div>
                             </td>
                         </tr>
-
-
-                        <tr className="table-dark">
-                            <th className='text-center'>Godzina</th>
-                            {groupNumber > 0 ? (
-                                Array.from({length: groupNumber}, (_, i) => i + 1).map((num) => (
-                                    <th key={num} className='text-center'>Grupa {num}</th>
-                                ))
+                        <tr className="table-dark godzina">
+                            {groupTypes ? (
+                            <th className='text-center' rowSpan={groupTypes.length-2}>Godzina</th>
                             ) : (
-                                <th>Error</th>
+                                <th className='text-center'>Godzina</th>
                             )}
                         </tr>
+                        {groupTypes ? (
+                            groupTypes.map((group) => (
+                                <tr className="table-dark d-flex flex-row" key={group.classType._id}>
+                                        {Array.from({length: group.groupCount}).map((_, i) => (
+                                                <th key={i} className="text-center w-100 border-secondary border border-1 grupy">
+                                                    {group.classType.acronym} {i + 1}
+                                                </th>
+
+                                        ))}
+                                </tr>
+                            ))
+                            ) : (
+                            <tr>
+                                <th>Error</th>
+                            </tr>
+                        )}
+
 
                         {grid.map((row, rowIndex) => {
                             return (
                                 <tr key={rowIndex} className="table-dark text-center">
                                     {/* Time column */}
-                                    <th scope="col" className="col-1">
+                                    <th scope="col" className="col-2">
                                         {timeTables ? (
                                             timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
                                         ) : (
@@ -209,88 +302,55 @@ const  ReadyPlan: React.FC = () => {
                                         )}
                                     </th>
 
-                                    {row.map((item, colIndex) => {
-                                        // If skipRows[colIndex] is greater than 0, it means we need to skip rendering this row for that column
-                                        if (skipRows[colIndex] > 0) {
-                                            skipRows[colIndex]--; // Decrease the skip count for the next row
-                                            return null; // Skip rendering for this column in this row
-                                        }
+                                    {/* Rowspan column */}
+                                    {rowIndex === 0 && (
+                                        <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
+                                            <div className="table-container p-0 w-100 h-100" style={{
+                                                position: 'relative',
+                                            }}> {/* Adjust height as needed */}
+                                                <table
+                                                    className="table table-bordered border-secondary table-dark table-equal-rows z-4 position-relative">
+                                                    <tbody>
+                                                    {tableData['W'].map((cellData, index) => (
+                                                        <tr key={index}>
+                                                            <td scope="row" className="p-0">
+                                                                {cellData ? (
+                                                                    <div className="text-black fw-bolder cell-content"
+                                                                         style={{backgroundColor: cellData.classType.color}}>
+                                                                        {cellData.subject.name}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-black fw-bolder"></span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    </tbody>
+                                                </table>
+                                                <table
+                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-1 bg-transparent">
+                                                    <tbody>
+                                                    {tableData['PS'].map((cellData, index) => (
+                                                        <tr key={index} className='bg-transparent'>
+                                                            <td scope="row" className='bg-transparent p-0'>
+                                                                {cellData ? (
+                                                                    <div className="text-black fw-bolder cell-content"
+                                                                         style={{backgroundColor: cellData.classType.color}}>
+                                                                        {cellData.subject.name}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-black fw-bolder"></span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    </tbody>
+                                                </table>
 
-                                        let rowspan = 1; // Default rowspan is 1
-                                        let cellValue = null; // To store the cell value for comparison
+                                            </div>
 
-                                        // Check if rowspan needs to be applied for this item based on periodBlocks
-                                        zajecia.forEach((zajecie) => {
-                                            if (
-                                                zajecie.periodBlocks.includes(rowIndex + 1) && // Check if the current period is in periodBlocks
-                                                zajecie.studentGroups.includes(colIndex + 1) && // Check if the group matches
-                                                zajecie.weekday === showCurrentDay // Check if the weekday is correct
-                                            ) {
-                                                // Get the value for the cell (for rowspan comparison)
-                                                cellValue = zajecie.subject.name;
-
-                                                // Check if there are additional consecutive periods to merge
-                                                let countConsecutivePeriods = 0;
-
-                                                for (let i = rowIndex + 1; i < grid.length; i++) {
-                                                    const nextZajecie = zajecia.find(
-                                                        (z) =>
-                                                            z.periodBlocks.includes(i + 1) &&
-                                                            z.studentGroups.includes(colIndex + 1) &&
-                                                            z.weekday === showCurrentDay
-                                                    );
-
-                                                    if (nextZajecie && nextZajecie.subject.name === cellValue) {
-                                                        countConsecutivePeriods++; // Count how many consecutive periods have the same value
-                                                    } else {
-                                                        break; // Stop if there is no consecutive period
-                                                    }
-                                                }
-
-                                                rowspan = countConsecutivePeriods + 1; // Add 1 for the current row
-                                                skipRows[colIndex] = countConsecutivePeriods; // Mark the next rows to be skipped for this column
-                                            }
-                                        });
-
-                                        return (
-                                            <td
-                                                key={colIndex}
-                                                className="table-dark col-3 text-center"
-                                                scope="col"
-                                                rowSpan={rowspan} // Apply the calculated rowspan
-                                            >
-                                                {timeTables ? (
-                                                    zajecia.map((zajecie) => {
-                                                        const shouldRender =
-                                                            zajecie.periodBlocks.includes(rowIndex + 1) &&
-                                                            zajecie.studentGroups.includes(colIndex + 1) &&
-                                                            zajecie.weekday === showCurrentDay &&
-                                                            zajecie.subject.name; // Ensure subject name exists
-
-                                                        // Only render the <div> if shouldRender is true
-                                                        return shouldRender ? (
-                                                            <div
-                                                                key={zajecie._id}
-                                                                style={{
-                                                                    backgroundColor: zajecie.classType.color,
-                                                                    color: 'black',
-                                                                    fontWeight: 'bold',
-                                                                    height: '100%', // Ensure the div fills the height of td
-                                                                    display: 'flex', // Add flexbox to ensure the content stretches
-                                                                    alignItems: 'center', // Optional: center the text vertically
-                                                                    justifyContent: 'center', // Optional: center the text horizontally
-                                                                }}
-                                                            >
-                                                                {zajecie.subject.name}
-                                                            </div>
-                                                        ) : null; // Return null if shouldRender is false
-                                                    })
-                                                ) : (
-                                                    <p>Loading...</p>
-                                                )}
-                                            </td>
-                                        );
-                                    })}
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         })}
