@@ -32,7 +32,7 @@ type GroupInfo = {
     groupCount: number;
 }
 
-let showCurrentDay: number = 6
+let showCurrentDay: number = 0
 
 const day ={
     0: "Niedziela",
@@ -81,6 +81,7 @@ interface ClassScheduleProps {
     fixedRows?: number;
 }
 /////////////
+type GroupNames = Record<string, number>;
 
 
 
@@ -90,7 +91,8 @@ const  ReadyPlan: React.FC = () => {
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>([])
     const [zajecia, setZajecia] = useState([])
     const [groupNumber, setGroupNumber] = useState<number>(0)
-    const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>(null)
+    const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
+    const [groupNames, setGroupNames] = useState({});
     const [maxGroupNumber, setMaxGroupNumber] = useState<number>(0)
     useEffect(() => {
         const fetchData = async () => {
@@ -102,6 +104,47 @@ const  ReadyPlan: React.FC = () => {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (groupTypes.length > 0) { // Check if groupTypes is populated
+            const names = groupTypes.reduce((accumulator, current) => {
+                const acronym = current.classType.acronym; // Get the acronym
+                const count = current.groupCount; // Get the groupCount
+                accumulator[acronym] = count; // Set the acronym as key and count as value
+                return accumulator; // Return the updated accumulator
+            }, {} as Record<string, number>); // Initialize as an empty object with string keys and number values
+
+            setGroupNames(names); // Update groupNames with the transformed data
+        }
+    }, [groupTypes]);
+
+
+    useEffect(() => {
+        // Simulate fetching data
+        const fetchData = async (): Promise => {
+            // Replace this with your actual fetch call
+            return [
+                { classType: { _id: "000000007375626a74000001", acronym: "W" }, groupCount: 1 },
+                { classType: { _id: "000000007375626a74000003", acronym: "PS" }, groupCount: 2 },
+                { classType: { _id: "000000007375626a74000005", acronym: "L" }, groupCount: 3 },
+                { classType: { _id: "000000007375626a74000007", acronym: "J" }, groupCount: 1 }
+            ];
+        };
+
+        fetchData().then(data => {
+            if (data) {
+                const transformedData: GroupNames = data.reduce((acc, item) => {
+                    acc[item.classType.acronym] = item.groupCount;
+                    return acc;
+                }, {} as GroupNames);
+
+                setGroupNames(transformedData);
+            }
+        }).catch(error => {
+            console.error("Error fetching data:", error);
+        });
+    }, []);
+
 
     useEffect(() => {
         if (zajecia.length > 0) {
@@ -184,8 +227,9 @@ const  ReadyPlan: React.FC = () => {
             });
         }
     });
+console.log(groupNames)
 
-console.log(tableData)
+
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -332,16 +376,20 @@ console.log(tableData)
                                                     <tbody>
                                                     {tableData['PS'].map((cellData, index) => (
                                                         <tr key={index} className='bg-transparent'>
-                                                            <td scope="row" className='bg-transparent p-0'>
-                                                                {cellData ? (
-                                                                    <div className="text-black fw-bolder cell-content"
-                                                                         style={{backgroundColor: cellData.classType.color}}>
-                                                                        {cellData.subject.name}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-black fw-bolder"></span>
-                                                                )}
-                                                            </td>
+                                                            {Array.from({ length: groupNames['PS'] }, (_, colIndex) => (
+                                                                <td key={colIndex} scope="col" className='bg-transparent p-0 col-1'>
+                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
+                                                                        <div
+                                                                            className="text-black fw-bolder cell-content"
+                                                                            style={{ backgroundColor: cellData.classType.color }}
+                                                                        >
+                                                                            {cellData.subject.name}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-black fw-bolder"></span>
+                                                                    )}
+                                                                </td>
+                                                            ))}
                                                         </tr>
                                                     ))}
                                                     </tbody>
