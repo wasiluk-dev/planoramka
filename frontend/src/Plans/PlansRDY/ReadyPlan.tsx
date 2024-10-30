@@ -32,7 +32,7 @@ type GroupInfo = {
     groupCount: number;
 }
 
-let showCurrentDay: number = 0
+let showCurrentDay: number = 6
 
 const day ={
     0: "Niedziela",
@@ -44,43 +44,6 @@ const day ={
     6: "Sobota",
 }
 
-
-////////////////
-type ClassType = {
-    acronym: string;
-    color: string;
-    name: string;
-};
-
-type Organizer = {
-    firstName: string;
-    lastName: string;
-    fullName: string;
-};
-
-type Room = {
-    number: string;
-    numberSecondary: string;
-};
-
-type Subject = {
-    name: string;
-    short: string;
-};
-
-type ClassItem = {
-    classType: ClassType;
-    organizer: Organizer;
-    periodLocks: number[];
-    room: Room;
-    subject: Subject;
-};
-
-interface ClassScheduleProps {
-    classes: ClassItem[];
-    fixedRows?: number;
-}
-/////////////
 type GroupNames = Record<string, number>;
 
 
@@ -94,6 +57,7 @@ const  ReadyPlan: React.FC = () => {
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [groupNames, setGroupNames] = useState({});
     const [maxGroupNumber, setMaxGroupNumber] = useState<number>(0)
+    const [ifweekend, setIfweekend] = useState<number>(0)
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
@@ -210,6 +174,8 @@ const  ReadyPlan: React.FC = () => {
     const fixedRows: number = 14
     const tableData = {
         W: Array(fixedRows).fill(null),
+        L: Array(fixedRows).fill(null),
+        J: Array(fixedRows).fill(null),
         PS: Array(fixedRows).fill(null),
     };
     const filteredClasses = zajecia.filter(classItem => classItem.weekday === showCurrentDay);
@@ -227,7 +193,7 @@ const  ReadyPlan: React.FC = () => {
             });
         }
     });
-console.log(groupNames)
+console.log(periods)
 
 
     return (
@@ -340,7 +306,9 @@ console.log(groupNames)
                                     {/* Time column */}
                                     <th scope="col" className="col-2">
                                         {timeTables ? (
-                                            timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                            showCurrentDay == 0 || showCurrentDay == 6 && timeTables ? ( timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
+                                            ) : (showCurrentDay > 0 && showCurrentDay < 6  && timeTables ? ( timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                            ) : ("Error in showing period per day!"))
                                         ) : (
                                             <p>Loading...</p>
                                         )}
@@ -353,7 +321,7 @@ console.log(groupNames)
                                                 position: 'relative',
                                             }}> {/* Adjust height as needed */}
                                                 <table
-                                                    className="table table-bordered border-secondary table-dark table-equal-rows z-4 position-relative">
+                                                    className="table table-bordered border-secondary table-dark table-equal-rows z-1 position-relative bg-transparent">
                                                     <tbody>
                                                     {tableData['W'].map((cellData, index) => (
                                                         <tr key={index}>
@@ -372,16 +340,17 @@ console.log(groupNames)
                                                     </tbody>
                                                 </table>
                                                 <table
-                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-1 bg-transparent">
+                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-3 bg-transparent">
                                                     <tbody>
                                                     {tableData['PS'].map((cellData, index) => (
                                                         <tr key={index} className='bg-transparent'>
-                                                            {Array.from({ length: groupNames['PS'] }, (_, colIndex) => (
-                                                                <td key={colIndex} scope="col" className='bg-transparent p-0 col-1'>
+                                                            {Array.from({length: groupNames['PS']}, (_, colIndex) => (
+                                                                <td key={colIndex} scope="col"
+                                                                    className='bg-transparent p-0 col-1'>
                                                                     {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
                                                                         <div
                                                                             className="text-black fw-bolder cell-content"
-                                                                            style={{ backgroundColor: cellData.classType.color }}
+                                                                            style={{backgroundColor: cellData.classType.color}}
                                                                         >
                                                                             {cellData.subject.name}
                                                                         </div>
@@ -394,7 +363,30 @@ console.log(groupNames)
                                                     ))}
                                                     </tbody>
                                                 </table>
-
+                                                <table
+                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-2 bg-transparent">
+                                                    <tbody>
+                                                    {tableData['L'].map((cellData, index) => (
+                                                        <tr key={index} className='bg-transparent'>
+                                                            {Array.from({length: groupNames['L']}, (_, colIndex) => (
+                                                                <td key={colIndex} scope="col"
+                                                                    className='bg-transparent p-0 col-1'>
+                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
+                                                                        <div
+                                                                            className="text-black fw-bolder cell-content"
+                                                                            style={{backgroundColor: cellData.classType.color}}
+                                                                        >
+                                                                            {cellData.subject.name}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-black fw-bolder"></span>
+                                                                    )}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                    </tbody>
+                                                </table>
                                             </div>
 
                                         </td>
