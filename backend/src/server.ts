@@ -7,6 +7,7 @@ import * as https from 'node:https';
 
 import app from './app';
 import routes from './routes/.index';
+import './init';
 
 // TODO: create a Mongo account for the app and switch it it .env for production
 const dbUri: string = `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_IP}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=${process.env.DB_AUTH}`;
