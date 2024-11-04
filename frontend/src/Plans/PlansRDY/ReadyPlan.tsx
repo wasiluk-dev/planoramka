@@ -290,26 +290,24 @@ const  ReadyPlan: React.FC = () => {
     };
 
     const changeDay = (newDay: number) => {
-        setTableData({}); // Clear the table data
         setShowCurrentDay(newDay); // Set the new current day
-        setFixedRows(0);
-        for (let i:number = 0; i < 7; i++){
-            if(timeTables[0]?.schedules[i].weekdays.includes(newDay)){
-                let newGrid: Array<Array<TimeTables | null>> = Array(timeTables[0]?.schedules[i].periods.length)
-                    .fill(null)
-                    .map(() => Array(groupNumber).fill(" "));
-                setFixedRows(timeTables[0]?.schedules[i].periods.length);
-                setGrid(Array(newGrid))
-                break;
-            }
-
+        const schedule = timeTables[0]?.schedules.find(schedule => schedule.weekdays.includes(newDay));
+        if (schedule) {
+            setFixedRows(schedule.periods.length);
         }
-        updateTableData();
-        console.log(grid)
+        updateTableData(); // Update table data whenever the day changes
     };
+
+    // Update grid based on fixedRows and groupNumber
     useEffect(() => {
-        updateTableData(); // Update table data whenever zajecia or fixedRows change
-    }, [zajecia, showCurrentDay, fixedRows, grid]);
+        const updatedGrid: Array<Array<TimeTables | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
+        setGrid(updatedGrid);
+    }, [fixedRows, groupNumber]);
+
+    // Update table data when zajecia, showCurrentDay or fixedRows change
+    useEffect(() => {
+        updateTableData();
+    }, [zajecia, showCurrentDay, fixedRows]);
 
     console.log(timeTables)
     return (
