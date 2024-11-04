@@ -58,12 +58,21 @@ const  ReadyPlan: React.FC = () => {
     const [groupNames, setGroupNames] = useState({});
     const [maxGroupNumber, setMaxGroupNumber] = useState<number>(0)
     const [ifweekend, setIfweekend] = useState<number>(0)
+    const [fixedRows, setFixedRows]= useState<number>(14)
+    const [tableData, setTableData] = useState<Record<string, (null | any)[]>>({}); // Initialize as an empty object
+
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
             setTimeTables(data); // Store fetched time tables in state
             setZajecia(data[0]?.classes)
             setGroupTypes(data[0]?.groups)
+            for (let i:number = 0; i < 7; i++){
+                if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
+                    setFixedRows(data[0]?.schedules[i].periods.length);
+                    break;
+                }
+            }
         };
 
         fetchData();
@@ -155,7 +164,7 @@ const  ReadyPlan: React.FC = () => {
         // Check if `normal` is defined and has a valid length
         if (!normal || normal.length === 0) return;
 
-        const updatedGrid: Array<Array<TimeTables | null>> = Array(normal.length)
+        const updatedGrid: Array<Array<TimeTables | null>> = Array(fixedRows)
             .fill(null)
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
@@ -168,32 +177,56 @@ const  ReadyPlan: React.FC = () => {
         }
     }, [groupTypes]);
 
-
-    const skipRows = Array(groupNumber).fill(0);
     console.log(timeTables)
-    const fixedRows: number = 14
-    const tableData = {
-        W: Array(fixedRows).fill(null),
-        L: Array(fixedRows).fill(null),
-        J: Array(fixedRows).fill(null),
-        PS: Array(fixedRows).fill(null),
-    };
-    const filteredClasses = zajecia.filter(classItem => classItem.weekday === showCurrentDay);
-    // Populate table data with class items based on acronym and periodLocks
-    filteredClasses.forEach((classItem) => {
-        const { acronym, color } = classItem.classType; // Get classType properties
-        if (tableData[acronym as 'W' | 'PS']) {
-            classItem.periodBlocks.forEach((period) => {
-                if (period <= fixedRows) {
-                    // Store the entire class item for the corresponding period
-                    tableData[acronym as 'W' | 'PS'][period - 1] = {
-                        ...classItem // Spread operator to include the whole classItem object
-                    };
+
+    // Update tableData whenever input changes
+    useEffect(() => {
+        if (groupTypes.length > 0) {
+            const newTableData = groupTypes.reduce((acc, item) => {
+                const acronym = item.classType.acronym;
+                acc[acronym] = Array(fixedRows).fill(null);
+                return acc;
+            }, {} as Record<string, (null | any)[]>);
+
+            setTableData(newTableData);
+        }
+    }, [groupTypes]);
+
+// Assuming `tableData` and `setTableData` are already defined using useState
+
+    useEffect(() => {
+        // Example filteredClasses for demonstration; replace with actual logic
+        const filteredClasses = zajecia.filter(
+            (classItem) => classItem.weekday === showCurrentDay
+        );
+
+        // Update `tableData` based on `filteredClasses`
+        setTableData((prevTableData) => {
+            // Create a copy of the existing tableData to avoid direct mutation
+            const newTableData = { ...prevTableData };
+
+            // Populate table data with class items based on acronym and periodLocks
+            filteredClasses.forEach((classItem) => {
+                const { acronym, color } = classItem.classType;
+
+                // Ensure `newTableData[acronym]` exists before accessing
+                if (newTableData[acronym]) {
+                    classItem.periodBlocks.forEach((period) => {
+                        if (period <= fixedRows) {
+                            // Update the newTableData for the corresponding period
+                            newTableData[acronym][period - 1] = {
+                                ...classItem, // Spread operator to include the whole classItem object
+                            };
+                        }
+                    });
                 }
             });
-        }
-    });
-console.log(periods)
+
+            return newTableData; // Return the updated tableData
+        });
+    }, [zajecia, showCurrentDay, fixedRows, setTableData]);
+
+console.log(tableData)
 
 
     return (
@@ -323,7 +356,7 @@ console.log(periods)
                                                 <table
                                                     className="table table-bordered border-secondary table-dark table-equal-rows z-1 position-relative bg-transparent">
                                                     <tbody>
-                                                    {tableData['W'].map((cellData, index) => (
+                                                    {tableData && tableData['W'] && tableData['W'].map((cellData, index) => (
                                                         <tr key={index}>
                                                             <td scope="row" className="p-0">
                                                                 {cellData ? (
@@ -337,12 +370,13 @@ console.log(periods)
                                                             </td>
                                                         </tr>
                                                     ))}
+
                                                     </tbody>
                                                 </table>
                                                 <table
                                                     className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-3 bg-transparent">
                                                     <tbody>
-                                                    {tableData['PS'].map((cellData, index) => (
+                                                    {tableData && tableData['PS']  && tableData['PS'].map((cellData, index) => (
                                                         <tr key={index} className='bg-transparent'>
                                                             {Array.from({length: groupNames['PS']}, (_, colIndex) => (
                                                                 <td key={colIndex} scope="col"
@@ -366,7 +400,7 @@ console.log(periods)
                                                 <table
                                                     className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-2 bg-transparent">
                                                     <tbody>
-                                                    {tableData['L'].map((cellData, index) => (
+                                                    {tableData && tableData['L'] && tableData['L'].map((cellData, index) => (
                                                         <tr key={index} className='bg-transparent'>
                                                             {Array.from({length: groupNames['L']}, (_, colIndex) => (
                                                                 <td key={colIndex} scope="col"
