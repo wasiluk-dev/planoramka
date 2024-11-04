@@ -32,8 +32,6 @@ type GroupInfo = {
     groupCount: number;
 }
 
-let showCurrentDay: number = 6
-
 const day ={
     0: "Niedziela",
     1: "Poniedziałek",
@@ -49,7 +47,7 @@ type GroupNames = Record<string, number>;
 
 
 const  ReadyPlan: React.FC = () => {
-
+    const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
     const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>([])
     const [zajecia, setZajecia] = useState([])
@@ -177,8 +175,6 @@ const  ReadyPlan: React.FC = () => {
         }
     }, [groupTypes]);
 
-    console.log(timeTables)
-
     // Update tableData whenever input changes
     useEffect(() => {
         if (groupTypes.length > 0) {
@@ -190,7 +186,7 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(newTableData);
         }
-    }, [groupTypes]);
+    }, [groupTypes, showCurrentDay, fixedRows]);
 
 // Assuming `tableData` and `setTableData` are already defined using useState
 
@@ -226,9 +222,96 @@ const  ReadyPlan: React.FC = () => {
         });
     }, [zajecia, showCurrentDay, fixedRows, setTableData]);
 
-console.log(tableData)
 
+        useEffect(() => {
+        if (zajecia.length > 0) {
+            const filteredClasses = zajecia.filter(
+                (classItem) => classItem.weekday === showCurrentDay
+            );
 
+            setTableData((prevTableData) => {
+                const newTableData = { ...prevTableData };
+
+                filteredClasses.forEach((classItem) => {
+                    const { acronym } = classItem.classType;
+                    if (newTableData[acronym]) {
+                        classItem.periodBlocks.forEach((period) => {
+                            if (period <= fixedRows) {
+                                newTableData[acronym][period - 1] = {
+                                    ...classItem,
+                                };
+                            }
+                        });
+                    }
+                });
+
+                return newTableData;
+            });
+        } else {
+            setTableData({});
+        }
+    }, [zajecia, showCurrentDay, fixedRows, grid]);
+
+    // console.log(tableData)
+
+    const updateTableData = () => {
+        if (zajecia.length > 0) {
+            const filteredClasses = zajecia.filter(
+                (classItem) => classItem.weekday === showCurrentDay
+            );
+
+            setTableData((prevTableData) => {
+                const newTableData = {};
+
+                // Initialize the table data for each group
+                Object.keys(groupNames).forEach(acronym => {
+                    newTableData[acronym] = Array(fixedRows).fill(null); // Create an array with nulls
+                });
+
+                filteredClasses.forEach((classItem) => {
+                    const { acronym } = classItem.classType;
+
+                    if (newTableData[acronym]) {
+                        classItem.periodBlocks.forEach((period) => {
+                            if (period <= fixedRows) {
+                                newTableData[acronym][period - 1] = {
+                                    ...classItem,
+                                };
+                            }
+                        });
+                    }
+                });
+
+                return newTableData;
+            });
+        } else {
+            setTableData({});
+        }
+    };
+
+    const changeDay = (newDay: number) => {
+        setTableData({}); // Clear the table data
+        setShowCurrentDay(newDay); // Set the new current day
+        setFixedRows(0);
+        for (let i:number = 0; i < 7; i++){
+            if(timeTables[0]?.schedules[i].weekdays.includes(newDay)){
+                let newGrid: Array<Array<TimeTables | null>> = Array(timeTables[0]?.schedules[i].periods.length)
+                    .fill(null)
+                    .map(() => Array(groupNumber).fill(" "));
+                setFixedRows(timeTables[0]?.schedules[i].periods.length);
+                setGrid(Array(newGrid))
+                break;
+            }
+
+        }
+        updateTableData();
+        console.log(grid)
+    };
+    useEffect(() => {
+        updateTableData(); // Update table data whenever zajecia or fixedRows change
+    }, [zajecia, showCurrentDay, fixedRows, grid]);
+
+    console.log(timeTables)
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -283,10 +366,11 @@ console.log(tableData)
                                                 className="flex-fill text-center me-2" // Flex item
                                             >
                                                 {key === showCurrentDay.toString() ? (
-                                                    <div className="fw-bold">{value}</div>
+                                                    <div className="fw-bold" role="button">{value}</div>
                                                 ) : (
-                                                    <div className="fw-light">{value}</div>
+                                                    <div className="fw-light" role="button" onClick={() => changeDay(parseInt(key))}>{value}</div>
                                                 )}
+
                                             </div>
                                         ))
                                     }
@@ -298,9 +382,9 @@ console.log(tableData)
                                             className="flex-fill text-center me-2" // Flex item
                                         >
                                             {showCurrentDay.toString() === '0' ? (
-                                                <div className="fw-bold">{day['0']}</div>
+                                                <div className="fw-bold"  role="button">{day['0']}</div>
                                             ) : (
-                                                <div className="fw-light">{day['0']}</div>
+                                                <div className="fw-light" role="button" onClick={() => changeDay(0)}>{day['0']}</div>
                                             )}
                                         </div>
                                     )}
@@ -339,88 +423,92 @@ console.log(tableData)
                                     {/* Time column */}
                                     <th scope="col" className="col-2">
                                         {timeTables ? (
-                                            showCurrentDay == 0 || showCurrentDay == 6 && timeTables ? ( timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
-                                            ) : (showCurrentDay > 0 && showCurrentDay < 6  && timeTables ? ( timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                            (showCurrentDay == 0 || showCurrentDay == 6) && timeTables[0]?.schedules[1]?.periods[rowIndex] ? (
+                                                timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
+                                            ) : (showCurrentDay > 0 && showCurrentDay < 6 && timeTables[0]?.schedules[0]?.periods[rowIndex] ? (
+                                                timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
                                             ) : ("Error in showing period per day!"))
                                         ) : (
                                             <p>Loading...</p>
                                         )}
                                     </th>
-
                                     {/* Rowspan column */}
                                     {rowIndex === 0 && (
                                         <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
-                                            <div className="table-container p-0 w-100 h-100" style={{
-                                                position: 'relative',
-                                            }}> {/* Adjust height as needed */}
-                                                <table
-                                                    className="table table-bordered border-secondary table-dark table-equal-rows z-1 position-relative bg-transparent">
-                                                    <tbody>
-                                                    {tableData && tableData['W'] && tableData['W'].map((cellData, index) => (
-                                                        <tr key={index}>
-                                                            <td scope="row" className="p-0">
-                                                                {cellData ? (
-                                                                    <div className="text-black fw-bolder cell-content"
-                                                                         style={{backgroundColor: cellData.classType.color}}>
-                                                                        {cellData.subject.name}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-black fw-bolder"></span>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
+                                            <div className="table-container p-0 w-100 h-100"
+                                                 style={{position: 'relative'}}>
+                                                {Object.keys(tableData || {}).map((acronym, idx) => {
+                                                    // Check if the tableData for this acronym contains non-null values
+                                                    const hasData = tableData[acronym]?.some((cellData) => cellData !== null);
 
-                                                    </tbody>
-                                                </table>
-                                                <table
-                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-3 bg-transparent">
-                                                    <tbody>
-                                                    {tableData && tableData['PS']  && tableData['PS'].map((cellData, index) => (
-                                                        <tr key={index} className='bg-transparent'>
-                                                            {Array.from({length: groupNames['PS']}, (_, colIndex) => (
-                                                                <td key={colIndex} scope="col"
-                                                                    className='bg-transparent p-0 col-1'>
-                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
-                                                                        <div
-                                                                            className="text-black fw-bolder cell-content"
-                                                                            style={{backgroundColor: cellData.classType.color}}
-                                                                        >
-                                                                            {cellData.subject.name}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-black fw-bolder"></span>
-                                                                    )}
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                    </tbody>
-                                                </table>
-                                                <table
-                                                    className="table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-2 bg-transparent">
-                                                    <tbody>
-                                                    {tableData && tableData['L'] && tableData['L'].map((cellData, index) => (
-                                                        <tr key={index} className='bg-transparent'>
-                                                            {Array.from({length: groupNames['L']}, (_, colIndex) => (
-                                                                <td key={colIndex} scope="col"
-                                                                    className='bg-transparent p-0 col-1'>
-                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
-                                                                        <div
-                                                                            className="text-black fw-bolder cell-content"
-                                                                            style={{backgroundColor: cellData.classType.color}}
-                                                                        >
-                                                                            {cellData.subject.name}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-black fw-bolder"></span>
-                                                                    )}
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                    </tbody>
-                                                </table>
+                                                    if (!hasData) return null; // Skip empty groups
+
+                                                    // Determine `z-index` for stacking
+                                                    const zIndex = idx + 1;
+
+                                                    // Number of columns for this acronym based on groupNames
+                                                    const columnCount = groupNames[acronym] || 1;
+
+                                                    // First table formatting
+                                                    if (idx === 0) {
+                                                        return (
+                                                            <table
+                                                                key={acronym}
+                                                                className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent"
+                                                            >
+                                                                <tbody>
+                                                                {tableData[acronym].map((cellData, rowIndex) => (
+                                                                    <tr key={rowIndex}>
+                                                                        <td scope="row" className="p-0">
+                                                                            {cellData ? (
+                                                                                <div
+                                                                                    className="text-black fw-bolder cell-content"
+                                                                                    style={{backgroundColor: cellData.classType.color}}>
+                                                                                    {cellData.subject.name}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <span
+                                                                                    className="text-black fw-bolder"></span>
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                                </tbody>
+                                                            </table>
+                                                        );
+                                                    } else {
+                                                        // Subsequent tables formatting
+                                                        return (
+                                                            <table
+                                                                key={acronym}
+                                                                className={`table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-${zIndex} bg-transparent`}
+                                                            >
+                                                                <tbody>
+                                                                {tableData[acronym].map((cellData, rowIndex) => (
+                                                                    <tr key={rowIndex}>
+                                                                        {Array.from({length: columnCount}, (_, colIndex) => (
+                                                                            <td key={colIndex} scope="col"
+                                                                                className="bg-transparent p-0 col-1">
+                                                                                {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
+                                                                                    <div
+                                                                                        className="text-black fw-bolder cell-content"
+                                                                                        style={{backgroundColor: cellData.classType.color}}
+                                                                                    >
+                                                                                        {cellData.subject.name}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <span
+                                                                                        className="text-black fw-bolder"></span>
+                                                                                )}
+                                                                            </td>
+                                                                        ))}
+                                                                    </tr>
+                                                                ))}
+                                                                </tbody>
+                                                            </table>
+                                                        );
+                                                    }
+                                                })}
                                             </div>
 
                                         </td>
