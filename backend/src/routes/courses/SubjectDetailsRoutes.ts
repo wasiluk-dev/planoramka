@@ -7,7 +7,7 @@ import BaseRoutes from '../BaseRoutes';
 const controller = new SubjectDetailsController();
 class SubjectDetailsRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof SubjectDetailsSchema>> {
     constructor() {
-        super(controller, 'subjects-details', 'subjectDetails');
+        super(controller, 'subject-details', 'subjectDetails');
     }
 }
 
