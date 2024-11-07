@@ -7,7 +7,7 @@ import * as https from 'node:https';
 
 import app from './app';
 import routes from './routes/.index';
-import './init';
+// import './init';
 
 // TODO: create a Mongo account for the app and switch it it .env for production
 const dbUri: string = `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_IP}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=${process.env.DB_AUTH}`;
@@ -21,8 +21,9 @@ const srvOptions = {
 app.use(session({
     // TODO: switch to process.env.SESSION_SECRET and make a script to generate new secrets
     secret: 'secret',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
     store: MongoStore.create({
         clientPromise: dbClient,
     }),
