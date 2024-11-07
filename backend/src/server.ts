@@ -6,6 +6,8 @@ import * as fs from 'node:fs';
 import * as https from 'node:https';
 
 import app from './app';
+import routes from './routes/.index';
+import './init';
 
 // TODO: create a Mongo account for the app and switch it it .env for production
 const dbUri: string = `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_IP}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=${process.env.DB_AUTH}`;
@@ -15,6 +17,7 @@ const srvOptions = {
     key: fs.readFileSync(process.cwd() + '/ssl/key.pem'),
 }
 
+// sessions
 app.use(session({
     // TODO: switch to process.env.SESSION_SECRET and make a script to generate new secrets
     secret: 'secret',
@@ -24,6 +27,13 @@ app.use(session({
         clientPromise: dbClient,
     }),
 }));
+
+// routes
+Object.keys(routes).forEach((key) => {
+    const RouteClass = routes[key as keyof typeof routes];
+    const routeInstance = new RouteClass();
+    routeInstance.route(app);
+});
 
 (() => {
     db.connect(dbUri)
