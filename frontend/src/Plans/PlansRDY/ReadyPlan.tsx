@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useMemo} from 'react';
 import apiService from "../../../services/apiService.tsx";
 import * as dataType from "../../../services/databaseTypes.tsx";
-import {Schedule, TimeTables} from "../../../services/databaseTypes.tsx";
+import {TimeTables} from "../../../services/databaseTypes.tsx";
 import './planrdy.css'
 
 const kierunki: { [key: number]: { [key: number]: string } } = {
@@ -42,9 +42,6 @@ const day ={
     6: "Sobota",
 }
 
-type GroupNames = Record<string, number>;
-
-
 
 const  ReadyPlan: React.FC = () => {
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
@@ -54,8 +51,6 @@ const  ReadyPlan: React.FC = () => {
     const [groupNumber, setGroupNumber] = useState<number>(0)
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [groupNames, setGroupNames] = useState({});
-    const [maxGroupNumber, setMaxGroupNumber] = useState<number>(0)
-    const [ifweekend, setIfweekend] = useState<number>(0)
     const [fixedRows, setFixedRows]= useState<number>(14)
     const [tableData, setTableData] = useState<Record<string, (null | any)[]>>({}); // Initialize as an empty object
 
@@ -72,7 +67,6 @@ const  ReadyPlan: React.FC = () => {
                 }
             }
         };
-
         fetchData();
     }, []);
 
@@ -88,33 +82,6 @@ const  ReadyPlan: React.FC = () => {
             setGroupNames(names); // Update groupNames with the transformed data
         }
     }, [groupTypes]);
-
-
-    useEffect(() => {
-        // Simulate fetching data
-        const fetchData = async (): Promise => {
-            // Replace this with your actual fetch call
-            return [
-                { classType: { _id: "000000007375626a74000001", acronym: "W" }, groupCount: 1 },
-                { classType: { _id: "000000007375626a74000003", acronym: "PS" }, groupCount: 2 },
-                { classType: { _id: "000000007375626a74000005", acronym: "L" }, groupCount: 3 },
-                { classType: { _id: "000000007375626a74000007", acronym: "J" }, groupCount: 1 }
-            ];
-        };
-
-        fetchData().then(data => {
-            if (data) {
-                const transformedData: GroupNames = data.reduce((acc, item) => {
-                    acc[item.classType.acronym] = item.groupCount;
-                    return acc;
-                }, {} as GroupNames);
-
-                setGroupNames(transformedData);
-            }
-        }).catch(error => {
-            console.error("Error fetching data:", error);
-        });
-    }, []);
 
 
     useEffect(() => {
@@ -167,13 +134,6 @@ const  ReadyPlan: React.FC = () => {
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
     }, [normal, groupNumber]);
-
-    useEffect(() => {
-        if (groupTypes && groupTypes.length > 0) {
-            const maxCount = Math.max(...groupTypes.map(group => group.groupCount));
-            setMaxGroupNumber(maxCount);
-        }
-    }, [groupTypes]);
 
     // Update tableData whenever input changes
     useEffect(() => {
