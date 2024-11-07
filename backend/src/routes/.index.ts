@@ -1,6 +1,7 @@
 import CourseRoutes from './courses/CourseRoutes';
 import ElectiveSubjectRoutes from './courses/ElectiveSubjectRoutes';
 import SemesterRoutes from './courses/SemesterRoutes';
+import SubjectDetailsRoutes from './courses/SubjectDetailsRoutes';
 import SubjectRoutes from './courses/SubjectRoutes';
 import BuildingRoutes from './faculty/BuildingRoutes';
 import FacultyRoutes from './faculty/FacultyRoutes';
@@ -19,6 +20,7 @@ const routes = {
     CourseRoutes,
     ElectiveSubjectRoutes,
     SemesterRoutes,
+    SubjectDetailsRoutes,
     SubjectRoutes,
 
     BuildingRoutes,

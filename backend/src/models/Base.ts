@@ -34,25 +34,37 @@ abstract class Base<T extends Document> {
         DBUtils.find(this._model, filter)
             .then((result) => {
                 return result;
+            })
+            .catch((err) => {
+                throw err;
             });
 
     create = (body: T) =>
         DBUtils.create(this._model, body)
             .then((result) => {
                 return result;
+            })
+            .catch((err) => {
+                throw err;
             });
 
     update = (filter: FilterQuery<T>, update: Partial<T>) =>
         DBUtils.update(this._model, filter, update)
             .then((result) => {
                 return result;
+            })
+            .catch((err) => {
+                throw err;
             });
 
     delete = (filter: FilterQuery<T>) =>
         DBUtils.delete(this._model, filter)
             .then((result: DeleteResult) => {
-            return result;
-        });
+                return result;
+            })
+            .catch((err) => {
+                throw err;
+            });
 
     get name(): string {
         return this._name;
