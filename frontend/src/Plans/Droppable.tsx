@@ -18,7 +18,7 @@ export const Droppable: React.FC<DroppableProps> = (props) => {
             width: '100px',
             minHeight: '100px',
             display: 'inline',
-            backgroundColor: 'green',
+            backgroundColor: 'transparent',
             }
 
     }else {

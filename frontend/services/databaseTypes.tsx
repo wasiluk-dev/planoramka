@@ -1,5 +1,6 @@
  export type Classdata = {
         classes: Array<TimeTables>;
+        groups: Array<ClassType>;
         schedules: Array<Schedule>;
         semester: string;
         targetedSemester: number;
@@ -79,10 +80,35 @@
         subjects: Array<Subject>;
     }
 
-  export type TimeTables ={
+  export type TimeTables = {
         _id: string;
         semester: Semesters;
         targetedSemester: number;
         schedules: Schedule;
         classes: Classes;
+    }
+
+    export type Courses = {
+        _id: string;
+        code: string;
+        name: string;
+        specialization: string;
+        cycle: number;
+        degree: number;
+        mode: boolean;
+        startDate: string;
+        semesterCount: number;
+        semesters: Array<string>; // do zmiany
+        electiveSubjects: Array<string>; //do zmiany
+    }
+
+    export type Users = {
+    _id: string;
+    username: string;
+    password: string;
+    fullName: string;
+    title: string;
+    email: string;
+    courses: Courses;
+    role: number;
     }
