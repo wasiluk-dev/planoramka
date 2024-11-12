@@ -112,3 +112,24 @@
     courses: Courses;
     role: number;
     }
+
+ export type SubjectDetails = {
+     _id: string;
+     course: string;
+     subject: {
+         _id: string;
+         code: string;
+         name: string;
+         shortName: string;
+         isElective: boolean;
+         targetedSemesters: number[];
+     };
+     details: [{
+         classType: {
+             name: string;
+             acronym: string;
+             color: string;
+         };
+         weeklyBlockCount: number;
+     }];
+ };

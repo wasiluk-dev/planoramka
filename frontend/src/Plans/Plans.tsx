@@ -9,6 +9,8 @@ import Droppable from "./Droppable.tsx";
 import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
+import APIUtils from "../utils/APIUtils.ts";
+import {SubjectDetails} from "../../services/databaseTypes.tsx";
 
 
 
@@ -79,6 +81,7 @@ type GroupInfo = {
 
 const Plans: React.FC = () => {
 
+    const [test, setTest] = useState<Array<SubjectDetails>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
     const [fixedRows, setFixedRows]= useState<number>(14)
@@ -90,6 +93,15 @@ const Plans: React.FC = () => {
             const data = await apiService.getTimeTables();
             setTimeTables(data); // Store fetched time tables in state
             setGroupTypes(data[0]?.groups)
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getSubjectDetails();
+            setTest(data)
         };
 
         fetchData();
@@ -259,7 +271,10 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-    console.log(groupTypes)
+    console.log(test)
+    if (test?.length > 0) {
+        console.log(APIUtils.getSubjectDetailsForSpecificSemesters(test, [4]))
+    }
 
     return (
         <>
