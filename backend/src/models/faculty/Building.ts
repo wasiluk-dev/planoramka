@@ -6,7 +6,7 @@ import Room from './Room';
 // A | Budynek A | Wiejska 45A, 15-351 Białystok, Polska | true | true | [101, 102, 103...]
 // B | Budynek B | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [B01, B02, B03...]
 // C | Budynek C | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [001, 002, 003...]
-export const BuildingSchema = new Schema({
+export const BuildingDefinition = {
     acronym: {
         type: String,
         required: true,
@@ -31,12 +31,11 @@ export const BuildingSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Room().name,
     }],
-});
+} as const;
+export const BuildingSchema = new Schema(BuildingDefinition);
 
-class Building extends Base<HydratedDocumentFromSchema<typeof BuildingSchema>> {
+export default class Building extends Base<HydratedDocumentFromSchema<typeof BuildingSchema>> {
     constructor() {
         super('Building', BuildingSchema);
     }
 }
-
-export default Building;

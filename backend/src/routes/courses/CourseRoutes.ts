@@ -5,10 +5,8 @@ import { CourseSchema } from '../../models/courses/Course';
 import BaseRoutes from '../BaseRoutes';
 
 const controller = new CourseController();
-class CourseRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof CourseSchema>> {
+export default class CourseRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof CourseSchema>> {
     constructor() {
         super(controller, 'courses', 'course');
     }
 }
-
-export default CourseRoutes;

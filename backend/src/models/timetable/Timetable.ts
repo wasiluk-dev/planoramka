@@ -6,7 +6,7 @@ import Class from './Class';
 import ClassType from './ClassType';
 import Schedule from './Schedule';
 
-export const TimetableSchema = new Schema({
+export const TimetableDefinition = {
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
@@ -55,12 +55,11 @@ export const TimetableSchema = new Schema({
         ref: new Class().name,
         autopopulate: true,
     }],
-});
+} as const;
+export const TimetableSchema = new Schema(TimetableDefinition);
 
-class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
+export default class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
     constructor() {
         super('Timetable', TimetableSchema);
     }
 }
-
-export default Timetable;
