@@ -13,12 +13,18 @@ export const SubjectDetailsDefinition = {
     subject: {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
+        autopopulate: {
+            select: '-types',
+        },
     },
     details: [{
         _id: false,
         classType: {
             type: Schema.Types.ObjectId,
             ref: new ClassType().name,
+            autopopulate: {
+                select: '-_id',
+            },
         },
         weeklyBlockCount: {
             type: Number,
