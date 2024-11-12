@@ -29,7 +29,7 @@ const Draggable: React.FC<DraggableProps> = (props) => {
     };
 
     return (
-            <button className='btn btn-light' ref={setNodeRef} style={style} {...listeners} {...attributes} id={props.id}>
+            <button className='btn btn-light fw-bold' ref={setNodeRef} style={style} {...listeners} {...attributes} id={props.id}>
                 {props.children}
             </button>
 
