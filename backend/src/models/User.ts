@@ -1,6 +1,7 @@
 import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import EUserRole from '../enums/EUserRole';
+import StringUtils from '../utils/StringUtils';
 import Base from './Base';
 import Course from './courses/Course';
 
