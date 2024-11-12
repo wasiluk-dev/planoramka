@@ -47,10 +47,8 @@ export const CourseDefinition = {
 } as const;
 export const CourseSchema = new Schema(CourseDefinition);
 
-class Course extends Base<HydratedDocumentFromSchema<typeof CourseSchema>> {
+export default class Course extends Base<HydratedDocumentFromSchema<typeof CourseSchema>> {
     constructor() {
         super('Course', CourseSchema);
     }
 }
-
-export default Course;

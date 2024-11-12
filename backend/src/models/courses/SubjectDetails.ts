@@ -37,10 +37,8 @@ export const SubjectDetailsDefinition = {
 } as const;
 export const SubjectDetailsSchema = new Schema(SubjectDetailsDefinition);
 
-class SubjectDetails extends Base<HydratedDocumentFromSchema<typeof SubjectDetailsSchema>> {
+export default class SubjectDetails extends Base<HydratedDocumentFromSchema<typeof SubjectDetailsSchema>> {
     constructor() {
         super('SubjectDetails', SubjectDetailsSchema);
     }
 }
-
-export default SubjectDetails;

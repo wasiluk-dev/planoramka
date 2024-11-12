@@ -16,10 +16,8 @@ export const SemesterDefinition = {
 } as const;
 export const SemesterSchema = new Schema(SemesterDefinition);
 
-class Semester extends Base<HydratedDocumentFromSchema<typeof SemesterSchema>> {
+export default class Semester extends Base<HydratedDocumentFromSchema<typeof SemesterSchema>> {
     constructor() {
         super('Semester', SemesterSchema);
     }
 }
-
-export default Semester;

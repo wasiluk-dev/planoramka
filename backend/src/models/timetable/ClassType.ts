@@ -20,10 +20,8 @@ export const ClassTypeDefinition = {
 } as const;
 export const ClassTypeSchema = new Schema(ClassTypeDefinition);
 
-class ClassType extends Base<HydratedDocumentFromSchema<typeof ClassTypeSchema>> {
+export default class ClassType extends Base<HydratedDocumentFromSchema<typeof ClassTypeSchema>> {
     constructor() {
         super('ClassType', ClassTypeSchema);
     }
 }
-
-export default ClassType;

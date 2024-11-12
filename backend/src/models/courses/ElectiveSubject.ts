@@ -21,10 +21,8 @@ export const ElectiveSubjectDefinition = {
 } as const;
 export const ElectiveSubjectSchema = new Schema(ElectiveSubjectDefinition);
 
-class ElectiveSubject extends Base<HydratedDocumentFromSchema<typeof ElectiveSubjectSchema>> {
+export default class ElectiveSubject extends Base<HydratedDocumentFromSchema<typeof ElectiveSubjectSchema>> {
     constructor() {
         super('ElectiveSubject', ElectiveSubjectSchema);
     }
 }
-
-export default ElectiveSubject;

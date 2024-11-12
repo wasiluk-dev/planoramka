@@ -5,10 +5,8 @@ import { ScheduleSchema } from '../../models/timetable/Schedule';
 import BaseRoutes from '../BaseRoutes';
 
 const controller = new ScheduleController();
-class ScheduleRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
+export default class ScheduleRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
     constructor() {
         super(controller, 'schedules', 'schedule');
     }
 }
-
-export default ScheduleRoutes;

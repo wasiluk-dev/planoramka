@@ -39,10 +39,8 @@ RoomSchema.virtual('roomNumber')
         }
     });
 
-class Room extends Base<HydratedDocumentFromSchema<typeof RoomSchema>> {
+export default class Room extends Base<HydratedDocumentFromSchema<typeof RoomSchema>> {
     constructor() {
         super('Room', RoomSchema);
     }
 }
-
-export default Room;

@@ -25,10 +25,8 @@ export const FacultyDefinition = {
 } as const;
 export const FacultySchema = new Schema(FacultyDefinition);
 
-class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {
+export default class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {
     constructor() {
         super('Faculty', FacultySchema);
     }
 }
-
-export default Faculty;

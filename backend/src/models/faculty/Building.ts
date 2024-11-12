@@ -34,10 +34,8 @@ export const BuildingDefinition = {
 } as const;
 export const BuildingSchema = new Schema(BuildingDefinition);
 
-class Building extends Base<HydratedDocumentFromSchema<typeof BuildingSchema>> {
+export default class Building extends Base<HydratedDocumentFromSchema<typeof BuildingSchema>> {
     constructor() {
         super('Building', BuildingSchema);
     }
 }
-
-export default Building;

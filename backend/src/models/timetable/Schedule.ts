@@ -29,10 +29,8 @@ export const ScheduleDefinition = {
 } as const;
 export const ScheduleSchema = new Schema(ScheduleDefinition);
 
-class Schedule extends Base<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
+export default class Schedule extends Base<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
     constructor() {
         super('Schedule', ScheduleSchema);
     }
 }
-
-export default Schedule;

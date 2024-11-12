@@ -15,10 +15,8 @@ export const RoomTypeDefinition = {
 } as const;
 export const RoomTypeSchema = new Schema(RoomTypeDefinition);
 
-class RoomType extends Base<HydratedDocumentFromSchema<typeof RoomTypeSchema>> {
+export default class RoomType extends Base<HydratedDocumentFromSchema<typeof RoomTypeSchema>> {
     constructor() {
         super('RoomType', RoomTypeSchema);
     }
 }
-
-export default RoomType;

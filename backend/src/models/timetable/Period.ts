@@ -37,10 +37,8 @@ export const PeriodDefinition = {
 } as const;
 export const PeriodSchema = new Schema(PeriodDefinition);
 
-class Period extends Base<HydratedDocumentFromSchema<typeof PeriodSchema>> {
+export default class Period extends Base<HydratedDocumentFromSchema<typeof PeriodSchema>> {
     constructor() {
         super('Period', PeriodSchema);
     }
 }
-
-export default Period;

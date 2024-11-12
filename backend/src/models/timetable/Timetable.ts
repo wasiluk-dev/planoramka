@@ -58,10 +58,8 @@ export const TimetableDefinition = {
 } as const;
 export const TimetableSchema = new Schema(TimetableDefinition);
 
-class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
+export default class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
     constructor() {
         super('Timetable', TimetableSchema);
     }
 }
-
-export default Timetable;
