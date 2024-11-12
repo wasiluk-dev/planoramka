@@ -1,7 +1,7 @@
 import argon2 from 'argon2';
 import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
 
-import EUserType from '../enums/EUserType';
+import EUserRole from '../enums/EUserRole';
 import Base from './Base';
 import Course from './courses/Course';
 
@@ -33,8 +33,8 @@ export const UserSchema = new Schema({
     }],
     role: {
         type: Number,
-        enum: EUserType,
-        default: EUserType.Student,
+        enum: EUserRole,
+        default: EUserRole.Student,
     },
 });
 
