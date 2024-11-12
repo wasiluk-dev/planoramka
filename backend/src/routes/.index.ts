@@ -1,3 +1,4 @@
+import AuthRoutes from './AuthRoutes';
 import CourseRoutes from './courses/CourseRoutes';
 import ElectiveSubjectRoutes from './courses/ElectiveSubjectRoutes';
 import SemesterRoutes from './courses/SemesterRoutes';
@@ -15,6 +16,7 @@ import TimetableRoutes from './timetable/TimetableRoutes';
 import UserRoutes from './UserRoutes.js';
 
 const routes = {
+    AuthRoutes,
     UserRoutes,
 
     CourseRoutes,
