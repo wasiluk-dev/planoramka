@@ -47,4 +47,6 @@ Object.keys(routes).forEach((key) => {
         .catch(err => {
             throw err;
         });
+
+    // db.set('debug', true);
 })();
