@@ -9,6 +9,8 @@ import Droppable from "./Droppable.tsx";
 import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
+import APIUtils from "../utils/APIUtils.ts";
+import {SubjectDetails} from "../../services/databaseTypes.tsx";
 
 
 
@@ -41,30 +43,65 @@ let data3: Array<Obiekt> = [
 
 const kierunki: { [key: number]: { [key: number]: string } } = {
     1: {
-        1: 'K1_1',
-        2: 'K1_2',
-        3: 'K1_3'
+        1: 'LAB',
+        2: 'PS',
+        3: 'W'
     },
     2: {
-        1: 'K2_1',
-        2: 'K2_2',
-        3: 'K2_3'
+        1: 'LAB',
+        2: 'PS',
+        3: 'W'
     },
     3: {
-        1: 'K3_1',
-        2: 'K3_2',
-        3: 'K3_3'
+        1: 'LAB',
+        2: 'PS',
+        3: 'W'
     }
 };
 
+const day ={
+    0: "Niedziela",
+    1: "Poniedziałek",
+    2: "Wtorek",
+    3: "Środa",
+    4: "Czwartek",
+    5: "Piątek",
+    6: "Sobota",
+}
+
+
+type GroupInfo = {
+    classType: {
+        acronym: string;
+        _id: string;
+        }
+    groupCount: number;
+}
+
+
 const Plans: React.FC = () => {
 
+    const [test, setTest] = useState<Array<SubjectDetails>>([]);
+    const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
+    const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
+    const [fixedRows, setFixedRows]= useState<number>(14)
     const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
+    const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
             setTimeTables(data); // Store fetched time tables in state
+            setGroupTypes(data[0]?.groups)
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getSubjectDetails();
+            setTest(data)
         };
 
         fetchData();
@@ -76,6 +113,21 @@ const Plans: React.FC = () => {
             setPeriods(data); // Store fetched time tables in state
         };
 
+        fetchData();
+    }, []);
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getTimeTables();
+            setTimeTables(data); // Store fetched time tables in state
+            for (let i:number = 0; i < 7; i++){
+                if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
+                    setFixedRows(data[0]?.schedules[i].periods.length);
+                    break;
+                }
+            }
+        };
         fetchData();
     }, []);
 
@@ -91,8 +143,32 @@ const Plans: React.FC = () => {
         const selectedValue = event.target.value;
         setSelectedKierunek(selectedValue);
 
-        if (selectedValue === '3') {  // Assuming '3' is the key for 'K3_3'
-            setLessons(data3);
+        if (selectedValue === '3') {  // W
+            for (let i = 0; i < groupTypes.length; i++) {
+                if (groupTypes[i].classType.acronym == 'W'){
+                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
+                    console.log(selectedGroupTypeCount+ " W")
+                }
+            }
+        }
+
+        if (selectedValue === '2') {  // PS
+            for (let i = 0; i < groupTypes.length; i++) {
+                if (groupTypes[i].classType.acronym == 'PS'){
+                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
+                    console.log(selectedGroupTypeCount+ " PS")
+                }
+            }
+        }
+
+        if (selectedValue === '1') {  // La
+            for (let i = 0; i < groupTypes.length; i++) {
+                if (groupTypes[i].classType.acronym == 'L'){
+                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
+                    console.log(selectedGroupTypeCount + " L")
+                }
+            }
+            // setLessons(data3);
         }
     };
 
@@ -102,19 +178,28 @@ const Plans: React.FC = () => {
     const [grid, setGrid] = useState<Array<Array<Obiekt | null>>>([]);
 
     useEffect(() => {
-        const updatedGrid: Array<Array<Obiekt | null>> = Array(7)
+        const updatedGrid: Array<Array<Obiekt | null>> = Array(fixedRows)
             .fill(null)
-            .map(() => Array(7).fill(null));
+            .map(() => Array(selectedGroupTypeCount).fill(null));
 
         lessons.forEach(item => {
             const { x, y } = item;
-            if (x >= 0 && x < 7 && y >= 0 && y < 7) {
+            if (x >= 0 && x < fixedRows && y >= 0 && y < selectedGroupTypeCount) {
                 updatedGrid[x][y] = item;
             }
         });
 
         setGrid(updatedGrid);
-    }, [lessons]);
+    }, [lessons,  selectedGroupTypeCount]);
+
+    const changeDay = (newDay: number) => {
+        setShowCurrentDay(newDay); // Set the new current day
+        const schedule = timeTables[0]?.schedules.find(schedule => schedule.weekdays.includes(newDay));
+        if (schedule) {
+            setFixedRows(schedule.periods.length);
+        }
+        // updateTableData(); // Update table data whenever the day changes
+    };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -186,7 +271,10 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-    console.log(timeTables)
+    console.log(test)
+    if (test?.length > 0) {
+        console.log(APIUtils.getSubjectDetailsForSpecificSemesters(test, [4]))
+    }
 
     return (
         <>
@@ -230,17 +318,62 @@ const Plans: React.FC = () => {
             </div>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <table className="table table-striped table-hover table-bordered border-primary">
-                        <tbody>
+                    <table className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
+                        <tbody style={{height: '100%'}}>
+                        <tr className="table-dark text-center">
+                            <td className="table-dark text-center fw-bolder fs-5" colSpan={selectedGroupTypeCount + 1}>
+                                <div className="d-flex justify-content-center"> {/* Flexbox container */}
+                                    {Object.entries(day)
+                                        .filter(([key]) => key !== '0') // Filter out the entry with key '0'
+                                        .map(([key, value]) => (
+                                            <div
+                                                key={key}
+                                                className="flex-fill text-center me-2" // Flex item
+                                            >
+                                                {key === showCurrentDay.toString() ? (
+                                                    <div className="fw-bold" role="button">{value}</div>
+                                                ) : (
+                                                    <div className="fw-light" role="button"
+                                                         onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                )}
+
+                                            </div>
+                                        ))
+                                    }
+
+                                    {/* Now display the entry with key '0' at the end */}
+                                    {day['0'] && (
+                                        <div
+                                            key="0"
+                                            className="flex-fill text-center me-2" // Flex item
+                                        >
+                                            {showCurrentDay.toString() === '0' ? (
+                                                <div className="fw-bold" role="button">{day['0']}</div>
+                                            ) : (
+                                                <div className="fw-light" role="button"
+                                                     onClick={() => changeDay(0)}>{day['0']}</div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                </div>
+                            </td>
+                        </tr>
                         {grid.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="table-dark">
-                                <th scope="col" className='col-1'>{periods ?  (
-                                    <p>{periods[rowIndex].startTime}</p>  // Accessing the first item's startTime
-                                ) : (
-                                    <p>Loading...</p>
-                                )}</th>
+                            <tr key={rowIndex} className="table-dark w-100">
+                                <th scope="col" className="col-1 text-nowrap">
+                                    {timeTables ? (
+                                        (showCurrentDay == 0 || showCurrentDay == 6) && timeTables[0]?.schedules[1]?.periods[rowIndex] ? (
+                                            timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
+                                        ) : (showCurrentDay > 0 && showCurrentDay < 6 && timeTables[0]?.schedules[0]?.periods[rowIndex] ? (
+                                            timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                        ) : ("Error in showing period per day!"))
+                                    ) : (
+                                        <p>Loading...</p>
+                                    )}
+                                </th>
                                 {row.map((item, colIndex) => (
-                                    <td key={colIndex} className="table-dark col-1 text-center" scope="col">
+                                    <td key={colIndex} className="col-3 text-center" scope="col">
                                         <Droppable id={`${rowIndex}_${colIndex}`}>
                                             {item && (
                                                 <Draggable id={item.id} name={item.name} x={item.x} y={item.y}

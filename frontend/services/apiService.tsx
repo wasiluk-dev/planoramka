@@ -55,6 +55,14 @@ const apiService = {
         }
         return await response.json();
     },
+    getSubjectDetails: async (): Promise<Object | null> => {
+        const response : Response = await fetch(baseUrl + '/subject-details');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+
 
     createUser: async (registerdata: CreateUser): Promise<void> => {
 
