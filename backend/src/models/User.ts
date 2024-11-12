@@ -1,4 +1,3 @@
-import argon2 from 'argon2';
 import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import EUserRole from '../enums/EUserRole';
@@ -30,32 +29,22 @@ export const UserDefinition = {
         enum: EUserRole,
         default: EUserRole.Student,
     },
-
-UserSchema.virtual('fullName')
-    .get(function() {
-        if (!this.firstName && !this.middleName && !this.lastName) {
-            return null;
-        }
 } as const;
 export const UserSchema = new Schema(UserDefinition);
 
-        return `${this.firstName}${(this.middleName) ? ` ${this.middleName}` : ''} ${this.lastName}`;
-    });
+UserSchema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
+    if (!this.isModified('password')) return next();
 
-class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
+    StringUtils.hash(this.password)
+        .then((hashedPassword: string) => {
+            this.password = hashedPassword;
+            return next();
+        })
+        .catch(err => next(err));
+});
+
+export default class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {
         super('User', UserSchema);
-        this.schema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
-            if (!this.password || !this.isModified('password')) return next();
-
-            argon2.hash(this.password)
-                .then((hashedPassword: string) => {
-                    this.password = hashedPassword;
-                    return next();
-                })
-                .catch(err => next(err));
-        });
     }
 }
-
-export default User;
