@@ -31,6 +31,7 @@ type ObiektNew = {
     x: number,
     y: number,
     isset: boolean
+    group?: number
 };
 
 
@@ -126,28 +127,34 @@ const Plans: React.FC = () => {
     }, [selectedSemester]);
 
     useEffect(() => {
-        if (acronym){
-            function getObiektyByAcronym(subjects: any[], acronym: string): ObiektNew[] {
-                console.log(subjects)
+        if (acronym) {
+            function getObiektyByAcronym(subjects: any[], acronym: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) =>
                     item.details
                         .filter((detail) => detail.classType.acronym === acronym)
                         .map((detail) => ({
-                            id: item._id,
-                            name: item.subject.name,
+                            id: `${item._id} ${groupNumber}`,
+                            name: `${item.subject.name} ${groupNumber}`, // Append groupNumber to name
                             type: detail.classType.name,
                             color: detail.classType.color,
                             isweekly: detail.weeklyBlockCount > 0,
                             x: -1,
                             y: -1,
-                            isset: false
+                            isset: false,
+                            groups: groupNumber // Set groups to current groupNumber
                         }))
                 );
             }
-            const result = getObiektyByAcronym(subjects, acronym);
-            setSubjectsOnBoard(result);
-            setLessons(result)
-            console.log(result)
+
+            // Accumulate results across multiple runs
+            let allResults: ObiektNew[] = [];
+            for (let i = 1; i <= selectedGroupTypeCount; i++) {
+                const result = getObiektyByAcronym(subjects, acronym, i);
+                allResults = [...allResults, ...result];
+            }
+            console.log(allResults);
+            setSubjectsOnBoard(allResults)
+            setLessons(allResults);
         }
 
     }, [acronym]);
@@ -230,7 +237,7 @@ const Plans: React.FC = () => {
     const wydzialyOptions = Object.entries(wydzialy);
     const grupyOptions = Object.entries(grupy);
 
-    const [lessons, setLessons] = useState(data);
+    const [lessons, setLessons] = useState([]);
     const [grid, setGrid] = useState<Array<Array<ObiektNew | null>>>([]);
 
     useEffect(() => {
@@ -449,7 +456,7 @@ const Plans: React.FC = () => {
                                     <td key={colIndex} className="col-3 text-center" scope="col">
                                         <Droppable id={`${rowIndex}_${colIndex}`}>
                                             {item && (
-                                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} type={item.type} color={item.color} group={item.group}
                                                            isset={true}>
                                                     {item.name}
                                                 </Draggable>
@@ -464,8 +471,8 @@ const Plans: React.FC = () => {
                     <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
                         <Droppable id='ugabuga'>
                             {lessons.filter(item => !item.isset).map(item => (
-                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}
-                                           key={item.id}>
+                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
+                                           key={item.name}>
                                     {item.name}
                                 </Draggable>
                             ))}
