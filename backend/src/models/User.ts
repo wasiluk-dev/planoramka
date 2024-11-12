@@ -14,16 +14,10 @@ export const UserDefinition = {
     },
     password: {
         type: String,
+        required: true,
         minLength: 8,
     },
-    firstName: {
-        type: String,
-        required: true,
-    },
-    middleName: {
-        type: String,
-    },
-    lastName: {
+    fullName: {
         type: String,
         required: true,
     },
