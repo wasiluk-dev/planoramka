@@ -5,7 +5,7 @@ import Base from '../Base';
 // W | Wykład | (#00FF00)
 // Lab | Laboratorium | (#FF0000)
 // Sem | Seminarium | (#0000FF)
-export const ClassTypeSchema = new Schema({
+export const ClassTypeDefinition = {
     name: {
         type: String,
         required: true,
@@ -17,7 +17,8 @@ export const ClassTypeSchema = new Schema({
         type: String,
         validation: /#[0-9A-Fa-f]{6}/,
     },
-});
+} as const;
+export const ClassTypeSchema = new Schema(ClassTypeDefinition);
 
 class ClassType extends Base<HydratedDocumentFromSchema<typeof ClassTypeSchema>> {
     constructor() {

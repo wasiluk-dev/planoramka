@@ -5,7 +5,7 @@ import Subject from './Subject';
 
 // Język obcy | [Angielski, Niemiecki, Rosyjski]
 // Programowanie aplikacji WWW | [.NET, Java, Szkieletowe]
-export const ElectiveSubjectSchema = new Schema({
+export const ElectiveSubjectDefinition = {
     name: {
         type: String,
         required: true,
@@ -18,7 +18,8 @@ export const ElectiveSubjectSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
     }],
-});
+} as const;
+export const ElectiveSubjectSchema = new Schema(ElectiveSubjectDefinition);
 
 class ElectiveSubject extends Base<HydratedDocumentFromSchema<typeof ElectiveSubjectSchema>> {
     constructor() {

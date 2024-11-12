@@ -7,7 +7,7 @@ import Period from './Period';
 // [0, 1, 2, 3, 4] | 09:15 | 09:30
 // [0, 1, 2, 3, 4] | 09:30 | 10:15
 // [5, 6] | 08:00 | 08:45
-export const ScheduleSchema = new Schema({
+export const ScheduleDefinition = {
     // Date.getDay() compatible
     weekdays: [{
         type: Number,
@@ -26,7 +26,8 @@ export const ScheduleSchema = new Schema({
         },
         required: true,
     }],
-});
+} as const;
+export const ScheduleSchema = new Schema(ScheduleDefinition);
 
 class Schedule extends Base<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
     constructor() {

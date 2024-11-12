@@ -4,7 +4,7 @@ import Base from '../Base';
 import ElectiveSubject from './ElectiveSubject';
 import Subject from './Subject';
 
-export const SemesterSchema = new Schema({
+export const SemesterDefinition = {
     subjects: [{
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
@@ -13,7 +13,8 @@ export const SemesterSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new ElectiveSubject().name,
     }],
-});
+} as const;
+export const SemesterSchema = new Schema(SemesterDefinition);
 
 class Semester extends Base<HydratedDocumentFromSchema<typeof SemesterSchema>> {
     constructor() {

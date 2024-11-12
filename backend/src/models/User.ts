@@ -5,7 +5,7 @@ import EUserRole from '../enums/EUserRole';
 import Base from './Base';
 import Course from './courses/Course';
 
-export const UserSchema = new Schema({
+export const UserDefinition = {
     username: {
         type: String,
         unique: true,
@@ -36,13 +36,14 @@ export const UserSchema = new Schema({
         enum: EUserRole,
         default: EUserRole.Student,
     },
-});
 
 UserSchema.virtual('fullName')
     .get(function() {
         if (!this.firstName && !this.middleName && !this.lastName) {
             return null;
         }
+} as const;
+export const UserSchema = new Schema(UserDefinition);
 
         return `${this.firstName}${(this.middleName) ? ` ${this.middleName}` : ''} ${this.lastName}`;
     });

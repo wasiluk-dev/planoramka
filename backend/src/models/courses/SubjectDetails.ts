@@ -35,7 +35,6 @@ export const SubjectDetailsDefinition = {
         },
     }],
 } as const;
-
 export const SubjectDetailsSchema = new Schema(SubjectDetailsDefinition);
 
 class SubjectDetails extends Base<HydratedDocumentFromSchema<typeof SubjectDetailsSchema>> {

@@ -6,7 +6,7 @@ import Room from '../faculty/Room';
 import User from '../User';
 import ClassType from './ClassType';
 
-export const ClassSchema = new Schema({
+export const ClassDefinition = {
     organizer: {
         type: Schema.Types.ObjectId,
         ref: new User().name,
@@ -58,7 +58,8 @@ export const ClassSchema = new Schema({
         autopopulate: true,
         required: true,
     },
-});
+} as const;
+export const ClassSchema = new Schema(ClassDefinition);
 
 class Class extends Base<HydratedDocumentFromSchema<typeof ClassSchema>> {
     constructor() {

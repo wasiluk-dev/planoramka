@@ -7,7 +7,7 @@ import Base from '../Base';
 import Semester from './Semester';
 
 // INF1 | Informatyka | I stopnia | inżynierskie | stacjonarne | 2021 | (9)
-export const CourseSchema = new Schema({
+export const CourseDefinition = {
     code: {
         type: String,
         required: true,
@@ -44,7 +44,8 @@ export const CourseSchema = new Schema({
         type: [Schema.Types.ObjectId],
         ref: new Semester().name,
     },
-});
+} as const;
+export const CourseSchema = new Schema(CourseDefinition);
 
 class Course extends Base<HydratedDocumentFromSchema<typeof CourseSchema>> {
     constructor() {

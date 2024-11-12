@@ -5,7 +5,7 @@ import ClassType from '../timetable/ClassType';
 
 // INF1PPR | BSK | Bezpieczeństwo sieci komputerowych | [Wykład, Ćwiczenia]
 // INZ1PEI | PEiE | Podstawy elektroniki i elektrotechniki | [Wykład, Laboratorium]
-export const SubjectSchema = new Schema({
+export const SubjectDefinition = {
     code: {
         type: String,
         required: true,
@@ -32,7 +32,8 @@ export const SubjectSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
     }],
-});
+} as const;
+export const SubjectSchema = new Schema(SubjectDefinition);
 
 class Subject extends Base<HydratedDocumentFromSchema<typeof SubjectSchema>> {
     constructor() {
