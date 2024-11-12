@@ -11,8 +11,7 @@ export const ClassDefinition = {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            // need to select fields with the data (first/middle/last) for the virtual (full) to work properly
-            select: 'firstName middleName lastName fullName', // TODO: add title later
+            select: 'fullName', // TODO: add title later
         },
         required: true,
     },
