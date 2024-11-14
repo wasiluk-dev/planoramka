@@ -22,6 +22,9 @@ type SubjectDetails = {
 
 export default class APIUtils {
     static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetails[], targetedSemesters: number[]) {
+        if(!subjectDetails || !targetedSemesters){
+            return null;
+        }
         const newSubjectDetails = [];
         for (const subjectDetail of subjectDetails) {
             try {
@@ -29,7 +32,7 @@ export default class APIUtils {
                     newSubjectDetails.push(subjectDetail);
                 }
             } catch (err) {
-                console.error(err);
+                // console.error(err);
             }
         }
 

@@ -22,41 +22,35 @@ type Obiekt = {
     isset: boolean
 };
 
-let data: Array<Obiekt> = [
-    { id: 'Englisz', name: 'Englisz', x: 0, y: 5, isset: true },
-    { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
-    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
-];
+type ObiektNew = {
+    id: string,
+    name: string,
+    type: string,
+    color: string,
+    isweekly: boolean,
+    x: number,
+    y: number,
+    isset: boolean
+    group?: number
+};
 
-let data2: Array<Obiekt> = [
-    { id: 'Englisz', name: 'Englisz', x: 0, y: 5, isset: true },
-    { id: 'Polish', name: 'Polish', x: 1, y: 1, isset: true },
-    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
-];
 
-let data3: Array<Obiekt> = [
-    { id: 'Englisz', name: 'Englisz', x: 0, y: 0, isset: true },
-    { id: 'Polish', name: 'Polish', x: 1, y: 5, isset: true },
-    { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false },
-    { id: 'Rusrus', name: 'Rusrus', x: -1, y: -1, isset: false }
-];
+const kierunki: { [key: number]: string } = {
+    1: "Informatyka",
+    2: "Informatyka i Ekonometria",
+    3: "Informatyka",
+};
 
-const kierunki: { [key: number]: { [key: number]: string } } = {
-    1: {
-        1: 'LAB',
-        2: 'PS',
-        3: 'W'
-    },
-    2: {
-        1: 'LAB',
-        2: 'PS',
-        3: 'W'
-    },
-    3: {
-        1: 'LAB',
-        2: 'PS',
-        3: 'W'
-    }
+const wydzialy: { [key: number]: string } = {
+    1: 'Informatyki',
+    2: 'Budowlany',
+    3: 'Mechaniczny',
+};
+
+const grupy: { [key: number]: string } = {
+    1: 'PS',
+    2: 'W',
+    3: 'LAB',
 };
 
 const day ={
@@ -81,6 +75,15 @@ type GroupInfo = {
 
 const Plans: React.FC = () => {
 
+    let data: Array<Obiekt> = [
+        { id: 'Englisz', name: 'Englisz', x: -1, y: -1, isset: false },
+        { id: 'Polish', name: 'Polish', x: -1, y: -1, isset: false },
+        { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
+    ];
+
+    const [acronym, setAcronym]  = useState<string>("");
+    const [subjects, setSubjects] = useState<Array>([]);
+    const [subjectsOnBoard, setSubjectsOnBoard] = useState<Array<ObiektNew>>([]);
     const [test, setTest] = useState<Array<SubjectDetails>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
@@ -88,6 +91,12 @@ const Plans: React.FC = () => {
     const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
+
+    const [selectedGroupType, setSelectedGroupType] = useState<string>("");
+    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
+    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
+    const [selectedSemester, setSelectedSemester] = useState<string>("");
+
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
@@ -106,6 +115,50 @@ const Plans: React.FC = () => {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, [Number(selectedSemester)]);
+            console.log(data)
+            setSubjects(data)
+        };
+
+        fetchData();
+    }, [selectedSemester]);
+
+    useEffect(() => {
+        if (acronym) {
+            function getObiektyByAcronym(subjects: any[], acronym: string, groupNumber: number): ObiektNew[] {
+                return subjects.flatMap((item) =>
+                    item.details
+                        .filter((detail) => detail.classType.acronym === acronym)
+                        .map((detail) => ({
+                            id: `${item._id} ${groupNumber}`,
+                            name: `${item.subject.name} ${groupNumber}`, // Append groupNumber to name
+                            type: detail.classType.name,
+                            color: detail.classType.color,
+                            isweekly: detail.weeklyBlockCount > 0,
+                            x: -1,
+                            y: -1,
+                            isset: false,
+                            groups: groupNumber // Set groups to current groupNumber
+                        }))
+                );
+            }
+
+            // Accumulate results across multiple runs
+            let allResults: ObiektNew[] = [];
+            for (let i = 1; i <= selectedGroupTypeCount; i++) {
+                const result = getObiektyByAcronym(subjects, acronym, i);
+                allResults = [...allResults, ...result];
+            }
+            console.log(allResults);
+            setSubjectsOnBoard(allResults)
+            setLessons(allResults);
+        }
+
+    }, [acronym]);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -131,54 +184,64 @@ const Plans: React.FC = () => {
         fetchData();
     }, []);
 
-    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
-    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
-
     const handleWydzialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedWydzial(event.target.value);
         setSelectedKierunek("");
     };
 
-    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = event.target.value;
-        setSelectedKierunek(selectedValue);
+    const handleSemesterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSemester(event.target.value);
+    };
 
-        if (selectedValue === '3') {  // W
+    const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = event.target.value;
+        setSelectedGroupType(event.target.value);
+        if (selectedValue === '2') {  // W
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'W'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
                     console.log(selectedGroupTypeCount+ " W")
+                    setAcronym("W")
                 }
             }
         }
 
-        if (selectedValue === '2') {  // PS
+        if (selectedValue === '1') {  // PS
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'PS'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
                     console.log(selectedGroupTypeCount+ " PS")
+                    setAcronym("PS")
                 }
             }
         }
 
-        if (selectedValue === '1') {  // La
+        if (selectedValue === '3') {  // La
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'L'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
                     console.log(selectedGroupTypeCount + " L")
+                    setAcronym("L")
                 }
             }
-            // setLessons(data3);
         }
     };
 
-    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki[parseInt(selectedWydzial)]) : [];
+    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = event.target.value;
+        console.log(event.target.value)
+        setSelectedKierunek(selectedValue);
+    };
 
-    const [lessons, setLessons] = useState(data);
-    const [grid, setGrid] = useState<Array<Array<Obiekt | null>>>([]);
+    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki) : [];
+    const wydzialyOptions = Object.entries(wydzialy);
+    const grupyOptions = Object.entries(grupy);
+
+    const [lessons, setLessons] = useState([]);
+    const [grid, setGrid] = useState<Array<Array<ObiektNew | null>>>([]);
 
     useEffect(() => {
-        const updatedGrid: Array<Array<Obiekt | null>> = Array(fixedRows)
+        const updatedGrid: Array<Array<ObiektNew | null>> = Array(fixedRows)
             .fill(null)
             .map(() => Array(selectedGroupTypeCount).fill(null));
 
@@ -190,7 +253,7 @@ const Plans: React.FC = () => {
         });
 
         setGrid(updatedGrid);
-    }, [lessons,  selectedGroupTypeCount]);
+    }, [lessons,  selectedGroupTypeCount, acronym]);
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
@@ -230,7 +293,7 @@ const Plans: React.FC = () => {
             return;
         }
 
-        const newGrid: Array<Array<Obiekt | null>> = grid.map(row => [...row]);
+        const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
         const draggedItem = lessons.find(item => item.id === active.id);
 
         if (!draggedItem) return;
@@ -271,10 +334,9 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-    console.log(test)
-    if (test?.length > 0) {
-        console.log(APIUtils.getSubjectDetailsForSpecificSemesters(test, [4]))
-    }
+    // if (test?.length > 0) {
+    //     console.log(APIUtils.getSubjectDetailsForSpecificSemesters(test, [4]))
+    // }
 
     return (
         <>
@@ -288,13 +350,12 @@ const Plans: React.FC = () => {
                     onChange={handleWydzialChange}
                 >
                     <option value="" disabled hidden>Wybierz wydział</option>
-                    <option value="1">Wydział 1</option>
-                    <option value="2">Wydział 2</option>
-                    <option value="3">Wydział 3</option>
+                    {wydzialyOptions.map(([key, value]) => (
+                        <option key={key} value={key}>{value}</option>
+                    ))}
                 </select>
 
                 {selectedWydzial && (
-                    <div className="">
                         <select
                             className="form-select"
                             aria-label="Default select example"
@@ -306,14 +367,33 @@ const Plans: React.FC = () => {
                                 <option key={key} value={key}>{value}</option>
                             ))}
                         </select>
-                    </div>
                 )}
-
-                {selectedKierunek && (
-                    <div className="mt-2">
-                        {/*<p>Wybrano: Wydział {selectedWydzial},*/}
-                        {/*    Kierunek {kierunki[selectedWydzial][selectedKierunek]}</p>*/}
-                    </div>
+                {selectedWydzial && selectedKierunek && (
+                    <select
+                        className="form-select"
+                        aria-label="Default select example"
+                        value={selectedSemester}
+                        onChange={handleSemesterChange}
+                    >
+                        <option value="" disabled hidden>Wybierz Semestr</option>
+                        {/*{kierunkiOptions.map(([key, value]) => (*/}
+                        {/*    <option key={key} value={key}>{value}</option>*/}
+                        {/*))}*/}
+                        <option value={4}>Semestr 4</option>
+                    </select>
+                )}
+                {selectedSemester && (
+                    <select
+                        className="form-select"
+                        aria-label="Default select example"
+                        value={selectedGroupType}
+                        onChange={handleGroupChange}
+                    >
+                        <option value="" disabled hidden>Wybierz kierunek</option>
+                        {grupyOptions.map(([key, value]) => (
+                            <option key={key} value={key}>{value}</option>
+                        ))}
+                    </select>
                 )}
             </div>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
@@ -376,7 +456,7 @@ const Plans: React.FC = () => {
                                     <td key={colIndex} className="col-3 text-center" scope="col">
                                         <Droppable id={`${rowIndex}_${colIndex}`}>
                                             {item && (
-                                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} type={item.type} color={item.color} group={item.group}
                                                            isset={true}>
                                                     {item.name}
                                                 </Draggable>
@@ -391,8 +471,8 @@ const Plans: React.FC = () => {
                     <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
                         <Droppable id='ugabuga'>
                             {lessons.filter(item => !item.isset).map(item => (
-                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset}
-                                           key={item.id}>
+                                <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
+                                           key={item.name}>
                                     {item.name}
                                 </Draggable>
                             ))}
@@ -406,3 +486,7 @@ const Plans: React.FC = () => {
 };
 
 export default Plans;
+
+
+
+
