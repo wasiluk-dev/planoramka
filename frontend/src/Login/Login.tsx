@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import apiService from "../../services/apiService.tsx";
 
 interface CreateUser{
-    name:string;
+    username:string;
     password:string;
     fullname:string;
 }
@@ -26,25 +26,33 @@ const Login: React.FC = () =>{
 
 
 
-    let ulogin: string | null = null;
     // @ts-ignore
     const [registerData, setRegisterData] = useState<CreateUser>({
         username: "",
         password: "",
     });
-    let pass: string | null = null;
 
     const login = () => {
         const uloginElement = document.getElementById('login') as HTMLInputElement | null;
         const passElement = document.getElementById('pass') as HTMLInputElement | null;
         //jeśli istnieje to weź wartość name i pass
         if (uloginElement && uloginElement.value && passElement && passElement.value) {
-            ulogin= uloginElement.value;
-            pass= passElement.value;
+            const loginData = {
+                username: uloginElement.value,
+                password: passElement.value,
+            };
+            setRegisterData(prevState => {
+                const updatedState = {
+                    ...prevState,
+                    ...loginData,
+                };
+                apiService.loginUser(updatedState);
+                return updatedState;
+            });
+        }else {
+            throw new Error("Błąd w logowaniou");
         }
-        console.log("Logowanie:");
-        console.log(ulogin);
-        console.log(pass);
+        console.log(document.cookie)
     }
 
     const register = () => {
@@ -54,7 +62,7 @@ const Login: React.FC = () =>{
 
         if (uloginElement?.value && passElement?.value && fullnameElement?.value) {
             const newRegisterData = {
-                name: uloginElement.value,
+                username: uloginElement.value,
                 password: passElement.value,
                 fullname: fullnameElement.value,
             };
@@ -64,13 +72,18 @@ const Login: React.FC = () =>{
                     ...prevState,
                     ...newRegisterData,
                 };
-                apiService.createUser(updatedState);
+                apiService.createUser(updatedState)
                 return updatedState;
             });
         } else {
             throw new Error("Błąd w rejestracji");
         }
     };
+
+
+    const logout = () => {
+                apiService.logoutUser()
+    }
 
  return(
      <>
@@ -84,8 +97,10 @@ const Login: React.FC = () =>{
              {/*<label htmlFor="email">Email:</label><br/>*/}
              {/*<input type="email" id="email" name="email"/>*/}
          </form>
-         <button className='btn btn-info fw-medium' name='login' onClick={login}>Zaloguj się (Ten przycisk nic nie robi :) )</button>
-         <button className='btn btn-success fw-medium' name='register' id="registerButton">Zarejestruj się</button>
+         <button className='btn btn-info fw-medium' name='login' onClick={login}>Zaloguj się</button>
+         <button className='btn btn-success fw-medium' name='register' id="registerButton" onClick={register}>Zarejestruj się</button>
+         <button className='btn btn-danger fw-medium' name='logout' id="logoutbutton" onClick={logout}>Wyloguj</button>
+
      </>
  )
 }
