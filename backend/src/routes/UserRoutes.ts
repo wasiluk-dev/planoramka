@@ -5,10 +5,8 @@ import { UserSchema } from '../models/User';
 import BaseRoutes from './BaseRoutes';
 
 const controller = new UserController();
-class UserRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof UserSchema>> {
+export default class UserRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {
         super(controller, 'users', 'user');
     }
 }
-
-export default UserRoutes;

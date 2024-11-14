@@ -5,10 +5,8 @@ import { SubjectSchema } from '../../models/courses/Subject';
 import BaseRoutes from '../BaseRoutes';
 
 const controller = new SubjectController();
-class SubjectRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof SubjectSchema>> {
+export default class SubjectRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof SubjectSchema>> {
     constructor() {
         super(controller, 'subjects', 'subject');
     }
 }
-
-export default SubjectRoutes;

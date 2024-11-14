@@ -1,11 +1,11 @@
-import argon2 from 'argon2';
 import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import EUserRole from '../enums/EUserRole';
+import StringUtils from '../utils/StringUtils';
 import Base from './Base';
 import Course from './courses/Course';
 
-export const UserSchema = new Schema({
+export const UserDefinition = {
     username: {
         type: String,
         unique: true,
@@ -14,16 +14,10 @@ export const UserSchema = new Schema({
     },
     password: {
         type: String,
+        required: true,
         minLength: 8,
     },
-    firstName: {
-        type: String,
-        required: true,
-    },
-    middleName: {
-        type: String,
-    },
-    lastName: {
+    fullName: {
         type: String,
         required: true,
     },
@@ -36,31 +30,22 @@ export const UserSchema = new Schema({
         enum: EUserRole,
         default: EUserRole.Student,
     },
+} as const;
+export const UserSchema = new Schema(UserDefinition);
+
+UserSchema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
+    if (!this.isModified('password')) return next();
+
+    StringUtils.hash(this.password)
+        .then((hashedPassword: string) => {
+            this.password = hashedPassword;
+            return next();
+        })
+        .catch(err => next(err));
 });
 
-UserSchema.virtual('fullName')
-    .get(function() {
-        if (!this.firstName && !this.middleName && !this.lastName) {
-            return null;
-        }
-
-        return `${this.firstName}${(this.middleName) ? ` ${this.middleName}` : ''} ${this.lastName}`;
-    });
-
-class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
+export default class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {
         super('User', UserSchema);
-        this.schema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
-            if (!this.password || !this.isModified('password')) return next();
-
-            argon2.hash(this.password)
-                .then((hashedPassword: string) => {
-                    this.password = hashedPassword;
-                    return next();
-                })
-                .catch(err => next(err));
-        });
     }
 }
-
-export default User;

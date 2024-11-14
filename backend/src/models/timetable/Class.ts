@@ -6,13 +6,12 @@ import Room from '../faculty/Room';
 import User from '../User';
 import ClassType from './ClassType';
 
-export const ClassSchema = new Schema({
+export const ClassDefinition = {
     organizer: {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            // need to select fields with the data (first/middle/last) for the virtual (full) to work properly
-            select: 'firstName middleName lastName fullName', // TODO: add title later
+            select: 'fullName', // TODO: add title later
         },
         required: true,
     },
@@ -58,12 +57,11 @@ export const ClassSchema = new Schema({
         autopopulate: true,
         required: true,
     },
-});
+} as const;
+export const ClassSchema = new Schema(ClassDefinition);
 
-class Class extends Base<HydratedDocumentFromSchema<typeof ClassSchema>> {
+export default class Class extends Base<HydratedDocumentFromSchema<typeof ClassSchema>> {
     constructor() {
         super('Class', ClassSchema);
     }
 }
-
-export default Class;

@@ -4,7 +4,7 @@ import Base from '../Base';
 import RoomType from './RoomType';
 
 // A030 | <Sala wykładowa> | 60
-export const RoomSchema = new Schema({
+export const RoomDefinition = {
     number: {
         type: String,
     },
@@ -21,7 +21,8 @@ export const RoomSchema = new Schema({
     capacity: {
         type: Number,
     },
-});
+} as const;
+export const RoomSchema = new Schema(RoomDefinition);
 
 RoomSchema.virtual('roomNumber')
     .get(function() {
@@ -38,10 +39,8 @@ RoomSchema.virtual('roomNumber')
         }
     });
 
-class Room extends Base<HydratedDocumentFromSchema<typeof RoomSchema>> {
+export default class Room extends Base<HydratedDocumentFromSchema<typeof RoomSchema>> {
     constructor() {
         super('Room', RoomSchema);
     }
 }
-
-export default Room;

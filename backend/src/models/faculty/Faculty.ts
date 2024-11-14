@@ -5,7 +5,7 @@ import Course from '../courses/Course';
 import Building from './Building';
 
 // WI | Wydział Informatyki | [Informatyka, Informatyka i ekonometria] | [Budynek A, Budynek B, Budynek C]
-export const FacultySchema = new Schema({
+export const FacultyDefinition = {
     acronym: {
         type: String,
         required: true,
@@ -22,12 +22,11 @@ export const FacultySchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Building().name,
     }],
-});
+} as const;
+export const FacultySchema = new Schema(FacultyDefinition);
 
-class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {
+export default class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {
     constructor() {
         super('Faculty', FacultySchema);
     }
 }
-
-export default Faculty;

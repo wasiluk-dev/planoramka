@@ -5,10 +5,8 @@ import { RoomSchema } from '../../models/faculty/Room';
 import BaseRoutes from '../BaseRoutes';
 
 const controller = new RoomController();
-class RoomRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof RoomSchema>> {
+export default class RoomRoutes extends BaseRoutes<HydratedDocumentFromSchema<typeof RoomSchema>> {
     constructor() {
         super(controller, 'rooms', 'room');
     }
 }
-
-export default RoomRoutes;

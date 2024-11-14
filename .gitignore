@@ -131,3 +131,6 @@ dist
 
 # SSL private key
 **/ssl/key.pem
+
+# Example app data
+data

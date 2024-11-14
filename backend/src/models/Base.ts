@@ -5,7 +5,7 @@ import uniqueValidator from 'mongoose-unique-validator';
 
 import DBUtils from '../utils/DBUtils';
 
-abstract class Base<T extends Document> {
+export default abstract class Base<T extends Document> {
     private readonly _name: string;
     private readonly _schema: Schema<T>;
     private readonly _model: Model<T>;
@@ -76,5 +76,3 @@ abstract class Base<T extends Document> {
         return this._model;
     }
 }
-
-export default Base;

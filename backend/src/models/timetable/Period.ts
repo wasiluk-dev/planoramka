@@ -6,7 +6,7 @@ import Base from '../Base';
 // 2 | 2 | 09:15 | 09:30
 // 3 | 3 | 09:30 | 10:15
 // 6 | 1 | 08:00 | 08:45
-export const PeriodSchema = new Schema({
+export const PeriodDefinition = {
     weekdays: [{
         type: Number,
         required: true,
@@ -34,12 +34,11 @@ export const PeriodSchema = new Schema({
         validate: /[0-9]{2}:[0-9]{2}/,
         required: true,
     },
-});
+} as const;
+export const PeriodSchema = new Schema(PeriodDefinition);
 
-class Period extends Base<HydratedDocumentFromSchema<typeof PeriodSchema>> {
+export default class Period extends Base<HydratedDocumentFromSchema<typeof PeriodSchema>> {
     constructor() {
         super('Period', PeriodSchema);
     }
 }
-
-export default Period;
