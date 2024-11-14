@@ -9,6 +9,9 @@ interface DraggableProps {
     x: number;
     y: number;
     isset: boolean;
+    type: string,
+    color: string,
+    group?: number,
 }
 
 const Draggable: React.FC<DraggableProps> = (props) => {
@@ -26,6 +29,8 @@ const Draggable: React.FC<DraggableProps> = (props) => {
 
     const style = {
         transform: CSS.Translate.toString(transform),
+        backgroundColor: props.color,
+        border: "1px solid black"
     };
 
     return (
