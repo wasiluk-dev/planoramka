@@ -11,6 +11,7 @@ import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
 import {SubjectDetails} from "../../services/databaseTypes.tsx";
+import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
 
 
@@ -91,6 +92,7 @@ const Plans: React.FC = () => {
     const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
+    const [popup, setPopup] = useState<boolean>(false)
 
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
     const [selectedWydzial, setSelectedWydzial] = useState<string>("");
@@ -119,7 +121,6 @@ const Plans: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, [Number(selectedSemester)]);
-            console.log(data)
             setSubjects(data)
         };
 
@@ -152,7 +153,6 @@ const Plans: React.FC = () => {
                 const result = getObiektyByAcronym(subjects, acronym, i);
                 allResults = [...allResults, ...result];
             }
-            console.log(allResults);
             setSubjectsOnBoard(allResults)
             setLessons(allResults);
         }
@@ -200,7 +200,6 @@ const Plans: React.FC = () => {
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'W'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    console.log(selectedGroupTypeCount+ " W")
                     setAcronym("W")
                 }
             }
@@ -210,7 +209,6 @@ const Plans: React.FC = () => {
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'PS'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    console.log(selectedGroupTypeCount+ " PS")
                     setAcronym("PS")
                 }
             }
@@ -220,7 +218,6 @@ const Plans: React.FC = () => {
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'L'){
                     setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    console.log(selectedGroupTypeCount + " L")
                     setAcronym("L")
                 }
             }
@@ -229,7 +226,6 @@ const Plans: React.FC = () => {
 
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
-        console.log(event.target.value)
         setSelectedKierunek(selectedValue);
     };
 
@@ -253,7 +249,7 @@ const Plans: React.FC = () => {
         });
 
         setGrid(updatedGrid);
-    }, [lessons,  selectedGroupTypeCount, acronym]);
+    }, [lessons,  selectedGroupTypeCount, acronym, fixedRows]);
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
@@ -266,7 +262,6 @@ const Plans: React.FC = () => {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        console.log(active.data.current);
         if (!over) {
             return;
         }
@@ -283,6 +278,7 @@ const Plans: React.FC = () => {
             toCol = -1;
         }
 
+
         if (isNaN(fromRow) || isNaN(fromCol) || isNaN(toRow) || isNaN(toCol)) {
             console.log("AjDi not walid");
             return;
@@ -294,11 +290,14 @@ const Plans: React.FC = () => {
         }
 
         const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
-        const draggedItem = lessons.find(item => item.id === active.id);
+        const draggedItem :ObiektNew = lessons.find(item => item.id === active.id);
+
+        if(!draggedItem.name.includes((toCol+1).toString())) return;
 
         if (!draggedItem) return;
 
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
+            //Wkładaniew pasek boczny
             if (toId.includes('ugabuga')) {
                 setLessons(prevLessons =>
                     prevLessons.map(item =>
@@ -308,9 +307,10 @@ const Plans: React.FC = () => {
                     )
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
+                //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
+                setPopup(true);
                 if (grid[toRow][toCol]) return;
-
                 const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
                 setLessons(prevLessons =>
                     prevLessons.map(item =>
@@ -322,6 +322,7 @@ const Plans: React.FC = () => {
         } else {
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
+                setPopup(true);
                 setLessons(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
@@ -330,13 +331,9 @@ const Plans: React.FC = () => {
                 newGrid[draggedItem.x][draggedItem.y] = null;
             }
         }
-
         setGrid(newGrid);
     };
 
-    // if (test?.length > 0) {
-    //     console.log(APIUtils.getSubjectDetailsForSpecificSemesters(test, [4]))
-    // }
 
     return (
         <>
@@ -396,6 +393,9 @@ const Plans: React.FC = () => {
                     </select>
                 )}
             </div>
+            <RoomPopup trigger={popup} setTrigger={setPopup}>
+
+            </RoomPopup>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <table className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">

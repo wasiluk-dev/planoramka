@@ -1,4 +1,5 @@
 import * as dataType from "./databaseTypes.tsx";
+import {redirect} from "react-router-dom";
 
 const baseUrl :string = 'https://127.0.0.1:3000';
 const  myHeaders = new Headers();
@@ -132,7 +133,6 @@ const apiService = {
 
             if (response.ok) {
                 console.log("Login successful");
-
                 // Display cookies
                 console.log("Cookies after login:", document.cookie);
             } else {
