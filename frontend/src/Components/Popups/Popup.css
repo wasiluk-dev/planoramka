@@ -18,6 +18,10 @@
 .popup-inner{
     max-width: 640px;
     background-color: #fff;
+    min-height: 300px;
+    border: #125801 2px solid;
+    border-radius: 8px;
+    background-color: darkgray;
 }
 
 .room, .teacher{
