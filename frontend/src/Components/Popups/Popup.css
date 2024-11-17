@@ -1,0 +1,29 @@
+.popup{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.close-btn{
+    top: 6px;
+    right: 6px;
+}
+
+.popup-inner{
+    max-width: 640px;
+    background-color: #fff;
+    min-height: 300px;
+    border: #125801 2px solid;
+    border-radius: 8px;
+    background-color: darkgray;
+}
+
+.room, .teacher{
+    margin-top: 20px;
+}

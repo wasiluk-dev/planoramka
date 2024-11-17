@@ -1,4 +1,5 @@
 import * as dataType from "./databaseTypes.tsx";
+import {redirect} from "react-router-dom";
 
 const baseUrl :string = 'https://127.0.0.1:3000';
 const  myHeaders = new Headers();
@@ -15,8 +16,13 @@ type User = {
 }
 
 type CreateUser = {
-    name: string;
+    username: string;
     fullname: string;
+    password: string;
+}
+
+type LoginUser = {
+    username: string;
     password: string;
 }
 
@@ -72,8 +78,8 @@ const apiService = {
     createUser: async (registerdata: CreateUser): Promise<void> => {
 
         const urlencoded = new URLSearchParams();
-        urlencoded.append("name", registerdata.name);
-        urlencoded.append("fullname", registerdata.fullname);
+        urlencoded.append("username", registerdata.username);
+        urlencoded.append("fullName", registerdata.fullname);
         urlencoded.append("password", registerdata.password);
 
         const requestOptions = {
@@ -82,15 +88,11 @@ const apiService = {
             body: urlencoded,
         };
         //CZEMU TO TERAZ DZIAŁA
-        console.log(urlencoded)
-        await fetch( baseUrl + "/users", requestOptions)
+        await fetch( baseUrl + "/auth/register", requestOptions)
             .then((response) => {
                 console.log(response)
                 response.text()
             })
-            // .then((result) => {
-            //     console.log(result)
-            // })
             .catch((error) => {
                 console.log(error)
             });
@@ -111,6 +113,55 @@ const apiService = {
         //     return true;
         // }
 
+    },
+
+    loginUser: async (registerdata: LoginUser): Promise<void> => {
+
+        const urlencoded = new URLSearchParams();
+        urlencoded.append("username", registerdata.username);
+        urlencoded.append("password", registerdata.password);
+
+        const requestOptions = {
+            method: "POST",
+            credentials: "include",
+            headers: myHeaders,
+            body: urlencoded
+        };
+        //CZEMU TO TERAZ DZIAŁA
+        try {
+            const response = await fetch(baseUrl + "/auth/login", requestOptions);
+
+            if (response.ok) {
+                console.log("Login successful");
+                // Display cookies
+                console.log("Cookies after login:", document.cookie);
+            } else {
+                console.error("Login failed:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("Request error:", error);
+        }
+    },
+
+    logoutUser: async (): Promise<void> => {
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+        };
+        //CZEMU TO TERAZ DZIAŁA
+        try {
+            const response = await fetch(baseUrl + "/auth/logout", requestOptions);
+
+            if (response.ok) {
+                console.log("Logout successful");
+
+            } else {
+                console.error("Logout failed:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("Request error:", error);
+        }
     }
 }
 export default  apiService;

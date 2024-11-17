@@ -1,0 +1,50 @@
+/* Styles for the dropdown */
+.dropdown {
+    position: relative;
+    width: 200px; /* Adjust width as needed */
+}
+
+.control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.selected-value input {
+    width: 100%;
+    border: none;
+    outline: none;
+}
+
+.arrow {
+    cursor: pointer;
+}
+
+.options {
+    position: absolute;
+    width: 100%;
+    max-height: 150px; /* Set a height limit for the dropdown */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    z-index: 1000; /* Ensure dropdown appears above other elements */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.options .option {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.options .option:hover {
+    background-color: #f0f0f0;
+}
+
+.options .option.selected {
+    font-weight: bold;
+    background-color: #e0e0e0;
+}
