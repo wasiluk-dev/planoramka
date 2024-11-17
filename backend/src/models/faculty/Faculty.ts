@@ -21,6 +21,9 @@ export const FacultyDefinition = {
     buildings: [{
         type: Schema.Types.ObjectId,
         ref: new Building().name,
+        autopopulate: {
+            select: '-address',
+        },
     }],
 } as const;
 export const FacultySchema = new Schema(FacultyDefinition);
