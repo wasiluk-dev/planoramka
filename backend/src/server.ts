@@ -23,7 +23,11 @@ app.use(session({
     secret: 'secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false },
+    cookie: {
+        secure: false,
+        sameSite: 'none',
+        httpOnly: false,
+    },
     store: MongoStore.create({
         clientPromise: dbClient,
     }),
