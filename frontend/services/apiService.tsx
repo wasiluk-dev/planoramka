@@ -44,6 +44,21 @@ const apiService = {
         }
         return await response.json();
     },
+    getRooms: async (): Promise<dataType.Periods | null> => {
+        const response : Response = await fetch(baseUrl + '/rooms');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+    getFaculties: async (): Promise<dataType.Periods | null> => {
+        const response : Response = await fetch(baseUrl + '/faculties');
+        if (!response.ok) {
+            return null;
+        }
+        return await response.json();
+    },
+
     // getSemesters: async (): Promise<Courses | null> => {
     //     const response : Response = await fetch(baseUrl + '/semesters');
     //     if (!response.ok) {
