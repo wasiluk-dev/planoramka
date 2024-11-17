@@ -14,6 +14,11 @@ type User = {
     type?: number;
 }
 
+type CreateUser = {
+    name: string;
+    fullname: string;
+    password: string;
+}
 
 const apiService = {
     //Test Api - userzy
@@ -66,16 +71,10 @@ const apiService = {
 
     createUser: async (registerdata: CreateUser): Promise<void> => {
 
-        const dane : User = {
-            username:registerdata.username,
-            password:registerdata.password,
-            email:"email@gmail.com",
-            name:"name",
-            surname:"Surname"
-        }
         const urlencoded = new URLSearchParams();
-        urlencoded.append("username", dane.username);
-        urlencoded.append("password", dane.password);
+        urlencoded.append("name", registerdata.name);
+        urlencoded.append("fullname", registerdata.fullname);
+        urlencoded.append("password", registerdata.password);
 
         const requestOptions = {
             method: "POST",
@@ -83,7 +82,8 @@ const apiService = {
             body: urlencoded,
         };
         //CZEMU TO TERAZ DZIAŁA
-        fetch("http://localhost:3000/users", requestOptions)
+        console.log(urlencoded)
+        await fetch( baseUrl + "/users", requestOptions)
             .then((response) => {
                 console.log(response)
                 response.text()

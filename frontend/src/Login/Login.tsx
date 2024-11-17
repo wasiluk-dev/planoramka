@@ -2,8 +2,9 @@ import React, {useEffect, useState} from "react";
 import apiService from "../../services/apiService.tsx";
 
 interface CreateUser{
-    username:string;
+    name:string;
     password:string;
+    fullname:string;
 }
 
 const Login: React.FC = () =>{
@@ -49,11 +50,13 @@ const Login: React.FC = () =>{
     const register = () => {
         const uloginElement = document.getElementById('login') as HTMLInputElement | null;
         const passElement = document.getElementById('pass') as HTMLInputElement | null;
+        const fullnameElement = document.getElementById('fullname') as HTMLInputElement | null;
 
-        if (uloginElement?.value && passElement?.value) {
+        if (uloginElement?.value && passElement?.value && fullnameElement?.value) {
             const newRegisterData = {
-                username: uloginElement.value,
+                name: uloginElement.value,
                 password: passElement.value,
+                fullname: fullnameElement.value,
             };
 
             setRegisterData(prevState => {
@@ -76,12 +79,10 @@ const Login: React.FC = () =>{
              <input type="text" id="login" name="login"/><br/>
              <label htmlFor="pass">Hasło:</label><br/>
              <input type="password" id="pass" name="pass"/><br/>
-             <label htmlFor="name">Imię:</label><br/>
-             <input type="text" id="name" name="name"/><br/>
-             <label htmlFor="sname">Nazwisko:</label><br/>
-             <input type="surname" id="sname" name="sname"/><br/>
-             <label htmlFor="email">Email:</label><br/>
-             <input type="email" id="email" name="email"/>
+             <label htmlFor="fullname">Imię i Nazwisko:</label><br/>
+             <input type="text" id="fullname" name="fullname"/><br/>
+             {/*<label htmlFor="email">Email:</label><br/>*/}
+             {/*<input type="email" id="email" name="email"/>*/}
          </form>
          <button className='btn btn-info fw-medium' name='login' onClick={login}>Zaloguj się (Ten przycisk nic nie robi :) )</button>
          <button className='btn btn-success fw-medium' name='register' id="registerButton">Zarejestruj się</button>
