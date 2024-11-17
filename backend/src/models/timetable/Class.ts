@@ -1,6 +1,7 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
+import Semester from '../courses/Semester';
 import Subject from '../courses/Subject';
 import Room from '../faculty/Room';
 import User from '../User';
@@ -27,14 +28,6 @@ export const ClassDefinition = {
         ref: new ClassType().name,
         autopopulate: true,
     },
-    periodBlocks: [{
-        type: Number,
-        required: true,
-        min: 1,
-        validate: {
-            validator: Number.isInteger,
-        },
-    }],
     weekday: {
         type: Number,
         required: true,
@@ -44,8 +37,9 @@ export const ClassDefinition = {
             validator: Number.isInteger,
         },
     },
-    studentGroups: [{
+    periodBlocks: [{
         type: Number,
+        required: true,
         min: 1,
         validate: {
             validator: Number.isInteger,
@@ -57,6 +51,17 @@ export const ClassDefinition = {
         autopopulate: true,
         required: true,
     },
+    semester: {
+        type: Schema.Types.ObjectId,
+        ref: new Semester().name,
+    },
+    studentGroups: [{
+        type: Number,
+        min: 1,
+        validate: {
+            validator: Number.isInteger,
+        },
+    }],
 } as const;
 export const ClassSchema = new Schema(ClassDefinition);
 
