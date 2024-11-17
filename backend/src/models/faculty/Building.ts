@@ -30,6 +30,7 @@ export const BuildingDefinition = {
     rooms: [{
         type: Schema.Types.ObjectId,
         ref: new Room().name,
+        autopopulate: true,
     }],
 } as const;
 export const BuildingSchema = new Schema(BuildingDefinition);
