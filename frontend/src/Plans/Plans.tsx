@@ -389,7 +389,7 @@ const Plans: React.FC = () => {
                         value={selectedGroupType}
                         onChange={handleGroupChange}
                     >
-                        <option value="" disabled hidden>Wybierz kierunek</option>
+                        <option value="" disabled hidden>Wybierz typ grupy</option>
                         {grupyOptions.map(([key, value]) => (
                             <option key={key} value={key}>{value}</option>
                         ))}
