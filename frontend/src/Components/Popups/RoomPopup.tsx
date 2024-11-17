@@ -93,8 +93,8 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
                                 >
                                     <option value="" disabled hidden>Wybierz Budynek</option>
                                     {selectedFacultyRooms.buildings.map(room => (
-                                        <option key={room} value={room} /*onClick={() =>{ setFacultyId(room._id)}}*/>
-                                            {room}
+                                        <option key={room.acronym} value={room.name} /*onClick={() =>{ setFacultyId(room._id)}}*/>
+                                            {room.name}
                                         </option>
                                     ))}
                                 </select>
