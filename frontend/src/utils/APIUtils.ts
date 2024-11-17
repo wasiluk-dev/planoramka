@@ -18,9 +18,8 @@ type ClassPopulated = {
         acronym: string;
         color: string;
     };
-    periodBlocks: number[];
     weekday: number;
-    studentGroups: number[];
+    periodBlocks: number[];
     room: {
         _id: string;
         number: string;
@@ -32,6 +31,8 @@ type ClassPopulated = {
         capacity: number | null;
         roomNumber: string;
     };
+    semester: string;
+    studentGroups: number[];
 };
 type RoomPopulated = {
     _id: string;
@@ -73,14 +74,14 @@ export default class APIUtils {
             return null;
         }
 
-        for (const c of classes) {
-            try {
+        try {
+            for (const c of classes) {
                 if (c.organizer._id === userId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
                     return true;
                 }
-            } catch (err) {
-                console.error(err);
             }
+        } catch (err) {
+            console.error(err);
         }
 
         return false;
@@ -90,32 +91,37 @@ export default class APIUtils {
             return null;
         }
 
-        for (const c of classes) {
-            try {
+        try {
+            for (const c of classes) {
                 if (c.room._id === roomId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
                     return true;
                 }
-            } catch (err) {
-                console.error(err);
             }
+        } catch (err) {
+            console.error(err);
         }
 
         return false;
     }
-    // TODO: check the group's semester first, somehow
-    static isStudentGroupBusy(classes: ClassPopulated[], semesterId: string, groupNumber: number, weekday: EWeekday, periodBlock: number) {
-        if (!classes || !semesterId || !groupNumber || !weekday || !periodBlock) {
+    static isStudentGroupBusy(classes: ClassPopulated[], classTypeId: string, semesterId: string, groupNumber: number, weekday: EWeekday, periodBlock: number) {
+        if (!classes || !classTypeId || !semesterId || !groupNumber || !weekday || !periodBlock) {
             return null;
         }
 
-        for (const c of classes) {
-            try {
-                if (c.room._id === roomId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
+        try {
+            for (const c of classes) {
+                if (
+                    c.semester === semesterId
+                    && c.classType._id === classTypeId
+                    && c.studentGroups.includes(groupNumber)
+                    && c.weekday === weekday
+                    && c.periodBlocks.includes(periodBlock)
+                ) {
                     return true;
                 }
-            } catch (err) {
-                console.error(err);
             }
+        } catch (err) {
+            console.error(err);
         }
 
         return false;
@@ -128,14 +134,14 @@ export default class APIUtils {
         }
 
         const roomsWithSpecifiedType: RoomPopulated[] = [];
-        for (const r of rooms) {
-            try {
+        try {
+            for (const r of rooms) {
                 if (r.type?._id === roomTypeId) {
                     roomsWithSpecifiedType.push(r);
                 }
-            } catch (err) {
-                console.error(err);
             }
+        } catch (err) {
+            console.error(err);
         }
 
         return roomsWithSpecifiedType;
@@ -148,14 +154,14 @@ export default class APIUtils {
         }
 
         const newSubjectDetails: SubjectDetailsPopulated[] = [];
-        for (const subjectDetail of subjectDetails) {
-            try {
+        try {
+            for (const subjectDetail of subjectDetails) {
                 if (targetedSemesters.every(v => subjectDetail.subject.targetedSemesters.includes(v))) {
                     newSubjectDetails.push(subjectDetail);
                 }
-            } catch (err) {
-                // console.error(err);
             }
+        } catch (err) {
+            // console.error(err);
         }
 
         return newSubjectDetails;
