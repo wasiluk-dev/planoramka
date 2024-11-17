@@ -20,7 +20,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                                                                    id,
                                                                    selectedVal,
                                                                    handleChange,
-                                                                   maxOptions = 10, // Default to show up to 10 options if not provided
+                                                                   maxOptions = 99, // Default to show up to 10 options if not provided
                                                                }) => {
     const [query, setQuery] = useState<string>("");
     const [isOpen, setIsOpen] = useState<boolean>(false);
