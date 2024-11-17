@@ -67,8 +67,6 @@ type SubjectDetailsPopulated = {
 
 // TODO: change returning nulls to throwing errors
 export default class APIUtils {
-    static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetails[], targetedSemesters: number[]) {
-        if(!subjectDetails || !targetedSemesters){
     // Class
     static isProfessorBusy(classes: ClassPopulated[], userId: string, weekday: EWeekday, periodBlock: number) {
         if (!classes || !userId || !weekday || !periodBlock) {
@@ -89,6 +87,24 @@ export default class APIUtils {
     }
     static isRoomOccupied(classes: ClassPopulated[], roomId: string, weekday: EWeekday, periodBlock: number) {
         if (!classes || !roomId || !weekday || !periodBlock) {
+            return null;
+        }
+
+        for (const c of classes) {
+            try {
+                if (c.room._id === roomId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
+                    return true;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        return false;
+    }
+    // TODO: check the group's semester first, somehow
+    static isStudentGroupBusy(classes: ClassPopulated[], semesterId: string, groupNumber: number, weekday: EWeekday, periodBlock: number) {
+        if (!classes || !semesterId || !groupNumber || !weekday || !periodBlock) {
             return null;
         }
 
