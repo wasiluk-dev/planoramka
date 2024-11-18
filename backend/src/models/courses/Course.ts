@@ -5,6 +5,7 @@ import ECourseDegree from '../../enums/ECourseDegree';
 import ECourseMode from '../../enums/ECourseMode';
 import Base from '../Base';
 import Semester from './Semester';
+import ElectiveSubject from './ElectiveSubject';
 
 // INF1 | Informatyka | I stopnia | inżynierskie | stacjonarne | 2021 | (9)
 export const CourseDefinition = {
@@ -36,6 +37,10 @@ export const CourseDefinition = {
     semesters: {
         type: [Schema.Types.ObjectId],
         ref: new Semester().name,
+    },
+    electiveSubjects: {
+        type: [Schema.Types.ObjectId],
+        ref: new ElectiveSubject().name,
     },
 } as const;
 export const CourseSchema = new Schema(CourseDefinition);

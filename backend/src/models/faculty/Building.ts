@@ -7,11 +7,11 @@ import Room from './Room';
 // B | Budynek B | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [B01, B02, B03...]
 // C | Budynek C | Wiejska 45A, 15-351 Białystok, Polska | (false) | (false) | [001, 002, 003...]
 export const BuildingDefinition = {
-    acronym: {
+    name: {
         type: String,
         required: true,
     },
-    name: {
+    acronym: {
         type: String,
         required: true,
     },
