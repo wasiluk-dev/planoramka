@@ -28,9 +28,12 @@ export const SubjectDefinition = {
             validator: Number.isInteger,
         },
     }],
-    types: [{
+    classTypes: [{
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
+        autopopulate: {
+            select: 'name acronym',
+        },
     }],
 } as const;
 export const SubjectSchema = new Schema(SubjectDefinition);
