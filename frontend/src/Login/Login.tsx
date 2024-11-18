@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import apiService from "../../services/apiService.tsx";
+import {useNavigate} from "react-router-dom";
 
 interface CreateUser{
     username:string;
@@ -9,6 +10,8 @@ interface CreateUser{
 
 const Login: React.FC = () =>{
 
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const button = document.getElementById('registerButton');
@@ -46,7 +49,11 @@ const Login: React.FC = () =>{
                     ...prevState,
                     ...loginData,
                 };
-                apiService.loginUser(updatedState);
+                apiService.loginUser(updatedState).then(r => {
+                    if (r){
+                        navigate('/');
+                    }
+                });
                 return updatedState;
             });
         }else {
