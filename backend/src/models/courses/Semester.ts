@@ -19,10 +19,7 @@ export const SemesterDefinition = {
     subjects: [{
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
-    }],
-    electiveSubjects: [{
-        type: Schema.Types.ObjectId,
-        ref: new ElectiveSubject().name,
+        autopopulate: true,
     }],
 } as const;
 export const SemesterSchema = new Schema(SemesterDefinition);

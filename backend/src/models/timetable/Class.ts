@@ -14,7 +14,6 @@ export const ClassDefinition = {
         autopopulate: {
             select: 'fullName', // TODO: add title later
         },
-        required: true,
     },
     subject: {
         type: Schema.Types.ObjectId,
@@ -27,6 +26,7 @@ export const ClassDefinition = {
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
         autopopulate: true,
+        required: true,
     },
     weekday: {
         type: Number,
@@ -54,9 +54,11 @@ export const ClassDefinition = {
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
+        required: true,
     },
     studentGroups: [{
         type: Number,
+        required: true,
         min: 1,
         validate: {
             validator: Number.isInteger,

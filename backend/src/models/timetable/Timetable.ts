@@ -10,13 +10,7 @@ export const TimetableDefinition = {
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
-    },
-    targetedSemester: {
-        type: Number,
-        min: 1,
-        validate: {
-            validator: Number.isInteger,
-        },
+        required: true,
     },
     weekdays: [{
         type: Number,
@@ -31,6 +25,7 @@ export const TimetableDefinition = {
         type: Schema.Types.ObjectId,
         ref: new Schedule().name,
         autopopulate: true,
+        required: true,
     }],
     groups: [{
         _id: false,

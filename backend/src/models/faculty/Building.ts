@@ -13,7 +13,6 @@ export const BuildingDefinition = {
     },
     acronym: {
         type: String,
-        required: true,
     },
     address: {
         type: String,
