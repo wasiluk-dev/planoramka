@@ -63,10 +63,10 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 
     return (
         <div className="dropdown" ref={dropdownRef}>
-            <div className="control">
+            <div className="">
                 <div className="selected-value dropdown">
                     <input
-                        className="form-text"
+                        className="form-control"
                         ref={inputRef}
                         type="text"
                         value={getDisplayValue()}

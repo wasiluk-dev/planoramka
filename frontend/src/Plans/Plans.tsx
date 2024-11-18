@@ -14,15 +14,6 @@ import {SubjectDetails} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
 
-
-type Obiekt = {
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    isset: boolean
-};
-
 type ObiektNew = {
     id: string,
     name: string,
@@ -76,11 +67,6 @@ type GroupInfo = {
 
 const Plans: React.FC = () => {
 
-    let data: Array<Obiekt> = [
-        { id: 'Englisz', name: 'Englisz', x: -1, y: -1, isset: false },
-        { id: 'Polish', name: 'Polish', x: -1, y: -1, isset: false },
-        { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
-    ];
 
     const [acronym, setAcronym]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
