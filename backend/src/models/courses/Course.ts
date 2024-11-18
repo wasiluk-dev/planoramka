@@ -33,13 +33,6 @@ export const CourseDefinition = {
         enum: ECourseMode,
         required: true,
     },
-    startDate: {
-        type: Date,
-    },
-    semesterCount: {
-        type: Number,
-        required: true,
-    },
     semesters: {
         type: [Schema.Types.ObjectId],
         ref: new Semester().name,
