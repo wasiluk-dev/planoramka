@@ -98,8 +98,8 @@
         mode: boolean;
         startDate: string;
         semesterCount: number;
-        semesters: Array<string>; // do zmiany
-        electiveSubjects: Array<string>; //do zmiany
+        semesters: Array<Semesters>;
+        electiveSubjects: Array<Subject>;
     }
 
     export type Users = {

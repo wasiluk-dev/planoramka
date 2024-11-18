@@ -10,18 +10,9 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {SubjectDetails} from "../../services/databaseTypes.tsx";
+import {Room, SubjectDetails, Courses} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
-
-
-type Obiekt = {
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    isset: boolean
-};
 
 type ObiektNew = {
     id: string,
@@ -35,17 +26,26 @@ type ObiektNew = {
     group?: number
 };
 
+type Buildings = {
+    id: string,
+    acronym: string,
+    name: string,
+    address: string;
+    rooms: Array<Room>;
+}
+
+type Faculties = {
+    _id: string;
+    acronym: string;
+    name: string;
+    buildings: Array<Buildings>;
+    courses: Array<Courses>;
+}
 
 const kierunki: { [key: number]: string } = {
     1: "Informatyka",
     2: "Informatyka i Ekonometria",
     3: "Informatyka",
-};
-
-const wydzialy: { [key: number]: string } = {
-    1: 'Informatyki',
-    2: 'Budowlany',
-    3: 'Mechaniczny',
 };
 
 const grupy: { [key: number]: string } = {
@@ -76,11 +76,6 @@ type GroupInfo = {
 
 const Plans: React.FC = () => {
 
-    let data: Array<Obiekt> = [
-        { id: 'Englisz', name: 'Englisz', x: -1, y: -1, isset: false },
-        { id: 'Polish', name: 'Polish', x: -1, y: -1, isset: false },
-        { id: 'Dżapanizz', name: 'Dżapanizz', x: -1, y: -1, isset: false }
-    ];
 
     const [acronym, setAcronym]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
@@ -93,10 +88,14 @@ const Plans: React.FC = () => {
     const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
     const [popup, setPopup] = useState<boolean>(false)
+    const [faculties, setFaculties] = useState<Array<Faculties>>([])
+    const [courses, setCourses] = useState<Array<Courses>>([])
 
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
-    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
-    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
+    const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
+    const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
+    const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+    const [selectedCourse, setSelectedCourse] = useState();
     const [selectedSemester, setSelectedSemester] = useState<string>("");
 
     useEffect(() => {
@@ -108,6 +107,19 @@ const Plans: React.FC = () => {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getFaculties();
+            setFaculties(data);
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+
+    }, [selectedFacultyId]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -184,9 +196,11 @@ const Plans: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleWydzialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedWydzial(event.target.value);
-        setSelectedKierunek("");
+    const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedFacultyId(event.target.value);
+        setSelectedCourseId("");
+        const faculty = faculties.find((faculty) => faculty._id === event.target.value);
+        setSelectedFaculty(faculty);
     };
 
     const handleSemesterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -226,11 +240,10 @@ const Plans: React.FC = () => {
 
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
-        setSelectedKierunek(selectedValue);
+        setSelectedCourseId(selectedValue);
     };
 
-    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki) : [];
-    const wydzialyOptions = Object.entries(wydzialy);
+    const kierunkiOptions = selectedFacultyId ? Object.entries(kierunki) : [];
     const grupyOptions = Object.entries(grupy);
 
     const [lessons, setLessons] = useState([]);
@@ -334,7 +347,6 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -343,29 +355,31 @@ const Plans: React.FC = () => {
                 <select
                     className="form-select"
                     aria-label="Default select example"
-                    value={selectedWydzial}
-                    onChange={handleWydzialChange}
+                    value={selectedFacultyId}
+                    onChange={handleFacultyChange}
                 >
-                    <option value="" disabled hidden>Wybierz wydział</option>
-                    {wydzialyOptions.map(([key, value]) => (
-                        <option key={key} value={key}>{value}</option>
+                    <option value="" disabled hidden>Wybierz Wydział</option>
+                    {faculties.map((faculty, index) => (
+                        <option key={faculty._id} value={faculty._id}>
+                            {faculty.name}
+                        </option>
                     ))}
                 </select>
-
-                {selectedWydzial && (
+                {selectedFacultyId && (
+                    selectedFaculty?.courses ? (
                         <select
-                            className="form-select"
-                            aria-label="Default select example"
-                            value={selectedKierunek}
-                            onChange={handleKierunekChange}
+                        className="form-select"
+                        aria-label="Default select example"
+                        value={selectedCourseId}
+                        onChange={handleKierunekChange}
                         >
-                            <option value="" disabled hidden>Wybierz kierunek</option>
-                            {kierunkiOptions.map(([key, value]) => (
-                                <option key={key} value={key}>{value}</option>
-                            ))}
-                        </select>
+                        <option value="" disabled hidden>Wybierz kierunek</option>
+                        {kierunkiOptions.map(([key, value]) => (
+                            <option key={key} value={key}>{value}</option>
+                        ))}
+                    </select>): ("Brak kierunków do wyświetlenia")
                 )}
-                {selectedWydzial && selectedKierunek && (
+                {selectedFacultyId && selectedCourseId && (
                     <select
                         className="form-select"
                         aria-label="Default select example"
@@ -398,7 +412,8 @@ const Plans: React.FC = () => {
             </RoomPopup>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <table className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
+                    <table
+                        className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
                         <tbody style={{height: '100%'}}>
                         <tr className="table-dark text-center">
                             <td className="table-dark text-center fw-bolder fs-5" colSpan={selectedGroupTypeCount + 1}>

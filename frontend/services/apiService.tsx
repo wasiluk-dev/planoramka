@@ -1,5 +1,4 @@
 import * as dataType from "./databaseTypes.tsx";
-import {redirect} from "react-router-dom";
 
 const baseUrl :string = 'https://127.0.0.1:3000';
 const  myHeaders = new Headers();
@@ -130,7 +129,7 @@ const apiService = {
 
     },
 
-    loginUser: async (registerdata: LoginUser): Promise<void> => {
+    loginUser: async (registerdata: LoginUser): Promise<boolean> => {
 
         const urlencoded = new URLSearchParams();
         urlencoded.append("username", registerdata.username);
@@ -148,13 +147,14 @@ const apiService = {
 
             if (response.ok) {
                 console.log("Login successful");
-                // Display cookies
-                console.log("Cookies after login:", document.cookie);
+                return true;
             } else {
                 console.error("Login failed:", response.status, response.statusText);
+                return false;
             }
         } catch (error) {
             console.error("Request error:", error);
+            return false;
         }
     },
 
@@ -170,7 +170,7 @@ const apiService = {
 
             if (response.ok) {
                 console.log("Logout successful");
-
+                document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             } else {
                 console.error("Logout failed:", response.status, response.statusText);
             }
