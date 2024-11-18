@@ -7,7 +7,7 @@ const app: Express = express();
 export default app;
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'http://127.0.0.1:5173',
     methods: 'GET,POST,PATCH,DELETE,HEAD,OPTIONS',
     credentials: true,
 }));
