@@ -14,7 +14,7 @@ export const SubjectDetailsDefinition = {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
         autopopulate: {
-            select: '-types',
+            select: '-classTypes',
         },
     },
     details: [{

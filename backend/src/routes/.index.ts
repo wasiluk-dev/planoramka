@@ -7,7 +7,6 @@ import SubjectRoutes from './courses/SubjectRoutes';
 import BuildingRoutes from './faculty/BuildingRoutes';
 import FacultyRoutes from './faculty/FacultyRoutes';
 import RoomRoutes from './faculty/RoomRoutes';
-import RoomTypeRoutes from './faculty/RoomTypeRoutes';
 import ClassRoutes from './timetable/ClassRoutes';
 import ClassTypeRoutes from './timetable/ClassTypeRoutes';
 import PeriodRoutes from './timetable/PeriodRoutes';
@@ -28,7 +27,6 @@ const routes = {
     BuildingRoutes,
     FacultyRoutes,
     RoomRoutes,
-    RoomTypeRoutes,
 
     ClassRoutes,
     ClassTypeRoutes,

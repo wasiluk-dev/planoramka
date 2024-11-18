@@ -6,17 +6,12 @@ import Building from './Building';
 
 // WI | Wydział Informatyki | [Informatyka, Informatyka i ekonometria] | [Budynek A, Budynek B, Budynek C]
 export const FacultyDefinition = {
-    acronym: {
-        type: String,
-        required: true,
-    },
     name: {
         type: String,
         required: true,
     },
-    courses: {
-        type: Schema.Types.ObjectId,
-        ref: new Course().name,
+    acronym: {
+        type: String,
     },
     buildings: [{
         type: Schema.Types.ObjectId,
@@ -24,6 +19,10 @@ export const FacultyDefinition = {
         autopopulate: {
             select: '-address',
         },
+    }],
+    courses: [{
+        type: Schema.Types.ObjectId,
+        ref: new Course().name,
     }],
 } as const;
 export const FacultySchema = new Schema(FacultyDefinition);

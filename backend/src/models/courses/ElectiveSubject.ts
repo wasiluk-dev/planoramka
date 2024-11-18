@@ -10,10 +10,6 @@ export const ElectiveSubjectDefinition = {
         type: String,
         required: true,
     },
-    courseCode: {
-        type: String,
-        required: true,
-    },
     subjects: [{
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
