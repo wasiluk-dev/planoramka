@@ -8,9 +8,9 @@ import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
 import './plans.css';
 import apiService from "../../services/apiService.tsx";
-import * as dataType from "../../services/databaseTypes.tsx";
+import * as dataType from "../../services/DBTypes.ts";
 import APIUtils from "../utils/APIUtils.ts";
-import {SubjectDetails} from "../../services/databaseTypes.tsx";
+import {SubjectDetailsPopulated} from "../../services/DBTypes.ts";
 
 
 
@@ -84,12 +84,12 @@ const Plans: React.FC = () => {
     const [acronym, setAcronym]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
     const [subjectsOnBoard, setSubjectsOnBoard] = useState<Array<ObiektNew>>([]);
-    const [test, setTest] = useState<Array<SubjectDetails>>([]);
+    const [test, setTest] = useState<Array<SubjectDetailsPopulated>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
     const [fixedRows, setFixedRows]= useState<number>(14)
-    const [timeTables, setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
-    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>(null)
+    const [timeTables, setTimeTables] = useState<dataType.ClassData | null>(null);// Fetch data from API when component mounts
+    const [periods, setPeriods] = useState<Array<dataType.PeriodPopulated> | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
 
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");

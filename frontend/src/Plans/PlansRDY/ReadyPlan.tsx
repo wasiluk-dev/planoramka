@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useMemo} from 'react';
 import apiService from "../../../services/apiService.tsx";
-import * as dataType from "../../../services/databaseTypes.tsx";
-import {TimeTables} from "../../../services/databaseTypes.tsx";
+import * as dataType from "../../../services/DBTypes.ts";
+import {TimetablePopulated} from "../../../services/DBTypes.ts";
 import './planrdy.css'
 
 const kierunki: { [key: number]: { [key: number]: string } } = {
@@ -45,8 +45,8 @@ const day ={
 
 const  ReadyPlan: React.FC = () => {
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
-    const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
-    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>([])
+    const [timeTables , setTimeTables] = useState<dataType.ClassData | null>(null);// Fetch data from API when component mounts
+    const [periods, setPeriods] = useState<Array<dataType.PeriodPopulated> | null>([])
     const [zajecia, setZajecia] = useState([])
     const [groupNumber, setGroupNumber] = useState<number>(0)
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
@@ -117,7 +117,7 @@ const  ReadyPlan: React.FC = () => {
 
     const kierunkiOptions = selectedWydzial ? Object.entries(kierunki[parseInt(selectedWydzial)]) : [];
 
-    const [grid, setGrid] = useState<Array<Array<TimeTables | null>>>([]);
+    const [grid, setGrid] = useState<Array<Array<TimetablePopulated | null>>>([]);
 
     const normal = useMemo(() => {
         return periods?.filter((item) =>
@@ -129,7 +129,7 @@ const  ReadyPlan: React.FC = () => {
         // Check if `normal` is defined and has a valid length
         if (!normal || normal.length === 0) return;
 
-        const updatedGrid: Array<Array<TimeTables | null>> = Array(fixedRows)
+        const updatedGrid: Array<Array<TimetablePopulated | null>> = Array(fixedRows)
             .fill(null)
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
@@ -260,7 +260,7 @@ const  ReadyPlan: React.FC = () => {
 
     // Update grid based on fixedRows and groupNumber
     useEffect(() => {
-        const updatedGrid: Array<Array<TimeTables | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
+        const updatedGrid: Array<Array<TimetablePopulated | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
         setGrid(updatedGrid);
     }, [fixedRows, groupNumber]);
 
