@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import apiService from "../../services/apiService.tsx";
+import APIService from "../../services/APIService.ts";
 
 interface CreateUser{
     name:string;
@@ -64,7 +64,7 @@ const Login: React.FC = () =>{
                     ...prevState,
                     ...newRegisterData,
                 };
-                apiService.createUser(updatedState);
+                APIService.createUser(updatedState);
                 return updatedState;
             });
         } else {

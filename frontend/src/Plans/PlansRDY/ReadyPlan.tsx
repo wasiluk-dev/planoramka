@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useMemo} from 'react';
-import apiService from "../../../services/apiService.tsx";
+import APIService from "../../../services/APIService.ts";
 import * as dataType from "../../../services/DBTypes.ts";
 import {TimetablePopulated} from "../../../services/DBTypes.ts";
 import './planrdy.css'
@@ -56,7 +56,7 @@ const  ReadyPlan: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await APIService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             setZajecia(data[0]?.classes)
             setGroupTypes(data[0]?.groups)
@@ -95,7 +95,7 @@ const  ReadyPlan: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getPeriods();
+            const data = await APIService.getPeriods();
             setPeriods(data); // Store fetched time tables in state
         };
 

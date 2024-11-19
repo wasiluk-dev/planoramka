@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import apiService from "../../services/apiService.tsx";
+import APIService from "../../services/APIService.ts";
 
 type Users ={
     _id: string;
@@ -124,7 +124,7 @@ const CreatePanel: React.FC = () => {
     const [timeTables, setTimeTables] = useState<TimeTables[] | null>(null);
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables()
+            const data = await APIService.getTimetables()
             setTimeTables(data); // Store fetched time tables in state
         };
 

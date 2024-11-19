@@ -7,7 +7,7 @@ import {
 import Draggable from "./Draggable.tsx";
 import Droppable from "./Droppable.tsx";
 import './plans.css';
-import apiService from "../../services/apiService.tsx";
+import APIService from "../../services/APIService.ts";
 import * as dataType from "../../services/DBTypes.ts";
 import APIUtils from "../utils/APIUtils.ts";
 import {SubjectDetailsPopulated} from "../../services/DBTypes.ts";
@@ -99,7 +99,7 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await APIService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             setGroupTypes(data[0]?.groups)
         };
@@ -109,7 +109,7 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getSubjectDetails();
+            const data = await APIService.getSubjectDetails();
             setTest(data)
         };
 
@@ -162,7 +162,7 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getPeriods();
+            const data = await APIService.getPeriods();
             setPeriods(data); // Store fetched time tables in state
         };
 
@@ -172,7 +172,7 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await APIService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             for (let i:number = 0; i < 7; i++){
                 if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
