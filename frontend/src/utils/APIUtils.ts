@@ -1,72 +1,12 @@
 import EWeekday from '../enums/EWeekday.ts';
+import {
+    ClassPopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    SubjectPopulated,
+} from '../../services/DBTypes.ts';
 
-// TODO: make all the types dynamic
-type ClassPopulated = {
-    _id: string;
-    organizer: {
-        _id: string;
-        fullName: string;
-    };
-    subject: {
-        _id: string;
-        name: string;
-        shortName: string | null;
-    };
-    classType: {
-        _id: string;
-        name: string;
-        acronym: string;
-        color: string;
-    };
-    weekday: number;
-    periodBlocks: number[];
-    room: {
-        _id: string;
-        number: string;
-        numberSecondary: string;
-        type: {
-            _id: string;
-            name: string;
-        } | null;
-        capacity: number | null;
-        roomNumber: string;
-    };
-    semester: string;
-    studentGroups: number[];
-};
-type RoomPopulated = {
-    _id: string;
-    number: string;
-    numberSecondary: string | null;
-    type: {
-        _id: string;
-        name: string;
-    } | null;
-    capacity: number | null;
-    roomNumber: string;
-};
-type SubjectDetailsPopulated = {
-    _id: string;
-    course: string;
-    subject: {
-        _id: string;
-        code: string;
-        name: string;
-        shortName: string;
-        isElective: boolean;
-        targetedSemesters: number[];
-    };
-    details: [{
-        classType: {
-            name: string;
-            acronym: string;
-            color: string;
-        };
-        weeklyBlockCount: number;
-    }];
-};
-
-// TODO: change returning nulls to throwing errors
+// TODO: replace returning nulls with throwing errors
 export default class APIUtils {
     // Class
     static isProfessorBusy(classes: ClassPopulated[], userId: string, weekday: EWeekday, periodBlock: number) {
@@ -76,7 +16,7 @@ export default class APIUtils {
 
         try {
             for (const c of classes) {
-                if (c.organizer._id === userId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
+                if (c.organizer?._id === userId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
                     return true;
                 }
             }
@@ -127,24 +67,39 @@ export default class APIUtils {
         return false;
     }
 
-    // Room
-    static getRoomsByType(rooms: RoomPopulated[], roomTypeId: string) {
-        if (!rooms || !roomTypeId) {
+    // Semesters
+    static getSemesterClassTypes(semesters: SemesterPopulated[], semesterId: string) {
+        if (!semesters) {
             return null;
         }
 
-        const roomsWithSpecifiedType: RoomPopulated[] = [];
+        const semesterSubjects: SubjectPopulated[] = [];
         try {
-            for (const r of rooms) {
-                if (r.type?._id === roomTypeId) {
-                    roomsWithSpecifiedType.push(r);
+            for (const s of semesters) {
+                if (s._id === semesterId) {
+                    for (const sb of s.subjects) {
+                        semesterSubjects.push(sb);
+                    }
                 }
             }
         } catch (err) {
             console.error(err);
         }
 
-        return roomsWithSpecifiedType;
+        const classTypes = [];
+        try {
+            for (const s of semesterSubjects) {
+                if (s.classTypes) {
+                    for (const sb of s.classTypes) {
+                        classTypes.push(sb._id);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return [...new Set(classTypes)].sort();
     }
 
     // SubjectDetails
@@ -161,7 +116,7 @@ export default class APIUtils {
                 }
             }
         } catch (err) {
-            // console.error(err);
+            console.error(err);
         }
 
         return newSubjectDetails;
