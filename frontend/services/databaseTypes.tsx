@@ -74,9 +74,8 @@
 
     export type Semesters = {
         _id: string;
-        courseCode: string;
-        number: number;
-        subjectCount: number;
+        academicYear: string;
+        index: number;
         subjects: Array<Subject>;
     }
 
