@@ -14,6 +14,8 @@ import {
     PeriodPopulated,
     SchedulePopulated,
     TimetablePopulated,
+
+    UserPopulated,
 } from './DBTypes.ts';
 import CourseRoutes from '../../backend/src/routes/courses/CourseRoutes.ts';
 import ElectiveSubjectRoutes from '../../backend/src/routes/courses/ElectiveSubjectRoutes.ts';
@@ -33,11 +35,6 @@ import TimetableRoutes from '../../backend/src/routes/timetable/TimetableRoutes.
 
 // TODO: replace url with .env variable
 const dbUrl: string = 'https://127.0.0.1:3000';
-type UserRegistrationForm = {
-    username: string;
-    password: string;
-    fullName: string;
-}
 
 export default class APIService {
     private static async fetchAPIResponse(resourceName: string) {
@@ -50,51 +47,51 @@ export default class APIService {
     }
 
     // courses
-    static async getCourses(): Promise<CoursePopulated | null> {
+    static async getCourses(): Promise<CoursePopulated[] | null> {
         return this.fetchAPIResponse(new CourseRoutes().prefix);
     }
-    static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated | null> {
+    static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated[] | null> {
         return this.fetchAPIResponse(new ElectiveSubjectRoutes().prefix);
     }
-    static async getSemesters(): Promise<SemesterPopulated | null> {
+    static async getSemesters(): Promise<SemesterPopulated[] | null> {
         return this.fetchAPIResponse(new SemesterRoutes().prefix);
     }
-    static async getSubjects(): Promise<SubjectPopulated | null> {
+    static async getSubjects(): Promise<SubjectPopulated[] | null> {
         return this.fetchAPIResponse(new SubjectRoutes().prefix);
     }
-    static async getSubjectDetails(): Promise<SubjectDetailsPopulated | null> {
+    static async getSubjectDetails(): Promise<SubjectDetailsPopulated[] | null> {
         return this.fetchAPIResponse(new SubjectDetailsRoutes().prefix);
     }
 
     // faculty
-    static async getBuildings(): Promise<BuildingPopulated | null> {
+    static async getBuildings(): Promise<BuildingPopulated[] | null> {
         return this.fetchAPIResponse(new BuildingRoutes().prefix);
     }
-    static async getFaculties(): Promise<FacultyPopulated | null> {
+    static async getFaculties(): Promise<FacultyPopulated[] | null> {
         return this.fetchAPIResponse(new FacultyRoutes().prefix);
     }
-    static async getRooms(): Promise<RoomPopulated | null> {
+    static async getRooms(): Promise<RoomPopulated[] | null> {
         return this.fetchAPIResponse(new RoomRoutes().prefix);
     }
 
     // timetable
-    static async getClasses(): Promise<ClassPopulated | null> {
+    static async getClasses(): Promise<ClassPopulated[] | null> {
         return this.fetchAPIResponse(new ClassRoutes().prefix);
     }
-    static async getClassTypes(): Promise<ClassTypePopulated | null> {
+    static async getClassTypes(): Promise<ClassTypePopulated[] | null> {
         return this.fetchAPIResponse(new ClassTypeRoutes().prefix);
     }
-    static async getPeriods(): Promise<PeriodPopulated | null> {
+    static async getPeriods(): Promise<PeriodPopulated[] | null> {
         return this.fetchAPIResponse(new PeriodRoutes().prefix);
     }
-    static async getSchedules(): Promise<SchedulePopulated | null> {
+    static async getSchedules(): Promise<SchedulePopulated[] | null> {
         return this.fetchAPIResponse(new ScheduleRoutes().prefix);
     }
-    static async getTimetables(): Promise<TimetablePopulated | null> {
+    static async getTimetables(): Promise<TimetablePopulated[] | null> {
         return this.fetchAPIResponse(new TimetableRoutes().prefix);
     }
 
-    static async createUser(registerData: UserRegistrationForm) {
+    static async createUser(registerData: Pick<UserPopulated, 'username' | 'password' | 'fullName'>) {
         const body = new URLSearchParams();
         body.append("username", registerData.username);
         body.append("password", registerData.password);
