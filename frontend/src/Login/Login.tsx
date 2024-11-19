@@ -1,15 +1,9 @@
-import React, {useEffect, useState} from "react";
-import APIService from "../../services/APIService.ts";
+import React, { useEffect, useState } from "react";
 
-interface CreateUser{
-    name:string;
-    password:string;
-    fullname:string;
-}
+import APIService from "../../services/APIService.ts";
+import { UserPopulated } from '../../services/DBTypes.ts';
 
 const Login: React.FC = () =>{
-
-
     useEffect(() => {
         const button = document.getElementById('registerButton');
         const handleClick = () => {
@@ -23,47 +17,44 @@ const Login: React.FC = () =>{
         };
     }, []);
 
+    let username: string | null = null;
+    let password: string | null = null;
 
-
-
-    let ulogin: string | null = null;
     // @ts-ignore
-    const [registerData, setRegisterData] = useState<CreateUser>({
+    const [registerData, setRegisterData] = useState<Pick<UserPopulated, 'username' | 'password' | 'fullName'>>({
         username: "",
         password: "",
     });
-    let pass: string | null = null;
 
     const login = () => {
-        const uloginElement = document.getElementById('login') as HTMLInputElement | null;
-        const passElement = document.getElementById('pass') as HTMLInputElement | null;
-        //jeśli istnieje to weź wartość name i pass
-        if (uloginElement && uloginElement.value && passElement && passElement.value) {
-            ulogin= uloginElement.value;
-            pass= passElement.value;
+        const usernameElement = document.getElementById('username') as HTMLInputElement | null;
+        const passwordElement = document.getElementById('password') as HTMLInputElement | null;
+
+        // jeśli istnieje, to weź wartość name i pass
+        if (usernameElement && usernameElement.value && passwordElement && passwordElement.value) {
+            username = usernameElement.value;
+            password = passwordElement.value;
         }
+
         console.log("Logowanie:");
-        console.log(ulogin);
-        console.log(pass);
+        console.log(username);
+        console.log(password);
     }
 
     const register = () => {
-        const uloginElement = document.getElementById('login') as HTMLInputElement | null;
-        const passElement = document.getElementById('pass') as HTMLInputElement | null;
-        const fullnameElement = document.getElementById('fullname') as HTMLInputElement | null;
+        const usernameElement = document.getElementById('username') as HTMLInputElement | null;
+        const passwordElement = document.getElementById('password') as HTMLInputElement | null;
+        const fullNameElement = document.getElementById('fullName') as HTMLInputElement | null;
 
-        if (uloginElement?.value && passElement?.value && fullnameElement?.value) {
+        if (usernameElement?.value && passwordElement?.value && fullNameElement?.value) {
             const newRegisterData = {
-                name: uloginElement.value,
-                password: passElement.value,
-                fullname: fullnameElement.value,
+                username: usernameElement.value,
+                password: passwordElement.value,
+                fullName: fullNameElement.value,
             };
 
             setRegisterData(prevState => {
-                const updatedState = {
-                    ...prevState,
-                    ...newRegisterData,
-                };
+                const updatedState = {...prevState, ...newRegisterData};
                 APIService.createUser(updatedState);
                 return updatedState;
             });
@@ -72,21 +63,20 @@ const Login: React.FC = () =>{
         }
     };
 
- return(
-     <>
+     return(<>
          <form>
-             <label htmlFor="login">Login:</label><br/>
-             <input type="text" id="login" name="login"/><br/>
-             <label htmlFor="pass">Hasło:</label><br/>
-             <input type="password" id="pass" name="pass"/><br/>
-             <label htmlFor="fullname">Imię i Nazwisko:</label><br/>
-             <input type="text" id="fullname" name="fullname"/><br/>
-             {/*<label htmlFor="email">Email:</label><br/>*/}
-             {/*<input type="email" id="email" name="email"/>*/}
+             <label htmlFor="username">Login:</label><br/>
+             <input type="text" id="username" name="username" /><br/>
+             <label htmlFor="password">Hasło:</label><br/>
+             <input type="password" id="password" name="password" /><br/>
+             <label htmlFor="fullName">Imię i Nazwisko:</label><br/>
+             <input type="text" id="fullName" name="fullName" /><br/>
+             {/* <label htmlFor="email">Email:</label><br/> */}
+             {/* <input type="email" id="email" name="email"/> */}
          </form>
          <button className='btn btn-info fw-medium' name='login' onClick={login}>Zaloguj się (Ten przycisk nic nie robi :) )</button>
          <button className='btn btn-success fw-medium' name='register' id="registerButton">Zarejestruj się</button>
-     </>
- )
+     </>)
 }
+
 export default Login;
