@@ -72,6 +72,7 @@ const Plans: React.FC = () => {
 
 
     const [acronym, setAcronym]  = useState<string>("");
+    const [displaysemsterdata, setDisplaysemsterdata] = useState<boolean>(false);
     const [subjects, setSubjects] = useState<Array>([]);
     const [test, setTest] = useState<Array<SubjectDetails>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
@@ -89,8 +90,8 @@ const Plans: React.FC = () => {
     const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
     const [selectedCourseId, setSelectedCourseId] = useState<string>("");
     const [selectedCourse, setSelectedCourse] = useState<Courses>();
-    const [selectedSemester, setSelectedSemester] = useState<string>("");
-
+    const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
+    const [selectedSemester, setSelectedSemester] = useState<number>(0);
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
@@ -159,6 +160,7 @@ const Plans: React.FC = () => {
                 allResults = [...allResults, ...result];
             }
             setLessons(allResults);
+
         }
 
     }, [acronym]);
@@ -181,13 +183,23 @@ const Plans: React.FC = () => {
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedFacultyId(event.target.value);
+        setLessons([])
+        setSelectedSemesterId("")
+        setSelectedCourseId("")
         const faculty = faculties.find((faculty) => faculty._id === event.target.value);
         setSelectedFaculty(faculty);
         setCourses(faculty.courses)
+        setSelectedGroupType("")
     };
 
     const handleSemesterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedSemester(event.target.value);
+        setSelectedSemesterId(event.target.value);
+        setLessons([])
+        setSelectedGroupType("")
+        const getsemester = semesterList.find((semester) => semester._id === event.target.value);
+        // console.log(getsemester.index);
+        setSelectedSemester(getsemester.index);
+        // console.log(APIUtils.getSemesterClassTypes(semesterList, selectedValue.id))
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -226,9 +238,10 @@ const Plans: React.FC = () => {
         const course = courses.find((course) => course._id === event.target.value);
         setSelectedCourseId(selectedValue);
         setSelectedCourse(course)
-
-        setSemesterList(course.semesters)
-
+        setLessons([])
+        setSelectedSemesterId("")
+        setSemesterList(course.semesters || [])
+        setSelectedGroupType("")
     };
 
     const grupyOptions = Object.entries(grupy);
@@ -247,7 +260,6 @@ const Plans: React.FC = () => {
                 updatedGrid[x][y] = item;
             }
         });
-
         setGrid(updatedGrid);
     }, [lessons,  selectedGroupTypeCount, acronym, fixedRows]);
 
@@ -335,7 +347,6 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
-
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -368,24 +379,24 @@ const Plans: React.FC = () => {
                                 <option key={course._id} value={course._id}>{course.name + " (" + course.specialization + ")"}</option>
                             ) : ( <option key={course._id} value={course._id}>{course.name}</option>)
                         ))}
-                    </select>): ("Brak kierunków do wyświetlenia")
+                    </select>): ("Brak danych do wyświetlenia")
                 )}
                 {selectedFacultyId && selectedCourseId && (
-                    selectedCourse.semesters ? (
-                        <select
-                            className="form-select"
-                            aria-label="Default select example"
-                            value={selectedSemester}
-                            onChange={handleSemesterChange}
-                        >
-                            <option value="" disabled hidden>Wybierz Semestr</option>
-                            {semesterList.map((semester) => (
-                                <option key={semester._id} value={semester.index}>{"Semestr " + semester.index}</option>
-                            ))}
-                        </select>
-                    ):("Brak rzeczy do wyświetlenia")
+                    selectedCourse.semesters && selectedFaculty?.courses ? (
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedSemesterId}
+                                onChange={handleSemesterChange}
+                            >
+                                <option value="" disabled hidden>Wybierz Semestr</option>
+                                {semesterList.map((semester) => (
+                                    <option key={semester._id} value={semester._id}>{"Semestr " + semester.index}</option>
+                                ))}
+                            </select>
+                    ):("")
                 )}
-                {selectedSemester && (
+                {selectedSemesterId && (
                     <select
                         className="form-select"
                         aria-label="Default select example"
@@ -399,9 +410,7 @@ const Plans: React.FC = () => {
                     </select>
                 )}
             </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup}>
-
-            </RoomPopup>
+            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFacultyId}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <table
