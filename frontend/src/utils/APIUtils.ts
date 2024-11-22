@@ -34,7 +34,25 @@ type ClassPopulated = {
     semester: string;
     studentGroups: number[];
 };
-
+type ClassTypePopulated = {
+    _id: string;
+    name: string;
+    acronym: string | null;
+    color: string | null;
+};
+type RoomPopulated = {
+    _id: string;
+    number: string | null; // TODO: remove null
+    numberSecondary: string | null;
+    capacity: number | null;
+    roomNumber: string;
+};
+type SemesterPopulated = {
+    _id: string;
+    academicYear: string;
+    index: number;
+    subjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[];
+};
 type SubjectPopulated = {
     _id: string;
     code: string;
@@ -42,23 +60,8 @@ type SubjectPopulated = {
     shortName: string | null;
     isElective: boolean;
     targetedSemesters: number[];
-    classTypes: Omit<ClassTypePopulated, 'color'>[];
-}
-
-type ClassTypePopulated = {
-    _id: string;
-    name: string;
-    acronym: string | null;
-    color: string | null;
-}
-
-type SemesterPopulated = {
-    _id: string;
-    academicYear: string;
-    index: number;
-    subjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[];
-}
-
+    classTypes: Omit<ClassTypePopulated, 'color'>[] | null; // TODO: remove null
+};
 type SubjectDetailsPopulated = {
     _id: string;
     course: string;
@@ -140,6 +143,60 @@ export default class APIUtils {
 
         return false;
     }
+    static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
+        if (!classes || !rooms || !weekday || !periodBlock) {
+            return null;
+        }
+
+        const unoccupiedRooms: RoomPopulated[] = [];
+        try {
+            for (const r of rooms) {
+                if (!this.isRoomOccupied(classes, r._id, weekday, periodBlock)) {
+                    unoccupiedRooms.push(r);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return unoccupiedRooms.sort((a, b) => a._id.localeCompare(b._id));
+    }
+
+    // Semester
+    static getSemesterClassTypes(semesters: SemesterPopulated[], semesterId: string) {
+        if (!semesters || !semesterId) {
+            return null;
+        }
+
+        const semesterSubjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[] = [];
+        try {
+            for (const s of semesters) {
+                if (s._id === semesterId) {
+                    for (const sb of s.subjects) {
+                        semesterSubjects.push(sb);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        const classTypes: Omit<ClassTypePopulated, 'color'>[] = [];
+        try {
+            for (const s of semesterSubjects) {
+                if (s.classTypes) {
+                    for (const sb of s.classTypes) {
+                        classTypes.push(sb);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        const classTypesUnique = [...new Map(classTypes.map(item => [item['_id'], item])).values()];
+        return classTypesUnique.sort((a, b) => a._id.localeCompare(b._id));
+    }
 
     // SubjectDetails
     static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetailsPopulated[], targetedSemesters: number[]) {
@@ -159,39 +216,5 @@ export default class APIUtils {
         }
 
         return newSubjectDetails;
-    }
-
-    static getSemesterClassTypes(semesters: SemesterPopulated[], semesterId: string) {
-        if (!semesters) {
-            return null;
-        }
-
-        const semesterSubjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[] = [];
-        try {
-            for (const s of semesters) {
-                if (s._id === semesterId) {
-                    for (const sb of s.subjects) {
-                        semesterSubjects.push(sb);
-                    }
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        }
-
-        const classTypes = [];
-        try {
-            for (const s of semesterSubjects) {
-                if (s.classTypes) {
-                    for (const sb of s.classTypes) {
-                        classTypes.push(sb._id);
-                    }
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        }
-
-        return [...new Set(classTypes)].sort();
     }
 }
