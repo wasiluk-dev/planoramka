@@ -11,26 +11,14 @@ export default class AuthRoutes {
     private prefix: string = '/auth';
 
     route = (app: Express): void => {
-        app.post(this.prefix + '/register', (req: Request, res: Response) => {
-            const { username, password, fullName } = req.body;
-            new User().create({
-                username: username,
-                password: password,
-                fullName: fullName,
-            } as HydratedDocumentFromSchema<typeof UserSchema>)
-                .then((result: HydratedDocumentFromSchema<typeof UserSchema>) => {
-                    // TODO: make it return only values needed for the req.session
-                    res.status(EHttpStatusCode.Created).json({
-                        username: result.username,
-                        fullName: result.fullName,
-                        role: result.role,
-                        courses: result.courses,
-                    });
-                })
-                .catch((err) => {
-                    res.status(EHttpStatusCode.InternalServerError).json(err.toString());
-                });
+        app.get(this.prefix + '/session', (req: Request, res: Response) => {
+            if (req.session.user) {
+                res.status(EHttpStatusCode.Ok).json(req.session.user);
+            } else {
+                res.status(EHttpStatusCode.Unauthorized).json('The user is not logged in');
+            }
         });
+
         app.post(this.prefix + '/login', (req: Request, res: Response) => {
             const { username, password } = req.body;
             const model: Model<HydratedDocumentFromSchema<typeof UserSchema>> = new UserController().base.model;
@@ -51,11 +39,10 @@ export default class AuthRoutes {
                                     req.session.user = {
                                         username: user.username,
                                         fullName: user.fullName,
-                                        role: user.role,
                                         courses: user.courses,
+                                        role: user.role,
                                     };
 
-                                    req.session.isAuthenticated = true;
                                     // res.sendStatus(EHttpStatusCode.Ok);
                                     res.status(EHttpStatusCode.Ok).json(req.session.user);
                                 }
@@ -80,6 +67,26 @@ export default class AuthRoutes {
 
                 res.status(EHttpStatusCode.Ok).json(sessionUser);
             });
+        });
+        app.post(this.prefix + '/register', (req: Request, res: Response) => {
+            const { username, password, fullName } = req.body;
+            new User().create({
+                username: username,
+                password: password,
+                fullName: fullName,
+            } as HydratedDocumentFromSchema<typeof UserSchema>)
+                .then((result: HydratedDocumentFromSchema<typeof UserSchema>) => {
+                    // TODO: make it return only values needed for the req.session
+                    res.status(EHttpStatusCode.Created).json({
+                        username: result.username,
+                        fullName: result.fullName,
+                        role: result.role,
+                        courses: result.courses,
+                    });
+                })
+                .catch((err) => {
+                    res.status(EHttpStatusCode.InternalServerError).json(err.toString());
+                });
         });
     }
 }
