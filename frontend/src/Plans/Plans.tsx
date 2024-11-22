@@ -205,6 +205,7 @@ const Plans: React.FC = () => {
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
         setSelectedGroupType(event.target.value);
+        console.log(groupTypes)
         if (selectedValue === '2') {  // W
             for (let i = 0; i < groupTypes.length; i++) {
                 if (groupTypes[i].classType.acronym == 'W'){
@@ -212,7 +213,7 @@ const Plans: React.FC = () => {
                     setAcronym("W")
                 }
             }
-        }
+        }else
 
         if (selectedValue === '1') {  // PS
             for (let i = 0; i < groupTypes.length; i++) {
@@ -221,7 +222,7 @@ const Plans: React.FC = () => {
                     setAcronym("PS")
                 }
             }
-        }
+        }else
 
         if (selectedValue === '3') {  // La
             for (let i = 0; i < groupTypes.length; i++) {
@@ -230,6 +231,8 @@ const Plans: React.FC = () => {
                     setAcronym("L")
                 }
             }
+        }else {
+            setAcronym("N")
         }
     };
 
