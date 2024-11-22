@@ -18,6 +18,9 @@ const Header: React.FC = () => {
                 <div className="block">
                     <a href='/create'>Creation Panel</a>
                 </div>
+                <div className="block">
+                    <a href='/profile'>Profil usera</a>
+                </div>
             </div>
         </div>
     );
