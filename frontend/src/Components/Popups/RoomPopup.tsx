@@ -6,6 +6,7 @@ import apiService from "../../../services/apiService.tsx";
 type Props = {
     trigger: boolean;
     setTrigger: (trigger: boolean) => void;
+    pickedFaculty: string;
 }
 
 type SelectedFaculty = {
@@ -40,7 +41,9 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
             name: "string",
             rooms: [],
             _id: "string"
-});
+        });
+    const [newRooms, setNewRooms] = useState<Array<Room>>([]);
+    const [allTeachers, setAllTeachers] = useState([])
     const [showallrooms, setShowallrooms] = useState<boolean>(false);
     const [rooms, setRooms] = useState<Array<Room>>([]);
     const [allFaculties, setAllFaculties] = useState([]);
@@ -48,6 +51,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
     const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<SelectedFaculty>();
     const [roomsList, setRoomsList] = useState([]);
     const [buildingName, setBuildingName] = useState<string>("");
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -74,11 +78,25 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
         })))
     }, [rooms]);
 
+    useEffect(() => {
+        setRoomsList(rooms.map(room => ({
+            id: room._id,
+            name: room.numberSecondary
+
+        })))
+    }, [!showallrooms]);
+
+    useEffect(() => {
+        setRoomsList(newRooms.map(room => ({
+            id: room._id,
+            name: room.numberSecondary
+
+        })))
+    }, [newRooms]);
 
     const handleBuildingChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
-        setRooms(selectedFacultyBuildings.buildings[Number(selectedValue)].rooms);
-        console.log(selectedFacultyBuildings.buildings[Number(selectedValue)].rooms)
+        setNewRooms(selectedFacultyBuildings.buildings[Number(selectedValue)].rooms);
         setBuildingName(selectedValue);
     };
 
@@ -89,6 +107,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
             (faculty) => faculty._id === selectedValue
         ))
     };
+
     return (props.trigger) ? (
         <div className="popup">
             <div className="popup-inner position-relative p-5, w-100 d-flex pt-4">
