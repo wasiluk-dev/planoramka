@@ -10,8 +10,9 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {Room, SubjectDetails, Courses, Semesters} from "../../services/databaseTypes.tsx";
+import {Room, SubjectDetails, Courses, Semesters, Periods} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
+import {scheduler} from "node:timers/promises";
 
 
 type ObiektNew = {
@@ -42,12 +43,6 @@ type Faculties = {
     courses: Array<Courses>;
 }
 
-const grupy: { [key: number]: string } = {
-    1: 'PS',
-    2: 'W',
-    3: 'LAB',
-};
-
 const day ={
     0: "Niedziela",
     1: "Poniedziałek",
@@ -67,12 +62,18 @@ type GroupInfo = {
     groupCount: number;
 }
 
+type GroupInSemester ={
+    acronym: string | null;
+    name: string;
+    _id: string;
+}
+
 
 const Plans: React.FC = () => {
 
 
-    const [acronym, setAcronym]  = useState<string>("");
-    const [displaysemsterdata, setDisplaysemsterdata] = useState<boolean>(false);
+    const [subjectTypeName, setSubjectTypeName]  = useState<string>("");
+    const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
     const [test, setTest] = useState<Array<SubjectDetails>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
@@ -83,8 +84,10 @@ const Plans: React.FC = () => {
     const [popup, setPopup] = useState<boolean>(false)
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<Courses>>([])
+    const [periods, setPeriods] = useState<Array<Array<Periods>>>([])
 
     const [semesterList, setSemesterList] = useState<Array<Semesters>>([])
+    const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
     const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
@@ -92,6 +95,30 @@ const Plans: React.FC = () => {
     const [selectedCourse, setSelectedCourse] = useState<Courses>();
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
     const [selectedSemester, setSelectedSemester] = useState<number>(0);
+
+    //TODO: pokazywać godziny dopiero po wybraniu sementy
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data: Periods | null = await apiService.getPeriods();
+            if (data === null){
+                console.error("KURWA")
+            }
+            // Separate periods into two groups based on weekdays
+            const weekdaysPeriods = data.filter(period =>
+                period.weekdays.some(day => day >= 1 && day <= 5)
+            );
+            const weekendPeriods = data.filter(period =>
+                period.weekdays.some(day => day === 6 || day === 0)
+            );
+
+            setPeriods([weekdaysPeriods.sort((a, b) => a.order - b.order), weekendPeriods.sort((a, b) => a.order - b.order)]);
+        };
+
+        fetchData();
+    }, []);
+
+
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimeTables();
@@ -134,11 +161,11 @@ const Plans: React.FC = () => {
     }, [selectedSemester]);
 
     useEffect(() => {
-        if (acronym) {
-            function getObiektyByAcronym(subjects: any[], acronym: string, groupNumber: number): ObiektNew[] {
+        if (subjectTypeId) {
+            function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) =>
                     item.details
-                        .filter((detail) => detail.classType.acronym === acronym)
+                        .filter((detail) => detail.classType._id === id)
                         .map((detail) => ({
                             id: `${item._id} ${groupNumber}`,
                             name: `${item.subject.name} ${groupNumber}`, // Append groupNumber to name
@@ -156,14 +183,14 @@ const Plans: React.FC = () => {
             // Accumulate results across multiple runs
             let allResults: ObiektNew[] = [];
             for (let i = 1; i <= selectedGroupTypeCount; i++) {
-                const result = getObiektyByAcronym(subjects, acronym, i);
+                const result = getObiektyById(subjects, subjectTypeId, i);
                 allResults = [...allResults, ...result];
             }
             setLessons(allResults);
 
         }
 
-    }, [acronym]);
+    }, [subjectTypeId]);
 
 
 
@@ -197,43 +224,56 @@ const Plans: React.FC = () => {
         setLessons([])
         setSelectedGroupType("")
         const getsemester = semesterList.find((semester) => semester._id === event.target.value);
-        // console.log(getsemester.index);
         setSelectedSemester(getsemester.index);
-        // console.log(APIUtils.getSemesterClassTypes(semesterList, selectedValue.id))
+        const selectedSemesterGroups = APIUtils.getSemesterClassTypes(semesterList, event.target.value)
+        if(selectedSemesterGroups && selectedSemesterGroups.length > 0){
+            setGroupTypeList(selectedSemesterGroups)
+        }
+
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = event.target.value;
+        // const selectedValue : string = event.target.value;
         setSelectedGroupType(event.target.value);
-        console.log(groupTypes)
-        if (selectedValue === '2') {  // W
-            for (let i = 0; i < groupTypes.length; i++) {
-                if (groupTypes[i].classType.acronym == 'W'){
-                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    setAcronym("W")
-                }
-            }
-        }else
 
-        if (selectedValue === '1') {  // PS
-            for (let i = 0; i < groupTypes.length; i++) {
-                if (groupTypes[i].classType.acronym == 'PS'){
-                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    setAcronym("PS")
-                }
+        for(let i= 0; i<groupTypeList.length; i++){
+            if(groupTypeList[i]._id === event.target.value){
+                setSubjectTypeName(groupTypeList[i].name)
+                setSubjectTypeId(groupTypeList[i]._id)
+                console.log(groupTypes)
+                break;
+                // setSelectedGroupTypeCount(groupTypes[i].groupCount);
             }
-        }else
-
-        if (selectedValue === '3') {  // La
-            for (let i = 0; i < groupTypes.length; i++) {
-                if (groupTypes[i].classType.acronym == 'L'){
-                    setSelectedGroupTypeCount(groupTypes[i].groupCount);
-                    setAcronym("L")
-                }
-            }
-        }else {
-            setAcronym("N")
         }
+
+        // if (selectedValue === '2') {  // W
+        //     for (let i = 0; i < groupTypes.length; i++) {
+        //         if (groupTypes[i].classType.acronym == 'W'){
+        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
+        //             setSubjectTypeName("W")
+        //         }
+        //     }
+        // }else
+        //
+        // if (selectedValue === '1') {  // PS
+        //     for (let i = 0; i < groupTypes.length; i++) {
+        //         if (groupTypes[i].classType.acronym == 'PS'){
+        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
+        //             setSubjectTypeName("PS")
+        //         }
+        //     }
+        // }else
+        //
+        // if (selectedValue === '3') {  // La
+        //     for (let i = 0; i < groupTypes.length; i++) {
+        //         if (groupTypes[i].classType.acronym == 'L'){
+        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
+        //             setSubjectTypeName("L")
+        //         }
+        //     }
+        // }else {
+        //     setSubjectTypeName("N")
+        // }
     };
 
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -247,7 +287,6 @@ const Plans: React.FC = () => {
         setSelectedGroupType("")
     };
 
-    const grupyOptions = Object.entries(grupy);
 
     const [lessons, setLessons] = useState([]);
     const [grid, setGrid] = useState<Array<Array<ObiektNew | null>>>([]);
@@ -264,15 +303,24 @@ const Plans: React.FC = () => {
             }
         });
         setGrid(updatedGrid);
-    }, [lessons,  selectedGroupTypeCount, acronym, fixedRows]);
+        console.log(grid)
+    }, [lessons,  selectedGroupTypeCount, subjectTypeId, fixedRows]);
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
-        const schedule = timeTables[0]?.schedules.find(schedule => schedule.weekdays.includes(newDay));
-        if (schedule) {
-            setFixedRows(schedule.periods.length);
+        let i: number = 0
+        if (newDay == 0 || newDay == 6) {
+            i = 1;
+        }else  if (newDay >= 1 && newDay <= 5) {
+            i = 0;
+        }else {
+            console.error("Błąd z pickowaniem dnia!")
         }
-        // updateTableData(); // Update table data whenever the day changes
+        const schedule = periods.find(schedule => schedule[i].weekdays.includes(newDay));
+        if (schedule) {
+            setFixedRows(schedule.length);
+        }
+
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -350,6 +398,7 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
+
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -400,17 +449,18 @@ const Plans: React.FC = () => {
                     ):("")
                 )}
                 {selectedSemesterId && (
-                    <select
+                    groupTypeList.length > 0 ? (
+                        <select
                         className="form-select"
                         aria-label="Default select example"
                         value={selectedGroupType}
                         onChange={handleGroupChange}
                     >
                         <option value="" disabled hidden>Wybierz typ grupy</option>
-                        {grupyOptions.map(([key, value]) => (
-                            <option key={key} value={key}>{value}</option>
+                        {groupTypeList.map((type) => (
+                            <option key={type._id} value={type._id}>{type.name}</option>
                         ))}
-                    </select>
+                    </select>): ("Brak grup do wyświetlenia")
                 )}
             </div>
             <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFacultyId}/>
@@ -471,11 +521,11 @@ const Plans: React.FC = () => {
                         {grid.map((row, rowIndex) => (
                             <tr key={rowIndex} className="table-dark w-100">
                                 <th scope="col" className="col-1 text-nowrap">
-                                    {timeTables ? (
-                                        (showCurrentDay == 0 || showCurrentDay == 6) && timeTables[0]?.schedules[1]?.periods[rowIndex] ? (
-                                            timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
-                                        ) : (showCurrentDay > 0 && showCurrentDay < 6 && timeTables[0]?.schedules[0]?.periods[rowIndex] ? (
-                                            timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
+                                    {periods.length > 0 ? (
+                                        (showCurrentDay == 0 || showCurrentDay == 6) && periods[1] ? (
+                                            periods[1][Number(rowIndex)].startTime + ' - ' + periods[1][Number(rowIndex)].endTime
+                                        ) : (showCurrentDay > 0 && showCurrentDay < 6 && periods[0] ? (
+                                            periods[0][rowIndex].startTime + ' - ' + periods[0][rowIndex].endTime
                                         ) : ("Error in showing period per day!"))
                                     ) : (
                                         <p>Loading...</p>
