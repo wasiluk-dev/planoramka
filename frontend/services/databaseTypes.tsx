@@ -3,7 +3,6 @@
         groups: Array<ClassType>;
         schedules: Array<Schedule>;
         semester: string;
-        targetedSemester: number;
         weekdays: Array<number>;
         _id: string;
     }
@@ -18,7 +17,7 @@
     export type Schedule = {
     _id: string;
     weekdays: Array<number>;
-    periods: Periods;
+    periods: Array<Periods>;
     }
 
     export type Organizer = {
@@ -33,8 +32,8 @@
         _id: string;
         weekdays: Array<number>;
         startTime: string;
+        order: number;
         endTime: string;
-        isBreak: boolean;
     }
 
     export type RoomType = {
