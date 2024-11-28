@@ -5,6 +5,7 @@ import Semester from '../courses/Semester';
 import Class from './Class';
 import ClassType from './ClassType';
 import Schedule from './Schedule';
+import EDayOfTheWeek from '../../enums/EDayOfTheWeek';
 
 export const TimetableDefinition = {
     semester: {
@@ -14,12 +15,8 @@ export const TimetableDefinition = {
     },
     weekdays: [{
         type: Number,
+        enum: EDayOfTheWeek,
         required: true,
-        min: 0,
-        max: 6,
-        validate: {
-            validator: Number.isInteger,
-        },
     }],
     schedules: [{
         type: Schema.Types.ObjectId,
@@ -27,29 +24,32 @@ export const TimetableDefinition = {
         autopopulate: true,
         required: true,
     }],
-    groups: [{
+    groups: {
         _id: false,
-        classType: {
-            type: Schema.Types.ObjectId,
-            ref: new ClassType().name,
-            autopopulate: {
-                select: 'name acronym',
+        type: [{
+            classType: {
+                type: Schema.Types.ObjectId,
+                ref: new ClassType().name,
+                autopopulate: {
+                    select: 'name acronym',
+                },
+                required: true,
             },
-            required: true,
-        },
-        groupCount: {
-            type: Number,
-            min: 1,
-            validate: {
-                validator: Number.isInteger,
-            },
-        }
-    }],
-    classes: [{
-        type: Schema.Types.ObjectId,
+            groupCount: {
+                type: Number,
+                min: 1,
+                validate: {
+                    validator: Number.isInteger,
+                },
+            }
+        }],
+        default: null,
+    },
+    classes: {
+        type: [Schema.Types.ObjectId],
         ref: new Class().name,
         autopopulate: true,
-    }],
+    },
 } as const;
 export const TimetableSchema = new Schema(TimetableDefinition);
 

@@ -2,6 +2,7 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
 import Period from './Period';
+import EDayOfTheWeek from '../../enums/EDayOfTheWeek';
 
 // [0, 1, 2, 3, 4] | [08:30, 09:15]
 // [0, 1, 2, 3, 4] | 09:15 | 09:30
@@ -11,21 +12,17 @@ export const ScheduleDefinition = {
     // Date.getDay() compatible
     weekdays: [{
         type: Number,
+        enum: EDayOfTheWeek,
         required: true,
-        min: 0,
-        max: 6,
-        validate: {
-            validator: Number.isInteger,
-        },
     }],
-    periods: [{
-        type: Schema.Types.ObjectId,
+    periods: {
+        type: [Schema.Types.ObjectId],
         ref: new Period().name,
         autopopulate: {
             select: '-_id -weekdays',
         },
-        required: true,
-    }],
+        default: [],
+    },
 } as const;
 export const ScheduleSchema = new Schema(ScheduleDefinition);
 
