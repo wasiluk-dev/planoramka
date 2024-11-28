@@ -16,25 +16,30 @@ export const SubjectDefinition = {
     },
     shortName: {
         type: String,
+        default: null,
     },
     isElective: {
         type: Boolean,
         default: false,
     },
-    targetedSemesters: [{
-        type: Number,
-        min: 1,
-        validate: {
-            validator: Number.isInteger,
-        },
-    }],
-    classTypes: [{
-        type: Schema.Types.ObjectId,
+    targetedSemesters: {
+        type: [{
+            type: Number,
+            min: 1,
+            validate: {
+                validator: Number.isInteger,
+            },
+        }],
+        default: [],
+    },
+    classTypes: {
+        type: [Schema.Types.ObjectId],
         ref: new ClassType().name,
         autopopulate: {
-            select: 'name acronym',
+            select: '-color',
         },
-    }],
+        default: [],
+    },
 } as const;
 export const SubjectSchema = new Schema(SubjectDefinition);
 

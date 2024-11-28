@@ -7,20 +7,24 @@ export const SemesterDefinition = {
     academicYear: {
         type: String,
         // match: '^[0-9][0-9][0-9][0-9]\/[0-9][0-9][0-9][0-9]$', TODO: fix the regexp
+        required: true,
     },
     index: {
         type: Number,
-        required: true,
         min: 1,
         validate: {
             validator: Number.isInteger,
         },
+        required: true,
     },
-    subjects: [{
-        type: Schema.Types.ObjectId,
+    subjects: {
+        type: [Schema.Types.ObjectId],
         ref: new Subject().name,
-        autopopulate: true,
-    }],
+        autopopulate: {
+            select: '_id classTypes',
+        },
+        default: [],
+    },
 } as const;
 export const SemesterSchema = new Schema(SemesterDefinition);
 

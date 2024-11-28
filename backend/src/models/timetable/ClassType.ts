@@ -12,10 +12,12 @@ export const ClassTypeDefinition = {
     },
     acronym: {
         type: String,
+        required: true,
     },
     color: {
         type: String,
         validation: /#[0-9A-Fa-f]{6}/,
+        default: null,
     },
 } as const;
 export const ClassTypeSchema = new Schema(ClassTypeDefinition);

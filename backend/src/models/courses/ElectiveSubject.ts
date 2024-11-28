@@ -10,10 +10,11 @@ export const ElectiveSubjectDefinition = {
         type: String,
         required: true,
     },
-    subjects: [{
-        type: Schema.Types.ObjectId,
+    subjects: {
+        type: [Schema.Types.ObjectId],
         ref: new Subject().name,
-    }],
+        default: [],
+    },
 } as const;
 export const ElectiveSubjectSchema = new Schema(ElectiveSubjectDefinition);
 

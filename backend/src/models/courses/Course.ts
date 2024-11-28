@@ -20,14 +20,16 @@ export const CourseDefinition = {
     specialization: {
         type: String,
     },
+    degree: {
+        type: Number,
+        enum: ECourseDegree,
+        // required: true, TODO: decide if required is needed
+        default: null,
+    },
     cycle: {
         type: Number,
         enum: ECourseCycle,
         required: true,
-    },
-    degree: {
-        type: Number,
-        enum: ECourseDegree,
     },
     mode: {
         type: Number,
@@ -37,10 +39,13 @@ export const CourseDefinition = {
     semesters: {
         type: [Schema.Types.ObjectId],
         ref: new Semester().name,
+        autopopulate: true,
+        default: [],
     },
     electiveSubjects: {
         type: [Schema.Types.ObjectId],
         ref: new ElectiveSubject().name,
+        default: [],
     },
 } as const;
 export const CourseSchema = new Schema(CourseDefinition);

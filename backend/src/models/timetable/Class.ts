@@ -12,15 +12,17 @@ export const ClassDefinition = {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            select: 'fullName', // TODO: add title later
+            select: '_id fullName', // TODO: add title later
         },
+        default: null,
     },
     subject: {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
         autopopulate: {
-            select: 'name shortName',
+            select: '_id name shortName',
         },
+        default: null,
     },
     classType: {
         type: Schema.Types.ObjectId,
@@ -30,21 +32,23 @@ export const ClassDefinition = {
     },
     weekday: {
         type: Number,
-        required: true,
         min: 0,
         max: 6,
         validate: {
             validator: Number.isInteger,
         },
-    },
-    periodBlocks: [{
-        type: Number,
         required: true,
-        min: 1,
-        validate: {
-            validator: Number.isInteger,
-        },
-    }],
+    },
+    periodBlocks: {
+        type: [{
+            type: Number,
+            min: 1,
+            validate: {
+                validator: Number.isInteger,
+            },
+        }],
+        default: [],
+    },
     room: {
         type: Schema.Types.ObjectId,
         ref: new Room().name,
@@ -54,16 +58,18 @@ export const ClassDefinition = {
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
-        required: true,
+        default: null,
     },
-    studentGroups: [{
-        type: Number,
-        required: true,
-        min: 1,
-        validate: {
-            validator: Number.isInteger,
-        },
-    }],
+    studentGroups: {
+        type: [{
+            type: Number,
+            min: 1,
+            validate: {
+                validator: Number.isInteger,
+            },
+        }],
+        default: null,
+    },
 } as const;
 export const ClassSchema = new Schema(ClassDefinition);
 
