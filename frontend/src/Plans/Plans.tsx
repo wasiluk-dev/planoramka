@@ -82,7 +82,7 @@ const Plans: React.FC = () => {
     const [timeTables, setTimeTables] = useState<Array<dataType.Classdata> | null>(null);// Fetch data from API when component mounts
     const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.Classdata | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
-    const [popup, setPopup] = useState<boolean>(false)
+    const [popup, setPopup] = useState<boolean>(true)
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<Courses>>([])
 
@@ -96,25 +96,6 @@ const Plans: React.FC = () => {
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
     const [selectedSemester, setSelectedSemester] = useState<number>(0);
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const data: Periods | null = await apiService.getPeriods();
-    //         if (data === null){
-    //             console.error("KURWA")
-    //         }
-    //         // Separate periods into two groups based on weekdays
-    //         const weekdaysPeriods = data.filter(period =>
-    //             period.weekdays.some(day => day >= 1 && day <= 5)
-    //         );
-    //         const weekendPeriods = data.filter(period =>
-    //             period.weekdays.some(day => day === 6 || day === 0)
-    //         );
-    //
-    //         setPeriods([weekdaysPeriods.sort((a, b) => a.order - b.order), weekendPeriods.sort((a, b) => a.order - b.order)]);
-    //     };
-    //
-    //     fetchData();
-    // }, [selectedTimeTable]);
 
     useEffect(() => {
         if(selectedSemesterId && timeTables){
@@ -197,6 +178,12 @@ const Plans: React.FC = () => {
 
     }, [subjectTypeId]);
 
+    useEffect(() => {
+        //Trzeba tutaj dodać ile jest grup bazując na timetables i na podstawie tego je wyświetlać
+        // const result = selectedTimeTable.groups.find((group, index) => group[index].classType._id === subjectTypeId);
+//TODO: wyświetlanie grup po ich wybraniu
+    }, [subjectTypeId]);
+
 
 
     useEffect(() => {
@@ -245,9 +232,8 @@ const Plans: React.FC = () => {
             if(groupTypeList[i]._id === event.target.value){
                 setSubjectTypeName(groupTypeList[i].name)
                 setSubjectTypeId(groupTypeList[i]._id)
-                console.log(groupTypeList[i])
+                setSelectedGroupTypeCount(1);
                 break;
-                // setSelectedGroupTypeCount(groupTypes[i].groupCount);
             }
         }
 
@@ -280,7 +266,6 @@ const Plans: React.FC = () => {
         //     setSubjectTypeName("N")
         // }
     };
-
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
         const course = courses.find((course) => course._id === event.target.value);
@@ -411,7 +396,8 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-
+    console.log(groupTypeList)
+    console.log(selectedTimeTable)
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
