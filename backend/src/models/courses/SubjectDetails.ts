@@ -9,6 +9,7 @@ export const SubjectDetailsDefinition = {
     course: {
         type: Schema.Types.ObjectId,
         ref: new Course().name,
+        required: true,
     },
     subject: {
         type: Schema.Types.ObjectId,
@@ -16,24 +17,30 @@ export const SubjectDetailsDefinition = {
         autopopulate: {
             select: '-classTypes',
         },
+        required: true,
     },
-    details: [{
+    details: {
         _id: false,
-        classType: {
-            type: Schema.Types.ObjectId,
-            ref: new ClassType().name,
-            autopopulate: {
-                select: '-_id',
+        type: [{
+            classType: {
+                type: Schema.Types.ObjectId,
+                ref: new ClassType().name,
+                autopopulate: {
+                    select: '-_id',
+                },
+                required: true,
             },
-        },
-        weeklyBlockCount: {
-            type: Number,
-            min: 0,
-            validate: {
-                validator: Number.isInteger,
+            weeklyBlockCount: {
+                type: Number,
+                min: 0,
+                validate: {
+                    validator: Number.isInteger,
+                },
+                required: true,
             },
-        },
-    }],
+        }],
+        default: [],
+    },
 } as const;
 export const SubjectDetailsSchema = new Schema(SubjectDetailsDefinition);
 

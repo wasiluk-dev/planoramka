@@ -6,19 +6,22 @@ import Base from '../Base';
 export const RoomDefinition = {
     number: {
         type: String,
-        // TODO: uncomment required: true,
+        // required: true, TODO: uncomment after fixing data
     },
     numberSecondary: {
         type: String,
+        default: null,
     },
     capacity: {
         type: Number,
+        default: null,
     },
 } as const;
 export const RoomSchema = new Schema(RoomDefinition);
 
 RoomSchema.virtual('roomNumber')
     .get(function() {
+        // TODO: remove after making number field required
         if (!this.number && !this.numberSecondary) {
             return null;
         }
@@ -28,7 +31,7 @@ RoomSchema.virtual('roomNumber')
         } else if (!this.number) {
             return this.numberSecondary;
         } else {
-            return `${this.number} (${this.numberSecondary})`;
+            return `${ this.number } (${ this.numberSecondary })`;
         }
     });
 

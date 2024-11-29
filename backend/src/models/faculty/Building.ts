@@ -13,6 +13,7 @@ export const BuildingDefinition = {
     },
     acronym: {
         type: String,
+        default: null,
     },
     address: {
         type: String,
@@ -26,11 +27,12 @@ export const BuildingDefinition = {
     //     type: Boolean,
     //     default: false,
     // },
-    rooms: [{
-        type: Schema.Types.ObjectId,
+    rooms: {
+        type: [Schema.Types.ObjectId],
         ref: new Room().name,
         autopopulate: true,
-    }],
+        default: [],
+    },
 } as const;
 export const BuildingSchema = new Schema(BuildingDefinition);
 

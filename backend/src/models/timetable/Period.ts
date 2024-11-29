@@ -1,6 +1,7 @@
 import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
+import EDayOfTheWeek from '../../enums/EDayOfTheWeek';
 
 // 1 | 1 | 08:30 | 09:15
 // 2 | 2 | 09:15 | 09:30
@@ -9,20 +10,16 @@ import Base from '../Base';
 export const PeriodDefinition = {
     weekdays: [{
         type: Number,
+        enum: EDayOfTheWeek,
         required: true,
-        min: 0,
-        max: 6,
-        validate: {
-            validator: Number.isInteger,
-        },
     }],
     order: {
         type: Number,
-        required: true,
         min: 1,
         validate: {
             validator: Number.isInteger,
         },
+        required: true,
     },
     startTime: {
         type: String,

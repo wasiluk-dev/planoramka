@@ -25,12 +25,14 @@ export default class AuthRoutes {
             const filter: FilterQuery<HydratedDocumentFromSchema<typeof UserSchema>> = { username: username };
 
             // TODO: fix the model type
+            // @ts-ignore
             DBUtils.find(model, filter)
                 .then((users) => {
                     if (users.length === 0) {
                         res.sendStatus(EHttpStatusCode.NotFound);
                     } else if (users.length === 1) {
                         // TODO: fix the variable type
+                        // @ts-ignore
                         const user: HydratedDocumentFromSchema<typeof UserSchema> = users[0];
                         AuthController.validateCredentials(username, password)
                             .then((areCredentialsValid) => {

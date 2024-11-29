@@ -8,23 +8,37 @@ import Course from './courses/Course';
 export const UserDefinition = {
     username: {
         type: String,
+        minLength: 3,
         unique: true,
         required: true,
-        minLength: 3,
     },
     password: {
         type: String,
-        required: true,
         minLength: 8,
+        required: true,
     },
     fullName: {
         type: String,
         required: true,
     },
-    courses: [{
-        type: Schema.Types.ObjectId,
+    // title: {
+    //     type: Number,
+    //     enum: EUserTitle,
+    // },
+    // email: {
+    //     type: String,
+    //     required: true,
+    //     index: {
+    //         unique: true,
+    //         sparse: true,
+    //     },
+    //     // match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, TODO: choose a sensible regex
+    // },
+    courses: {
+        type: [Schema.Types.ObjectId],
         ref: new Course().name,
-    }],
+        default: [],
+    },
     role: {
         type: Number,
         enum: EUserRole,
