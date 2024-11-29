@@ -82,7 +82,7 @@ const Plans: React.FC = () => {
     const [timeTables, setTimeTables] = useState<Array<dataType.Classdata> | null>(null);// Fetch data from API when component mounts
     const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.Classdata | null>(null)
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
-    const [popup, setPopup] = useState<boolean>(true)
+    const [popup, setPopup] = useState<boolean>(false)
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<Courses>>([])
 
@@ -218,10 +218,10 @@ const Plans: React.FC = () => {
         const getsemester = semesterList.find((semester) => semester._id === event.target.value);
         setSelectedSemester(getsemester.index);
         const selectedSemesterGroups = APIUtils.getSemesterClassTypes(semesterList, event.target.value)
-        if(selectedSemesterGroups && selectedSemesterGroups.length > 0){
+        if(selectedSemesterGroups){
             setGroupTypeList(selectedSemesterGroups)
         }
-
+        console.log(selectedSemesterGroups)
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -396,8 +396,6 @@ const Plans: React.FC = () => {
         setGrid(newGrid);
     };
 
-    console.log(groupTypeList)
-    console.log(selectedTimeTable)
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
