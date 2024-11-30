@@ -52,7 +52,8 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
     const [allTeachers, setAllTeachers] = useState<Array<UserPopulated>>([])
     const [showallrooms, setShowallrooms] = useState<boolean>(false);
     const [rooms, setRooms] = useState<Array<Room>>([]);
-    const [teacherList, setTeacherList] = useState<Array<UserPopulated>>([]);
+    const [teacherList, setTeacherList] = useState();
+    const [teacherSurnameList, setTeacherSurnameList] = useState<Array>([]);
     const [allFaculties, setAllFaculties] = useState([]);
     const [facultyId, setFacultyId] = useState<string>("");
     const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<SelectedFaculty>();
@@ -80,13 +81,26 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
                 // Compare surnames
                 return surnameA.localeCompare(surnameB);
             });
+            const modifiedNames = sortedTeachers?.map(teacher => {
+                const nameParts = teacher.fullName.split(" ");
+                const surname = nameParts.slice(-1)[0];
+                const firstName = nameParts.slice(0, -1).join(" ");
+                return {
+                    _id: teacher._id,
+                    name: `${surname} ${firstName}`
+                };
+
+            });
+
+// Log or save the modified names
+            console.log(modifiedNames)
+            setTeacherSurnameList(modifiedNames)
 
 // Save the sorted data
             setAllTeachers(sortedTeachers);
         };
         fetchData();
     }, [props.trigger]);
-    // console.log(teacherList)
     useEffect(() => {
         if (props.pickedFaculty?.buildings && props.pickedFaculty.buildings.length > 0) {
             const allRooms = props.pickedFaculty.buildings.flatMap(building => building.rooms || []);
@@ -95,12 +109,12 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
     }, [showallrooms, props.trigger]);
 
     useEffect(() => {
-        setTeacherList(allTeachers.map(teacher => ({
+        setTeacherList(teacherSurnameList.map(teacher => ({
             id: teacher._id,
-            name: teacher.fullName
+            name: teacher.name
 
         })))
-    }, [allTeachers]);
+    }, [teacherSurnameList]);
 
 
     useEffect(() => {
@@ -141,7 +155,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
             (faculty) => faculty._id === selectedValue
         ))
     };
-
+// console.log(teacherList)
     return (props.trigger) ? (
         <div className="popup">
             <div className="popup-inner position-relative p-5, w-100 d-flex pt-4">
