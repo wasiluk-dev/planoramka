@@ -77,6 +77,9 @@ export default class APIService {
         return this.fetchAPIResponse('/timetables');
     }
 
+    static async getUsers(): Promise<UserPopulated | null> {
+        return this.fetchAPIResponse('/users');
+    }
     static async registerUser(registerData: Pick<UserPopulated, 'username' | 'password' | 'fullName'>) {
         const body = new URLSearchParams();
         body.append('username', registerData.username);

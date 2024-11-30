@@ -7,7 +7,7 @@ import EDayOfTheWeek from '../../backend/src/enums/EDayOfTheWeek.ts';
 export type UserPopulated = {
     _id: string;
     username: string;
-    password: string;
+    password: string | null;
     fullName: string;
     // TODO: uncomment fields after implementing
     // title: EUserTitle | null;
@@ -53,7 +53,7 @@ export type SubjectDetailsPopulated = {
     course: string;
     subject: Omit<SubjectPopulated, 'classTypes'>;
     details: [{
-        classType: Omit<ClassTypePopulated, '_id'>;
+        classType: ClassTypePopulated;
         weeklyBlockCount: number;
     }];
 }

@@ -6,8 +6,9 @@ import {
     SemesterPopulated,
     SubjectDetailsPopulated,
     SubjectPopulated,
-    TimetablePopulated
+    TimetablePopulated, UserPopulated
 } from '../../services/databaseTypes.tsx';
+import EUserRole from "../../../backend/src/enums/EUserRole.ts";
 
 // TODO: change returning nulls to throwing errors
 export default class APIUtils {
@@ -175,5 +176,24 @@ export default class APIUtils {
         }
 
         return groupCounts;
+    }
+
+    static getUsersWithRole(users: UserPopulated[], role: EUserRole) {
+        if (!users || !role) {
+            return null;
+        }
+
+        const usersWithRole: UserPopulated[] = [];
+        try {
+            for (const u of users) {
+                if (u.role === role) {
+                    usersWithRole.push(u);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return usersWithRole;
     }
 }

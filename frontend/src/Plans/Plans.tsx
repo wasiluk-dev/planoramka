@@ -10,7 +10,7 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {Room, SubjectDetails, Courses, Semesters, Periods} from "../../services/databaseTypes.tsx";
+import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated, PeriodPopulated} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 import {scheduler} from "node:timers/promises";
 
@@ -32,7 +32,7 @@ type Buildings = {
     acronym: string,
     name: string,
     address: string;
-    rooms: Array<Room>;
+    rooms: Array<RoomPopulated>;
 }
 
 type Faculties = {
@@ -40,7 +40,7 @@ type Faculties = {
     acronym: string;
     name: string;
     buildings: Array<Buildings>;
-    courses: Array<Courses>;
+    courses: Array<CoursePopulated>;
 }
 
 const day ={
@@ -75,24 +75,24 @@ const Plans: React.FC = () => {
     const [subjectTypeName, setSubjectTypeName]  = useState<string>("");
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
-    const [test, setTest] = useState<Array<SubjectDetails>>([]);
+    const [test, setTest] = useState<Array<SubjectDetailsPopulated>>([]);
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [showCurrentDay, setShowCurrentDay] = useState<number>(5);
     const [fixedRows, setFixedRows]= useState<number>(1)
-    const [timeTables, setTimeTables] = useState<Array<dataType.Classdata> | null>(null);// Fetch data from API when component mounts
-    const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.Classdata | null>(null)
+    const [timeTables, setTimeTables] = useState<Array<dataType.TimetablePopulated>>([]);// Fetch data from API when component mounts
+    const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.TimetablePopulated>()
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
     const [popup, setPopup] = useState<boolean>(false)
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
-    const [courses, setCourses] = useState<Array<Courses>>([])
+    const [courses, setCourses] = useState<Array<CoursePopulated>>([])
 
-    const [semesterList, setSemesterList] = useState<Array<Semesters>>([])
+    const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
     const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
     const [selectedCourseId, setSelectedCourseId] = useState<string>("");
-    const [selectedCourse, setSelectedCourse] = useState<Courses>();
+    const [selectedCourse, setSelectedCourse] = useState<CoursePopulated>();
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
     const [selectedSemester, setSelectedSemester] = useState<number>(0);
 
@@ -107,7 +107,7 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await apiService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             setGroupTypes(data[0]?.groups)
         };
@@ -149,12 +149,14 @@ const Plans: React.FC = () => {
     useEffect(() => {
         if (subjectTypeId) {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
-                return subjects.flatMap((item) =>
-                    item.details
-                        .filter((detail) => detail.classType._id === id)
+                return subjects.flatMap((item) => {
+                    return item.details
+                        .filter((detail) => {
+                            return detail.classType._id === id;
+                        })
                         .map((detail) => ({
                             id: `${item._id} ${groupNumber}`,
-                            name: `${item.subject.name} ${groupNumber}`, // Append groupNumber to name
+                            name: `${item.subject.name} (gr. ${groupNumber})`, // Append groupNumber to name
                             type: detail.classType.name,
                             color: detail.classType.color,
                             isweekly: detail.weeklyBlockCount > 0,
@@ -162,33 +164,22 @@ const Plans: React.FC = () => {
                             y: -1,
                             isset: false,
                             groups: groupNumber // Set groups to current groupNumber
-                        }))
-                );
+                        }));
+                });
             }
 
-            // Accumulate results across multiple runs
             let allResults: ObiektNew[] = [];
             for (let i = 1; i <= selectedGroupTypeCount; i++) {
                 const result = getObiektyById(subjects, subjectTypeId, i);
                 allResults = [...allResults, ...result];
             }
             setLessons(allResults);
-
         }
-
     }, [subjectTypeId]);
-
-    useEffect(() => {
-        //Trzeba tutaj dodać ile jest grup bazując na timetables i na podstawie tego je wyświetlać
-        // const result = selectedTimeTable.groups.find((group, index) => group[index].classType._id === subjectTypeId);
-//TODO: wyświetlanie grup po ich wybraniu
-    }, [subjectTypeId]);
-
-
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await apiService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             for (let i:number = 0; i < 7; i++){
                 if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
@@ -221,50 +212,32 @@ const Plans: React.FC = () => {
         if(selectedSemesterGroups){
             setGroupTypeList(selectedSemesterGroups)
         }
-        console.log(selectedSemesterGroups)
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         // const selectedValue : string = event.target.value;
+        setLessons([]);
         setSelectedGroupType(event.target.value);
+        if (selectedTimeTable){
+            const groupCounts = APIUtils.getTimetableGroupCounts(timeTables, selectedTimeTable._id);
 
-        for(let i= 0; i<groupTypeList.length; i++){
-            if(groupTypeList[i]._id === event.target.value){
-                setSubjectTypeName(groupTypeList[i].name)
-                setSubjectTypeId(groupTypeList[i]._id)
-                setSelectedGroupTypeCount(1);
-                break;
+            if (groupCounts) { // Ensure groupCounts is not null
+                for (const [key, groupTypeList] of Object.entries(groupCounts)) {
+                    for (let i = 0; i < groupTypeList.length; i++) {
+                        if (groupTypeList[i]._id === event.target.value) {
+                            setSubjectTypeName(groupTypeList[i].name);
+                            setSubjectTypeId(groupTypeList[i]._id);
+                            setSelectedGroupTypeCount(Number(key)); // Set to the key value as a number
+                            break;
+                        }
+                    }
+                }
+            } else {
+                console.error("Group counts are null");
             }
+        }else {
+            console.error("Error w wybranym timetable")
         }
-
-        // if (selectedValue === '2') {  // W
-        //     for (let i = 0; i < groupTypes.length; i++) {
-        //         if (groupTypes[i].classType.acronym == 'W'){
-        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
-        //             setSubjectTypeName("W")
-        //         }
-        //     }
-        // }else
-        //
-        // if (selectedValue === '1') {  // PS
-        //     for (let i = 0; i < groupTypes.length; i++) {
-        //         if (groupTypes[i].classType.acronym == 'PS'){
-        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
-        //             setSubjectTypeName("PS")
-        //         }
-        //     }
-        // }else
-        //
-        // if (selectedValue === '3') {  // La
-        //     for (let i = 0; i < groupTypes.length; i++) {
-        //         if (groupTypes[i].classType.acronym == 'L'){
-        //             setSelectedGroupTypeCount(groupTypes[i].groupCount);
-        //             setSubjectTypeName("L")
-        //         }
-        //     }
-        // }else {
-        //     setSubjectTypeName("N")
-        // }
     };
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
@@ -460,7 +433,7 @@ const Plans: React.FC = () => {
                     </select>): ("Brak grup do wyświetlenia")
                 )}
             </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFacultyId}/>
+            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 {/*Tutaj if apropo tego czy wybrany semestr czy nie*/}
                 {selectedSemesterId ? (
