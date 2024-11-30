@@ -1,133 +1,126 @@
- export type Classdata = {
-        classes: Array<TimeTables>;
-        groups: Array<ClassType>;
-        schedules: Array<Schedule>;
-        semester: string;
-        weekdays: Array<number>;
-        _id: string;
-    }
+import ECourseCycle from '../../backend/src/enums/ECourseCycle';
+import ECourseDegree from '../../backend/src/enums/ECourseDegree';
+import ECourseMode from '../../backend/src/enums/ECourseMode.ts';
+import EUserRole from '../../backend/src/enums/EUserRole.ts';
+import EDayOfTheWeek from '../../backend/src/enums/EDayOfTheWeek.ts';
 
-    export type ClassType = {
-    acronym: string;
-    color: string;
-    name: string;
-    _id: string;
-    }
-
-    export type Schedule = {
-    _id: string;
-    weekdays: Array<number>;
-    periods: Array<Periods>;
-    }
-
-    export type Organizer = {
-    _id: string;
-    fristName: string;
-    fullName: string;
-    lastname: string;
-    middleName: string;
-    }
-
-    export type Periods = {
-        _id: string;
-        weekdays: Array<number>;
-        startTime: string;
-        order: number;
-        endTime: string;
-    }
-
-    export type RoomType = {
-        _id: string;
-        name: string;
-    }
-
-    export type Room = {
-    _id: string;
-    capacity: number | null;
-    number: string;
-    numberSecondary: string;
-    roomNumber: string;
-    type: RoomType;
-    }
-
-    export type Subject = {
-    _id: string;
-    name: string;
-    code: string;
-    shortName: string;
-    isElective: boolean;
-    targetedSemesters: Array<number>;
-    classTypes: Array<ClassType>;
-    }
-
-    export type Classes = {
-        _id: string;
-        organizer: string;
-        subject: string;
-        classType: string;
-        studentGroups: Array<number>;
-        periodBlocks: Array<number>;
-        room: string;
-        weekday: number;
-    }
-
-    export type Semesters = {
-        _id: string;
-        academicYear: string;
-        index: number;
-        subjects: Array<Subject>;
-    }
-
-  export type TimeTables = {
-        _id: string;
-        semester: Semesters;
-        targetedSemester: number;
-        schedules: Schedule;
-        classes: Classes;
-    }
-
-    export type Courses = {
-        _id: string;
-        code: string;
-        name: string;
-        specialization: string;
-        cycle: number;
-        degree: number;
-        mode: boolean;
-        startDate: string;
-        semesterCount: number;
-        semesters: Array<Semesters>;
-        electiveSubjects: Array<Subject>;
-    }
-
-    export type Users = {
+export type UserPopulated = {
     _id: string;
     username: string;
     password: string;
     fullName: string;
-    title: string;
-    email: string;
-    courses: Courses;
-    role: number;
-    }
+    // TODO: uncomment fields after implementing
+    // title: EUserTitle | null;
+    // email: string;
+    courses: string[];
+    role: EUserRole;
+}
 
- export type SubjectDetails = {
-     _id: string;
-     course: string;
-     subject: {
-         _id: string;
-         code: string;
-         name: string;
-         shortName: string;
-         isElective: boolean;
-         targetedSemesters: number[];
-     };
-     details: [{
-         classType: {
-             name: string;
-             acronym: string;
-             color: string;
-         };
-         weeklyBlockCount: number;
-     }];
- };
+// courses
+export type CoursePopulated = {
+    _id: string;
+    code: string;
+    name: string;
+    specialization: string | null;
+    degree: ECourseDegree | null; // TODO: remove null?
+    cycle: ECourseCycle;
+    mode: ECourseMode;
+    semesters: SemesterPopulated[];
+    electiveSubjects: string[];
+}
+export type ElectiveSubjectPopulated = {
+    _id: string;
+    name: string;
+    subjects: string[];
+}
+export type SemesterPopulated = {
+    _id: string;
+    academicYear: string;
+    index: number;
+    subjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[];
+}
+export type SubjectPopulated = {
+    _id: string;
+    code: string;
+    name: string;
+    shortName: string | null;
+    isElective: boolean;
+    targetedSemesters: number[];
+    classTypes: Omit<ClassTypePopulated, 'color'>[];
+}
+export type SubjectDetailsPopulated = {
+    _id: string;
+    course: string;
+    subject: Omit<SubjectPopulated, 'classTypes'>;
+    details: [{
+        classType: Omit<ClassTypePopulated, '_id'>;
+        weeklyBlockCount: number;
+    }];
+}
+
+// faculty
+export type BuildingPopulated = {
+    _id: string;
+    name: string;
+    acronym: string | null;
+    address: string;
+    // hasDeanOffice: boolean;
+    // hasRectorOffice: boolean;
+    rooms: RoomPopulated[];
+}
+export type FacultyPopulated = {
+    _id: string;
+    name: string;
+    acronym: string | null;
+    buildings: Omit<BuildingPopulated, 'address'>[];
+    courses: Pick<CoursePopulated, '_id' | 'code' | 'name' | 'specialization' | 'semesters'>[];
+}
+export type RoomPopulated = {
+    _id: string;
+    number: string | null; // TODO: remove null
+    numberSecondary: string | null;
+    capacity: number | null;
+    roomNumber: string | null; // virtual field (number / numberSecondary / number + numberSecondary), TODO: remove null
+}
+
+// timetable
+export type ClassPopulated = {
+    _id: string;
+    organizer: Pick<UserPopulated, '_id' | 'fullName'> | null;
+    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'> | null;
+    classType: ClassTypePopulated;
+    weekday: number;
+    periodBlocks: number[];
+    room: RoomPopulated;
+    semester: string | null;
+    studentGroups: number[] | null;
+}
+export type ClassTypePopulated = {
+    _id: string;
+    name: string;
+    acronym: string;
+    color: string | null;
+}
+export type PeriodPopulated = {
+    _id: string;
+    weekdays: EDayOfTheWeek[];
+    order: number;
+    startTime: string;
+    endTime: string;
+}
+export type SchedulePopulated = {
+    _id: string;
+    weekdays: EDayOfTheWeek[];
+    periods: Omit<PeriodPopulated, '_id' | 'weekdays'>[];
+}
+export type TimetablePopulated = {
+    _id: string;
+    semester: string;
+    weekdays: EDayOfTheWeek[];
+    schedules: SchedulePopulated[];
+    groups: {
+        classType: Omit<ClassTypePopulated, 'color'>;
+        groupCount: number;
+    }[] | null;
+    classes: ClassPopulated[];
+}
