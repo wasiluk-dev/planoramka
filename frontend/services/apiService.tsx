@@ -1,182 +1,136 @@
-import * as dataType from "./databaseTypes.tsx";
+import {
+    BuildingPopulated,
+    ClassPopulated,
+    ClassTypePopulated,
+    CoursePopulated,
+    ElectiveSubjectPopulated,
+    FacultyPopulated,
+    PeriodPopulated,
+    RoomPopulated,
+    SchedulePopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    SubjectPopulated,
+    TimetablePopulated,
+    UserPopulated,
+} from './databaseTypes.tsx';
 
-const baseUrl :string = 'https://127.0.0.1:3000';
-const  myHeaders = new Headers();
-myHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
+// TODO: replace url with .env variable
+const dbUrl: string = 'https://127.0.0.1:3000';
+const headers = new Headers();
+headers.append('Content-Type', 'application/x-www-form-urlencoded');
 
-//old type, will not be used, to be deleted
-type User = {
-    username: string;
-    password: string;
-    email: string;
-    name?: string;
-    surname?: string;
-    type?: number;
-}
+export default class APIService {
+    private static async fetchAPIResponse(resourceName: string) {
+        const response: Response = await fetch(dbUrl + resourceName);
 
-type CreateUser = {
-    username: string;
-    fullname: string;
-    password: string;
-}
-
-type LoginUser = {
-    username: string;
-    password: string;
-}
-
-const apiService = {
-    //Test Api - userzy
-    getTestPerson: async (): Promise<User | null> => {
-        const response : Response = await fetch(baseUrl + '/users');
         if (!response.ok) {
+            // TODO?: replace with a throw?
             return null;
         }
 
         return await response.json();
-    },
+    }
 
-    getPeriods: async (): Promise<dataType.Periods | null> => {
-        const response : Response = await fetch(baseUrl + '/periods');
-        if (!response.ok) {
-            return null;
-        }
-        return await response.json();
-    },
-    getRooms: async (): Promise<dataType.Periods | null> => {
-        const response : Response = await fetch(baseUrl + '/rooms');
-        if (!response.ok) {
-            return null;
-        }
-        return await response.json();
-    },
-    getFaculties: async (): Promise<dataType.Periods | null> => {
-        const response : Response = await fetch(baseUrl + '/faculties');
-        if (!response.ok) {
-            return null;
-        }
-        return await response.json();
-    },
+    // courses
+    static async getCourses(): Promise<CoursePopulated[] | null> {
+        return this.fetchAPIResponse('/courses');
+    }
+    static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated[] | null> {
+        return this.fetchAPIResponse('/elective-subjects');
+    }
+    static async getSemesters(): Promise<SemesterPopulated[] | null> {
+        return this.fetchAPIResponse('/semesters');
+    }
+    static async getSubjects(): Promise<SubjectPopulated[] | null> {
+        return this.fetchAPIResponse('/subjects');
+    }
+    static async getSubjectDetails(): Promise<SubjectDetailsPopulated[] | null> {
+        return this.fetchAPIResponse('/subject-details');
+    }
 
-    // getSemesters: async (): Promise<Courses | null> => {
-    //     const response : Response = await fetch(baseUrl + '/semesters');
-    //     if (!response.ok) {
-    //         return null;
-    //     }
-    //     return await response.json();
-    // },
-    // getElecviteSubjects: async (): Promise<Courses | null> => {
-    //     const response : Response = await fetch(baseUrl + '/electiveSubjects');
-    //     if (!response.ok) {
-    //         return null;
-    //     }
-    //     return await response.json();
-    // },
+    // faculty
+    static async getBuildings(): Promise<BuildingPopulated[] | null> {
+        return this.fetchAPIResponse('/buildings');
+    }
+    static async getFaculties(): Promise<FacultyPopulated[] | null> {
+        return this.fetchAPIResponse('/faculties');
+    }
+    static async getRooms(): Promise<RoomPopulated[] | null> {
+        return this.fetchAPIResponse('/rooms');
+    }
 
-    getTimeTables: async (): Promise<dataType.TimeTables | null> => {
-        const response : Response = await fetch(baseUrl + '/timeTables');
-        if (!response.ok) {
-            return null;
-        }
-        return await response.json();
-    },
-    getSubjectDetails: async (): Promise<Object | null> => {
-        const response : Response = await fetch(baseUrl + '/subject-details');
-        if (!response.ok) {
-            return null;
-        }
-        return await response.json();
-    },
+    // timetable
+    static async getClasses(): Promise<ClassPopulated[] | null> {
+        return this.fetchAPIResponse('/classes');
+    }
+    static async getClassTypes(): Promise<ClassTypePopulated[] | null> {
+        return this.fetchAPIResponse('/class-types');
+    }
+    static async getPeriods(): Promise<PeriodPopulated[] | null> {
+        return this.fetchAPIResponse('/periods');
+    }
+    static async getSchedules(): Promise<SchedulePopulated[] | null> {
+        return this.fetchAPIResponse('/schedules');
+    }
+    static async getTimetables(): Promise<TimetablePopulated[] | null> {
+        return this.fetchAPIResponse('/timetables');
+    }
 
+    static async registerUser(registerData: Pick<UserPopulated, 'username' | 'password' | 'fullName'>) {
+        const body = new URLSearchParams();
+        body.append('username', registerData.username);
+        body.append('password', registerData.password);
+        body.append('fullName', registerData.fullName);
 
-    createUser: async (registerdata: CreateUser): Promise<void> => {
-
-        const urlencoded = new URLSearchParams();
-        urlencoded.append("username", registerdata.username);
-        urlencoded.append("fullName", registerdata.fullname);
-        urlencoded.append("password", registerdata.password);
-
-        const requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-            body: urlencoded,
-        };
-        //CZEMU TO TERAZ DZIAŁA
-        await fetch( baseUrl + "/auth/register", requestOptions)
-            .then((response) => {
-                console.log(response)
-                response.text()
-            })
-            .catch((error) => {
-                console.log(error)
+        try {
+            const response: Response = await fetch(dbUrl + '/auth/register', {
+                method: 'POST',
+                headers: headers,
+                body: body,
             });
 
-        // const response = await fetch(baseUrl + '/users', {
-        //     method: 'POST',
-        //     headers: myHeaders,
-        //     body: formBody,
-        //     redirect: 'follow'
-        // });
-        //
-        // if (!response.ok) {
-        //     //NIE UDAŁO SIĘ UTWORZYĆ KONTA
-        //     console.error('Failed to create user:', await response.text());
-        //     return false;
-        // }else{
-        //     //UŻYTKOWNIK POPRAWNIE UTWORZYŁ KONTO
-        //     return true;
-        // }
-
-    },
-
-    loginUser: async (registerdata: LoginUser): Promise<boolean> => {
-
-        const urlencoded = new URLSearchParams();
-        urlencoded.append("username", registerdata.username);
-        urlencoded.append("password", registerdata.password);
-
-        const requestOptions = {
-            method: "POST",
-            credentials: "include",
-            headers: myHeaders,
-            body: urlencoded
-        };
-        //CZEMU TO TERAZ DZIAŁA
-        try {
-            const response = await fetch(baseUrl + "/auth/login", requestOptions);
-
-            if (response.ok) {
-                console.log("Login successful");
-                return true;
-            } else {
-                console.error("Login failed:", response.status, response.statusText);
-                return false;
+            if (!response.ok) {
+                console.error(response.statusText);
             }
-        } catch (error) {
-            console.error("Request error:", error);
-            return false;
+        } catch (err) {
+            console.error(err);
         }
-    },
+    }
+    static async loginUser(registerData: Pick<UserPopulated, 'username' | 'password'>) {
+        const body = new URLSearchParams();
+        body.append('username', registerData.username);
+        body.append('password', registerData.password);
 
-    logoutUser: async (): Promise<void> => {
-
-        const requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-        };
-        //CZEMU TO TERAZ DZIAŁA
         try {
-            const response = await fetch(baseUrl + "/auth/logout", requestOptions);
+            const response: Response = await fetch(dbUrl + '/auth/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: headers,
+                body: body,
+            });
+
+            if (!response.ok) {
+                console.error(response.statusText);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    static async logoutUser() {
+        try {
+            const response: Response = await fetch(dbUrl + '/auth/logout', {
+                method: 'POST',
+                headers: headers,
+            });
 
             if (response.ok) {
-                console.log("Logout successful");
-                document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = 'connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             } else {
-                console.error("Logout failed:", response.status, response.statusText);
+                console.error('Logout failed:', response.status, response.statusText);
             }
-        } catch (error) {
-            console.error("Request error:", error);
+        } catch (err) {
+            console.error(err);
         }
     }
 }
-export default  apiService;
