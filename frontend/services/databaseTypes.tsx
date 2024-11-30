@@ -53,7 +53,7 @@ export type SubjectDetailsPopulated = {
     course: string;
     subject: Omit<SubjectPopulated, 'classTypes'>;
     details: [{
-        classType: Omit<ClassTypePopulated, '_id'>;
+        classType: ClassTypePopulated;
         weeklyBlockCount: number;
     }];
 }

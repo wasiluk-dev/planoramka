@@ -56,7 +56,7 @@ const  ReadyPlan: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getTimeTables();
+            const data = await apiService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
             setZajecia(data[0]?.classes)
             setGroupTypes(data[0]?.groups)
