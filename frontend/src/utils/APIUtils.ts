@@ -1,87 +1,13 @@
 import EWeekday from '../enums/EWeekday.ts';
-
-// TODO: make all the types dynamic
-type ClassPopulated = {
-    _id: string;
-    organizer: {
-        _id: string;
-        fullName: string;
-    };
-    subject: {
-        _id: string;
-        name: string;
-        shortName: string | null;
-    };
-    classType: {
-        _id: string;
-        name: string;
-        acronym: string;
-        color: string;
-    };
-    weekday: number;
-    periodBlocks: number[];
-    room: {
-        _id: string;
-        number: string;
-        numberSecondary: string;
-        type: {
-            _id: string;
-            name: string;
-        } | null;
-        capacity: number | null;
-        roomNumber: string;
-    };
-    semester: string;
-    studentGroups: number[];
-};
-type ClassTypePopulated = {
-    _id: string;
-    name: string;
-    acronym: string | null;
-    color: string | null;
-};
-type RoomPopulated = {
-    _id: string;
-    number: string | null; // TODO: remove null
-    numberSecondary: string | null;
-    capacity: number | null;
-    roomNumber: string;
-};
-type SemesterPopulated = {
-    _id: string;
-    academicYear: string;
-    index: number;
-    subjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[];
-};
-type SubjectPopulated = {
-    _id: string;
-    code: string;
-    name: string;
-    shortName: string | null;
-    isElective: boolean;
-    targetedSemesters: number[];
-    classTypes: Omit<ClassTypePopulated, 'color'>[] | null; // TODO: remove null
-};
-type SubjectDetailsPopulated = {
-    _id: string;
-    course: string;
-    subject: {
-        _id: string;
-        code: string;
-        name: string;
-        shortName: string;
-        isElective: boolean;
-        targetedSemesters: number[];
-    };
-    details: [{
-        classType: {
-            name: string;
-            acronym: string;
-            color: string;
-        };
-        weeklyBlockCount: number;
-    }];
-};
+import {
+    ClassPopulated,
+    ClassTypePopulated,
+    RoomPopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    SubjectPopulated,
+    TimetablePopulated
+} from '../../services/databaseTypes.tsx';
 
 // TODO: change returning nulls to throwing errors
 export default class APIUtils {
@@ -93,7 +19,7 @@ export default class APIUtils {
 
         try {
             for (const c of classes) {
-                if (c.organizer._id === userId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
+                if (c.organizer?._id === userId && c.weekday === weekday && c.periodBlocks.includes(periodBlock)) {
                     return true;
                 }
             }
@@ -130,7 +56,7 @@ export default class APIUtils {
                 if (
                     c.semester === semesterId
                     && c.classType._id === classTypeId
-                    && c.studentGroups.includes(groupNumber)
+                    && c.studentGroups?.includes(groupNumber)
                     && c.weekday === weekday
                     && c.periodBlocks.includes(periodBlock)
                 ) {
@@ -216,5 +142,38 @@ export default class APIUtils {
         }
 
         return newSubjectDetails;
+    }
+
+    // Timetable
+    static getTimetableGroupCounts(timetables: TimetablePopulated[], timetableId: string) {
+        if (!timetables || !timetableId) {
+            return null;
+        }
+
+        let groups: TimetablePopulated['groups'] = [];
+        try {
+            for (const t of timetables) {
+                if (t._id === timetableId && t.groups) {
+                    groups = t.groups;
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        const groupCounts: Record<number, Omit<ClassTypePopulated, "color">[]> = {};
+        try {
+            for (const g of groups) {
+                if (!groupCounts[g.groupCount]) {
+                    groupCounts[g.groupCount] = [];
+                }
+
+                groupCounts[g.groupCount].push(g.classType);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return groupCounts;
     }
 }
