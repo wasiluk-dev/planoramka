@@ -2,11 +2,23 @@ import React, {useEffect, useState} from "react";
 import './Popup.css'
 import SearchableDropdown from "../SearchableDropdown/SearchableDropdown.tsx";
 import apiService from "../../../services/apiService.tsx";
+import {CoursePopulated, FacultyPopulated, RoomPopulated, UserPopulated} from "../../../services/databaseTypes.tsx";
+import APIUtils from "../../utils/APIUtils.ts";
+
+type Faculties = {
+    _id: string;
+    acronym: string;
+    name: string;
+    buildings: Array<Buildings>;
+    courses: Array<CoursePopulated>;
+}
+
 
 type Props = {
     trigger: boolean;
     setTrigger: (trigger: boolean) => void;
-    pickedFaculty: string;
+    pickedFaculty?: Faculties;
+
 }
 
 type SelectedFaculty = {
@@ -25,42 +37,27 @@ type Room = {
 }
 
 type Buildings = {
-    acronym: string;
-    name: string;
-    rooms: Array<Room>;
-    _id: string;
+    id: string,
+    acronym: string,
+    name: string,
+    address: string;
+    rooms: Array<RoomPopulated>;
 }
 
 const RoomPopup:React.FC<Props> = (props: Props) => {
 
     const [roomValue, setRoomValue] = useState("Wybierz salę...");
     const [teacherValue, setTeacherValue] = useState("Wybierz nauczyciela...");
-    const [selectedBuilding, setSelectedBuilding] = useState<Buildings>(
-        {
-            acronym: "string",
-            name: "string",
-            rooms: [],
-            _id: "string"
-        });
     const [newRooms, setNewRooms] = useState<Array<Room>>([]);
-    const [allTeachers, setAllTeachers] = useState([])
+    const [allTeachers, setAllTeachers] = useState<Array<UserPopulated>>([])
     const [showallrooms, setShowallrooms] = useState<boolean>(false);
     const [rooms, setRooms] = useState<Array<Room>>([]);
+    const [teacherList, setTeacherList] = useState<Array<UserPopulated>>([]);
     const [allFaculties, setAllFaculties] = useState([]);
     const [facultyId, setFacultyId] = useState<string>("");
     const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<SelectedFaculty>();
     const [roomsList, setRoomsList] = useState([]);
     const [buildingName, setBuildingName] = useState<string>("");
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getRooms();
-            setRooms(data)
-        };
-
-        fetchData();
-    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -69,6 +66,42 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
         };
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getUsers();
+            const allTeachers = APIUtils.getUsersWithRole(data, 2);
+
+            const sortedTeachers = allTeachers?.sort((a, b) => {
+                // Extract the last word (surname) from the fullName property
+                const surnameA = a.fullName.split(" ").slice(-1)[0].toLowerCase();
+                const surnameB = b.fullName.split(" ").slice(-1)[0].toLowerCase();
+
+                // Compare surnames
+                return surnameA.localeCompare(surnameB);
+            });
+
+// Save the sorted data
+            setAllTeachers(sortedTeachers);
+        };
+        fetchData();
+    }, [props.trigger]);
+    // console.log(teacherList)
+    useEffect(() => {
+        if (props.pickedFaculty?.buildings && props.pickedFaculty.buildings.length > 0) {
+            const allRooms = props.pickedFaculty.buildings.flatMap(building => building.rooms || []);
+            setRooms(allRooms);
+        }
+    }, [showallrooms, props.trigger]);
+
+    useEffect(() => {
+        setTeacherList(allTeachers.map(teacher => ({
+            id: teacher._id,
+            name: teacher.fullName
+
+        })))
+    }, [allTeachers]);
+
 
     useEffect(() => {
         setRoomsList(rooms.map(room => ({
@@ -102,6 +135,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
+        setBuildingName("")
         setFacultyId(selectedValue);
         setSelectedFacultyBuildings(allFaculties.find(
             (faculty) => faculty._id === selectedValue
@@ -181,27 +215,10 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
                     <h3>Wykładowca</h3>
                     <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
-                        Pokaż wszystkich prowadzących
-                    </label><br/>
-                    <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
-                    <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż tylko dostępnych prowadzących
                     </label><br/>
                     <SearchableDropdown
-                        options={[
-                            {id: "1", name: "Lion"},
-                            {id: "2", name: "Tiger"},
-                            {id: "3", name: "Elephant"},
-                            {id: "4", name: "Bear"},
-                            {id: "5", name: "Fox"},
-                            {id: "6", name: "Wolf"},
-                            {id: "7", name: "Deer"},
-                            {id: "8", name: "Rabbit"},
-                            {id: "9", name: "Giraffe"},
-                            {id: "10", name: "Zebra"},
-                            {id: "11", name: "Kangaroo"},
-                            {id: "12", name: "Panda"},
-                        ]}
+                        options={teacherList}
                         label="name"
                         id="id"
                         selectedVal={teacherValue}

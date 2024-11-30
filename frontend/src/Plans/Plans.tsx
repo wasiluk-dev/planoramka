@@ -32,7 +32,7 @@ type Buildings = {
     acronym: string,
     name: string,
     address: string;
-    rooms: Array<Room>;
+    rooms: Array<RoomPopulated>;
 }
 
 type Faculties = {
@@ -40,7 +40,7 @@ type Faculties = {
     acronym: string;
     name: string;
     buildings: Array<Buildings>;
-    courses: Array<Courses>;
+    courses: Array<CoursePopulated>;
 }
 
 const day ={
@@ -433,7 +433,7 @@ const Plans: React.FC = () => {
                     </select>): ("Brak grup do wyświetlenia")
                 )}
             </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFacultyId}/>
+            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 {/*Tutaj if apropo tego czy wybrany semestr czy nie*/}
                 {selectedSemesterId ? (
