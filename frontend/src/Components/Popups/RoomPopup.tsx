@@ -122,14 +122,14 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
                     </button>
                 </div>
                 <div className="room p-2 ms-2 me-2">
-                    <h3>Wybierz sale</h3>
+                    <h3>Sala</h3>
                     <input className="form-check-input me-2 mb-2" type="checkbox"
                            onChange={() => {
                         setShowallrooms(!showallrooms);
                     }}
                            id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
-                        Pokaż wszystkie sale
+                        Pokaż z danego wydziału
                     </label><br/>
                     {showallrooms ? (
                         <>
@@ -178,7 +178,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
                     />
                 </div>
                 <div className="teacher p-2">
-                    <h3>Wybierz prowadzącego</h3>
+                    <h3>Wykładowca</h3>
                     <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż wszystkich prowadzących
