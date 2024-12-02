@@ -92,8 +92,7 @@ const RoomPopup:React.FC<Props> = (props: Props) => {
 
             });
 
-// Log or save the modified names
-            console.log(modifiedNames)
+
             setTeacherSurnameList(modifiedNames)
 
 // Save the sorted data
