@@ -10,9 +10,8 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated, PeriodPopulated} from "../../services/databaseTypes.tsx";
+import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
-import {scheduler} from "node:timers/promises";
 
 
 type ObiektNew = {
@@ -119,11 +118,9 @@ const Plans: React.FC = () => {
                 return setMadeLessons([]);
             }
 
-            console.log("Classes Array:", classesArray);
 
             const filteredLessons = classesArray
                 .filter((classItem: any) => {
-                    console.log("Checking classItem:", classItem); // Debugging
                     return classItem?.classType?._id === selectedGroupType;
                 })
                 .map((classItem: any) => ({
@@ -133,17 +130,16 @@ const Plans: React.FC = () => {
                     subject: classItem.subject,
                 }));
 
-            console.log("Filtered Lessons:", filteredLessons); // Debugging
             setMadeLessons(filteredLessons || []);
         } else {
-            console.error("selectedTimeTable is not an object or is null/undefined");
+            // console.error("selectedTimeTable is not an object or is null/undefined");
             setMadeLessons([]); // Set to an empty array as a fallback
         }
 
 
     }, [selectedTimeTable, selectedGroupType]);
 
-console.log(madeLessons)
+
     useEffect(() => {
         const fetchData = async () => {
             const data = await apiService.getTimetables();
@@ -180,7 +176,6 @@ console.log(madeLessons)
         const fetchData = async () => {
             const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, [Number(selectedSemester)]);
             setSubjects(data)
-            console.log(data)
         };
 
         fetchData();
@@ -191,20 +186,22 @@ console.log(madeLessons)
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
                     return item.details
-                        .filter((detail) => {
-                            return detail.classType._id === id;
-                        })
-                        .map((detail) => ({
-                            id: `${item._id}${groupNumber}`,
-                            name: `${item.subject.name} (gr. ${groupNumber})`, // Append groupNumber to name
-                            type: detail.classType.name,
-                            color: detail.classType.color,
-                            isweekly: detail.weeklyBlockCount > 0,
-                            x: -1,
-                            y: -1,
-                            isset: false,
-                            groups: groupNumber // Set groups to current groupNumber
-                        }));
+                        .filter((detail) => detail.classType._id === id)
+                        .flatMap((detail) =>
+                            Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
+                                id: `${item._id}_${groupNumber}_${index}`, // Unique ID for each repetition
+                                name: `${item.subject.name} (gr. ${groupNumber})`,
+                                type: detail.classType.name,
+                                color: detail.classType.color,
+                                weeklyCount: detail.weeklyBlockCount,
+                                isweekly: detail.weeklyBlockCount > 0,
+                                x: -1,
+                                y: -1,
+                                isset: false,
+                                groups: groupNumber, // Set groups to current groupNumber
+                                setday: -1,
+                            }))
+                        );
                 });
             }
 
@@ -215,7 +212,7 @@ console.log(madeLessons)
             }
             setLessons(allResults);
         }
-    }, [subjectTypeId]);
+    }, [subjectTypeId, showCurrentDay]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -307,7 +304,7 @@ console.log(madeLessons)
         });
         setGrid(updatedGrid);
 
-    }, [fixedRows, lessons,  selectedGroupTypeCount, subjectTypeId]);
+    }, [fixedRows, lessons,  selectedGroupTypeCount, subjectTypeId, showCurrentDay]);
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
@@ -331,7 +328,6 @@ console.log(madeLessons)
 
         setFixedRows(epic.length);
     };
-
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -408,6 +404,8 @@ console.log(madeLessons)
         }
         setGrid(newGrid);
     };
+console.log(lessons)
+
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
@@ -475,7 +473,6 @@ console.log(madeLessons)
             </div>
             <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                {/*Tutaj if apropo tego czy wybrany semestr czy nie*/}
                 {selectedSemesterId ? (
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <table
@@ -565,7 +562,7 @@ console.log(madeLessons)
                             <Droppable id='ugabuga'>
                                 {lessons.filter(item => !item.isset).map(item => (
                                     <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
-                                               key={item.name}>
+                                               key={item.id} setday={item.setday}>
                                         {item.name}
                                     </Draggable>
                                 ))}
