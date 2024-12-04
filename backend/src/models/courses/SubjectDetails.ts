@@ -25,9 +25,7 @@ export const SubjectDetailsDefinition = {
             classType: {
                 type: Schema.Types.ObjectId,
                 ref: new ClassType().name,
-                autopopulate: {
-                    select: '-_id',
-                },
+                autopopulate: true,
                 required: true,
             },
             weeklyBlockCount: {

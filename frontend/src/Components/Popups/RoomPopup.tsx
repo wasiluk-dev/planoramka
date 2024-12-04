@@ -1,247 +1,188 @@
-import React, {useEffect, useState} from "react";
-import './Popup.css'
-import SearchableDropdown from "../SearchableDropdown/SearchableDropdown.tsx";
-import apiService from "../../../services/apiService.tsx";
-import {CoursePopulated, FacultyPopulated, RoomPopulated, UserPopulated} from "../../../services/databaseTypes.tsx";
+import React, { useEffect, useState } from 'react';
+import './Popup.css';
+import SearchableDropdown from '../SearchableDropdown/SearchableDropdown.tsx';
+import APIService from '../../../services/apiService.tsx';
+import { FacultyPopulated, RoomPopulated, UserPopulated } from '../../../services/databaseTypes.tsx';
 import APIUtils from "../../utils/APIUtils.ts";
-
-type Faculties = {
-    _id: string;
-    acronym: string;
-    name: string;
-    buildings: Array<Buildings>;
-    courses: Array<CoursePopulated>;
-}
-
+import EUserRole from '../../../../backend/src/enums/EUserRole.ts';
 
 type Props = {
     trigger: boolean;
     setTrigger: (trigger: boolean) => void;
-    pickedFaculty?: Faculties;
-
+    pickedFaculty?: FacultyPopulated;
 }
 
-type SelectedFaculty = {
-    acronym: string;
-    buildings: Array<Buildings>;
-    name: string;
-    _id: string;
-}
-
-type Room = {
-    capacity: number | null;
-    number: string | null;
-    numberSecondary: string| null;
-    roomNumber: string| null;
-    _id: string;
-}
-
-type Buildings = {
-    id: string,
-    acronym: string,
-    name: string,
-    address: string;
-    rooms: Array<RoomPopulated>;
-}
-
-const RoomPopup:React.FC<Props> = (props: Props) => {
-
-    const [roomValue, setRoomValue] = useState("Wybierz salę...");
-    const [teacherValue, setTeacherValue] = useState("Wybierz nauczyciela...");
-    const [newRooms, setNewRooms] = useState<Array<Room>>([]);
-    const [allTeachers, setAllTeachers] = useState<Array<UserPopulated>>([])
-    const [showallrooms, setShowallrooms] = useState<boolean>(false);
-    const [rooms, setRooms] = useState<Array<Room>>([]);
-    const [teacherList, setTeacherList] = useState();
-    const [teacherSurnameList, setTeacherSurnameList] = useState<Array>([]);
-    const [allFaculties, setAllFaculties] = useState([]);
-    const [facultyId, setFacultyId] = useState<string>("");
-    const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<SelectedFaculty>();
-    const [roomsList, setRoomsList] = useState([]);
-    const [buildingName, setBuildingName] = useState<string>("");
+const RoomPopup: React.FC<Props> = (props: Props) => {
+    const [roomValue, setRoomValue] = useState<string>('Wybierz salę...');
+    const [teacherValue, setTeacherValue] = useState<string>('Wybierz nauczyciela...');
+    const [newRooms, setNewRooms] = useState<RoomPopulated[]>([]);
+    const [allTeachers, setAllTeachers] = useState<UserPopulated[]>([]);
+    const [showAllRooms, setShowAllRooms] = useState<boolean>(false);
+    const [rooms, setRooms] = useState<RoomPopulated[]>([]);
+    const [teacherList, setTeacherList] = useState<Pick<UserPopulated, '_id' | 'fullName'>[]>([]);
+    const [teacherSurnameList, setTeacherSurnameList] = useState<Pick<UserPopulated, '_id' | 'fullName'>[]>([]);
+    const [allFaculties, setAllFaculties] = useState<FacultyPopulated[]>([]);
+    const [facultyId, setFacultyId] = useState<string>('');
+    const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<Omit<FacultyPopulated, 'courses'>>();
+    const [roomsList, setRoomsList] = useState<Pick<RoomPopulated, '_id' | 'roomNumber'>[]>([]);
+    const [buildingName, setBuildingName] = useState<string>('');
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getFaculties();
-            setAllFaculties(data)
-        };
+        const fetchData = async() => setAllFaculties(await APIService.getFaculties());
         fetchData();
     }, []);
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getUsers();
-            const allTeachers = APIUtils.getUsersWithRole(data, 2);
+            const data = await APIService.getUsers();
+            const allTeachers = APIUtils.getUsersWithRole(data, EUserRole.Professor);
 
-            const sortedTeachers = allTeachers?.sort((a, b) => {
-                // Extract the last word (surname) from the fullName property
-                const surnameA = a.fullName.split(" ").slice(-1)[0].toLowerCase();
-                const surnameB = b.fullName.split(" ").slice(-1)[0].toLowerCase();
-
-                // Compare surnames
+            // TODO: rework after splitting fullName into names and surnames
+            const teachersSorted = allTeachers.sort((a, b) => {
+                const surnameA = a.fullName.split(' ').slice(-1)[0].toLowerCase();
+                const surnameB = b.fullName.split(' ').slice(-1)[0].toLowerCase();
                 return surnameA.localeCompare(surnameB);
             });
-            const modifiedNames = sortedTeachers?.map(teacher => {
-                const nameParts = teacher.fullName.split(" ");
-                const surname = nameParts.slice(-1)[0];
-                const firstName = nameParts.slice(0, -1).join(" ");
+
+            const modifiedNames = teachersSorted.map(teacher => {
+                const fullNameParts = teacher.fullName.split(' ');
+                const surnames = fullNameParts.slice(-1)[0];
+                const names = fullNameParts.slice(0, -1).join(' ');
                 return {
                     _id: teacher._id,
-                    name: `${surname} ${firstName}`
+                    fullName: `${surnames} ${names}`
                 };
-
             });
 
-// Log or save the modified names
-            console.log(modifiedNames)
-            setTeacherSurnameList(modifiedNames)
-
-// Save the sorted data
-            setAllTeachers(sortedTeachers);
+            setTeacherSurnameList(modifiedNames);
+            setAllTeachers(teachersSorted);
         };
+
         fetchData();
     }, [props.trigger]);
+
     useEffect(() => {
         if (props.pickedFaculty?.buildings && props.pickedFaculty.buildings.length > 0) {
             const allRooms = props.pickedFaculty.buildings.flatMap(building => building.rooms || []);
             setRooms(allRooms);
         }
-    }, [showallrooms, props.trigger]);
+    }, [showAllRooms, props.trigger]);
 
     useEffect(() => {
         setTeacherList(teacherSurnameList.map(teacher => ({
-            id: teacher._id,
-            name: teacher.name
-
+            _id: teacher._id,
+            fullName: teacher.fullName,
         })))
     }, [teacherSurnameList]);
 
-
     useEffect(() => {
         setRoomsList(rooms.map(room => ({
-            id: room._id,
-            name: room.numberSecondary
-
+            _id: room._id,
+            roomNumber: room.roomNumber,
         })))
-    }, [rooms]);
-
-    useEffect(() => {
-        setRoomsList(rooms.map(room => ({
-            id: room._id,
-            name: room.numberSecondary
-
-        })))
-    }, [!showallrooms]);
-
-    useEffect(() => {
-        setRoomsList(newRooms.map(room => ({
-            id: room._id,
-            name: room.numberSecondary
-
-        })))
-    }, [newRooms]);
+    }, [rooms, newRooms, !showAllRooms]);
 
     const handleBuildingChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
-        setNewRooms(selectedFacultyBuildings.buildings[Number(selectedValue)].rooms);
-        setBuildingName(selectedValue);
+        if (selectedFacultyBuildings) {
+            setNewRooms(selectedFacultyBuildings.buildings[Number(selectedValue)].rooms);
+            setBuildingName(selectedValue);
+        }
     };
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
-        setBuildingName("")
+        setBuildingName('');
         setFacultyId(selectedValue);
         setSelectedFacultyBuildings(allFaculties.find(
             (faculty) => faculty._id === selectedValue
         ))
     };
-// console.log(teacherList)
+
     return (props.trigger) ? (
         <div className="popup">
             <div className="popup-inner position-relative p-5, w-100 d-flex pt-4">
                 <div className="buttons position-absolute">
                     <button className="btn btn-success close-btn me-2"
-                        /*onClick={() => props.setTrigger(false)}*/>
+                            // onClick={ () => props.setTrigger(false) }
+                        >
                         Zatwierdź
                     </button>
                     <button className="btn btn-secondary close-btn"
-                            onClick={() => props.setTrigger(false)}>
+                            onClick={ () => props.setTrigger(false) }
+                    >
                         Zamknij
                     </button>
                 </div>
                 <div className="room p-2 ms-2 me-2">
                     <h3>Sala</h3>
                     <input className="form-check-input me-2 mb-2" type="checkbox"
-                           onChange={() => {
-                        setShowallrooms(!showallrooms);
-                    }}
+                           onChange={ () => setShowAllRooms(!showAllRooms) }
                            id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż z danego wydziału
                     </label><br/>
-                    {showallrooms ? (
-                        <>
-                            <select
-                                className="form-select mb-2"
-                                aria-label="Default select example"
-                                value={facultyId}
-                                onChange={handleFacultyChange}
-                            >
-                                <option value="" disabled hidden>Wybierz Wydział</option>
-                                {allFaculties.map(faculty => (
-                                    <option key={faculty._id} value={faculty._id} onClick={() =>{ setFacultyId(faculty._id)}}>
-                                        {faculty.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {facultyId ? (
-                                selectedFacultyBuildings.buildings ? (
-                                    <select
-                                        className="form-select mb-2"
-                                        aria-label="Default select example"
-                                        value={buildingName}
-                                        onChange={handleBuildingChange}
-                                    >
-                                        <option value="" disabled hidden>Wybierz Budynek</option>
-                                        {selectedFacultyBuildings.buildings.map((building, index) => (
-                                            <option key={building.acronym} value={index}>
-                                                {building.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                ):(<><span className="fw-bold fs-3">ERROR</span><br/></>)
-                            ) : ("")}
-                        </>
-                    ) : ("")}
+                    { showAllRooms ? (<>
+                        <select
+                            className="form-select mb-2"
+                            aria-label="Default select example"
+                            value={ facultyId }
+                            onChange={ handleFacultyChange }
+                        >
+                            <option value="" disabled hidden>[Wydział]</option>
+                            { allFaculties.map(faculty => (
+                                <option key={ faculty._id } value={ faculty._id } onClick={ () => { setFacultyId(faculty._id) } }>
+                                    { faculty.name }
+                                </option>
+                            )) }
+                        </select>
+                        { facultyId ? (
+                            selectedFacultyBuildings?.buildings ? (
+                                <select
+                                    className="form-select mb-2"
+                                    aria-label="Default select example"
+                                    value={buildingName}
+                                    onChange={handleBuildingChange}
+                                >
+                                    <option value="" disabled hidden>[Budynek]</option>
+                                    { selectedFacultyBuildings.buildings.map((building, index) => (
+                                        <option key={ building.acronym } value={ index }>
+                                            { building.name }
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (<><span className="fw-bold fs-3">ERROR</span><br/></>)
+                        ) : ('') }
+                    </>) : ('') }
                     <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż tylko wolne sale
                     </label><br/>
                     <SearchableDropdown
-                        options={roomsList}
+                        options={ roomsList }
                         label="name"
                         id="id"
-                        selectedVal={roomValue}
-                        handleChange={(val) => setRoomValue(val)}
+                        selectedVal={ roomValue }
+                        handleChange={ (val) => val ? setRoomValue(val) : '' }
                     />
                 </div>
                 <div className="teacher p-2">
-                    <h3>Wykładowca</h3>
+                    <h3>Prowadzący</h3>
                     <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż tylko dostępnych prowadzących
                     </label><br/>
                     <SearchableDropdown
-                        options={teacherList}
+                        options={ teacherList }
                         label="name"
                         id="id"
-                        selectedVal={teacherValue}
-                        handleChange={(val) => setTeacherValue(val)}
+                        selectedVal={ teacherValue }
+                        handleChange={ (val) => val ? setTeacherValue(val) : '' }
                     />
                 </div>
             </div>
         </div>
-    ) : ("");
+    ) : ('');
 };
 
 export default RoomPopup;
