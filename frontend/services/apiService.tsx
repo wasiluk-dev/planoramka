@@ -26,61 +26,62 @@ export default class APIService {
 
         if (!response.ok) {
             // TODO?: replace with a throw?
-            return null;
+            return [];
         }
 
         return await response.json();
     }
 
     // courses
-    static async getCourses(): Promise<CoursePopulated[] | null> {
+    static async getCourses(): Promise<CoursePopulated[]> {
         return this.fetchAPIResponse('/courses');
     }
-    static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated[] | null> {
+    static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated[]> {
         return this.fetchAPIResponse('/elective-subjects');
     }
-    static async getSemesters(): Promise<SemesterPopulated[] | null> {
+    static async getSemesters(): Promise<SemesterPopulated[]> {
         return this.fetchAPIResponse('/semesters');
     }
-    static async getSubjects(): Promise<SubjectPopulated[] | null> {
+    static async getSubjects(): Promise<SubjectPopulated[]> {
         return this.fetchAPIResponse('/subjects');
     }
-    static async getSubjectDetails(): Promise<SubjectDetailsPopulated[] | null> {
+    static async getSubjectDetails(): Promise<SubjectDetailsPopulated[]> {
         return this.fetchAPIResponse('/subject-details');
     }
 
     // faculty
-    static async getBuildings(): Promise<BuildingPopulated[] | null> {
+    static async getBuildings(): Promise<BuildingPopulated[]> {
         return this.fetchAPIResponse('/buildings');
     }
-    static async getFaculties(): Promise<FacultyPopulated[] | null> {
+    static async getFaculties(): Promise<FacultyPopulated[]> {
         return this.fetchAPIResponse('/faculties');
     }
-    static async getRooms(): Promise<RoomPopulated[] | null> {
+    static async getRooms(): Promise<RoomPopulated[]> {
         return this.fetchAPIResponse('/rooms');
     }
 
     // timetable
-    static async getClasses(): Promise<ClassPopulated[] | null> {
+    static async getClasses(): Promise<ClassPopulated[]> {
         return this.fetchAPIResponse('/classes');
     }
-    static async getClassTypes(): Promise<ClassTypePopulated[] | null> {
+    static async getClassTypes(): Promise<ClassTypePopulated[]> {
         return this.fetchAPIResponse('/class-types');
     }
-    static async getPeriods(): Promise<PeriodPopulated[] | null> {
+    static async getPeriods(): Promise<PeriodPopulated[]> {
         return this.fetchAPIResponse('/periods');
     }
-    static async getSchedules(): Promise<SchedulePopulated[] | null> {
+    static async getSchedules(): Promise<SchedulePopulated[]> {
         return this.fetchAPIResponse('/schedules');
     }
-    static async getTimetables(): Promise<TimetablePopulated[] | null> {
+    static async getTimetables(): Promise<TimetablePopulated[]> {
         return this.fetchAPIResponse('/timetables');
     }
 
-    static async getUsers(): Promise<UserPopulated | null> {
+    // user
+    static async getUsers(): Promise<UserPopulated[]> {
         return this.fetchAPIResponse('/users');
     }
-    static async registerUser(registerData: Pick<UserPopulated, 'username' | 'password' | 'fullName'>) {
+    static async registerUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password' | 'fullName'>) {
         const body = new URLSearchParams();
         body.append('username', registerData.username);
         body.append('password', registerData.password);
@@ -100,7 +101,7 @@ export default class APIService {
             console.error(err);
         }
     }
-    static async loginUser(registerData: Pick<UserPopulated, 'username' | 'password'>) {
+    static async loginUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password'>) {
         const body = new URLSearchParams();
         body.append('username', registerData.username);
         body.append('password', registerData.password);
