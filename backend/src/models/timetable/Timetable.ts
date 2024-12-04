@@ -31,7 +31,7 @@ export const TimetableDefinition = {
                 type: Schema.Types.ObjectId,
                 ref: new ClassType().name,
                 autopopulate: {
-                    select: 'name acronym',
+                    select: '-color',
                 },
                 required: true,
             },
