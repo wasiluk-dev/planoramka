@@ -10,9 +10,8 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated, PeriodPopulated} from "../../services/databaseTypes.tsx";
+import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
-import {scheduler} from "node:timers/promises";
 
 
 type ObiektNew = {
@@ -53,7 +52,6 @@ const day ={
     6: "Sobota",
 }
 
-
 type GroupInfo = {
     classType: {
         acronym: string;
@@ -62,16 +60,23 @@ type GroupInfo = {
     groupCount: number;
 }
 
-type GroupInSemester ={
+type GroupInSemester = {
     acronym: string | null;
     name: string;
     _id: string;
 }
 
+type Lessons = {
+    periodBlocks: Array<number>;
+    studentGroups: Array<number>;
+    weekday: number;
+    subject: SubjectDetailsPopulated;
+}
+
 
 const Plans: React.FC = () => {
 
-
+    const [madeLessons, setMadeLessons] = useState<Array<Lessons>>([]);
     const [subjectTypeName, setSubjectTypeName]  = useState<string>("");
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
@@ -103,6 +108,36 @@ const Plans: React.FC = () => {
         }
 
     }, [selectedSemesterId]);
+
+    useEffect(() => {
+        if (selectedTimeTable && typeof selectedTimeTable === "object") {
+            const classesArray = selectedTimeTable?.classes;
+
+            if (!Array.isArray(classesArray)) {
+                console.error("Classes is not an array or is undefined.");
+                return setMadeLessons([]);
+            }
+
+
+            const filteredLessons = classesArray
+                .filter((classItem: any) => {
+                    return classItem?.classType?._id === selectedGroupType;
+                })
+                .map((classItem: any) => ({
+                    studentGroups: classItem.studentGroups,
+                    weekday: classItem.weekday,
+                    periodBlocks: classItem.periodBlocks,
+                    subject: classItem.subject,
+                }));
+
+            setMadeLessons(filteredLessons || []);
+        } else {
+            // console.error("selectedTimeTable is not an object or is null/undefined");
+            setMadeLessons([]); // Set to an empty array as a fallback
+        }
+
+
+    }, [selectedTimeTable, selectedGroupType]);
 
 
     useEffect(() => {
@@ -151,31 +186,33 @@ const Plans: React.FC = () => {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
                     return item.details
-                        .filter((detail) => {
-                            return detail.classType._id === id;
-                        })
-                        .map((detail) => ({
-                            id: `${item._id} ${groupNumber}`,
-                            name: `${item.subject.name} (gr. ${groupNumber})`, // Append groupNumber to name
-                            type: detail.classType.name,
-                            color: detail.classType.color,
-                            isweekly: detail.weeklyBlockCount > 0,
-                            x: -1,
-                            y: -1,
-                            isset: false,
-                            groups: groupNumber // Set groups to current groupNumber
-                        }));
+                        .filter((detail) => detail.classType._id === id)
+                        .flatMap((detail) =>
+                            Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
+                                id: `${item._id}_${groupNumber}_${index}`, // Unique ID for each repetition
+                                name: `${item.subject.name} (gr. ${groupNumber})`,
+                                type: detail.classType.name,
+                                color: detail.classType.color,
+                                weeklyCount: detail.weeklyBlockCount,
+                                isweekly: detail.weeklyBlockCount > 0,
+                                x: -1,
+                                y: -1,
+                                isset: false,
+                                groups: groupNumber, // Set groups to current groupNumber
+                                setday: -1,
+                            }))
+                        );
                 });
             }
 
             let allResults: ObiektNew[] = [];
             for (let i = 1; i <= selectedGroupTypeCount; i++) {
-                const result = getObiektyById(subjects, subjectTypeId, i);
+                const result = getObiektyById(subjects, selectedGroupType, i);
                 allResults = [...allResults, ...result];
             }
             setLessons(allResults);
         }
-    }, [subjectTypeId]);
+    }, [subjectTypeId, showCurrentDay]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -267,7 +304,7 @@ const Plans: React.FC = () => {
         });
         setGrid(updatedGrid);
 
-    }, [fixedRows, lessons,  selectedGroupTypeCount, subjectTypeId]);
+    }, [fixedRows, lessons,  selectedGroupTypeCount, subjectTypeId, showCurrentDay]);
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
@@ -291,7 +328,6 @@ const Plans: React.FC = () => {
 
         setFixedRows(epic.length);
     };
-
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -368,7 +404,9 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
+console.log(lessons)
 
+    //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -435,7 +473,6 @@ const Plans: React.FC = () => {
             </div>
             <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                {/*Tutaj if apropo tego czy wybrany semestr czy nie*/}
                 {selectedSemesterId ? (
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <table
@@ -525,7 +562,7 @@ const Plans: React.FC = () => {
                             <Droppable id='ugabuga'>
                                 {lessons.filter(item => !item.isset).map(item => (
                                     <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
-                                               key={item.name}>
+                                               key={item.id} setday={item.setday}>
                                         {item.name}
                                     </Draggable>
                                 ))}

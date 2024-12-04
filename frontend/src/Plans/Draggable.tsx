@@ -12,6 +12,7 @@ interface DraggableProps {
     type: string,
     color: string,
     group?: number,
+    setday?: number,
 }
 
 const Draggable: React.FC<DraggableProps> = (props) => {
@@ -24,6 +25,7 @@ const Draggable: React.FC<DraggableProps> = (props) => {
             x: props.x,
             y: props.y,
             isset: props.isset,
+            setday: props.setday,
         }
     });
 
