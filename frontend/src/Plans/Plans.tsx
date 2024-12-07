@@ -85,13 +85,9 @@ type LessonsOnBoard = {
 
 
 const Plans: React.FC = () => {
-
-    const [madeLessons, setMadeLessons] = useState<Array<Lessons>>([]);
-    const [subjectTypeName, setSubjectTypeName]  = useState<string>("");
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
     const [test, setTest] = useState<Array<SubjectDetailsPopulated>>([]);
-    const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [showCurrentDay, setShowCurrentDay] = useState<number>(5);
     const [fixedRows, setFixedRows]= useState<number>(1)
     const [timeTables, setTimeTables] = useState<Array<dataType.TimetablePopulated>>([]);// Fetch data from API when component mounts
@@ -101,6 +97,7 @@ const Plans: React.FC = () => {
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
     const [lessonsOnBoard, setlessonsOnBoard] = useState<Array<dataType.ClassPopulated>>([])
+    const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
@@ -126,7 +123,6 @@ const Plans: React.FC = () => {
 
             if (!Array.isArray(classesArray)) {
                 console.error("Classes is not an array or is undefined.");
-                return setMadeLessons([]);
             }
 
 
@@ -141,10 +137,6 @@ const Plans: React.FC = () => {
                     subject: classItem.subject,
                 }));
 
-            setMadeLessons(filteredLessons || []);
-        } else {
-            // console.error("selectedTimeTable is not an object or is null/undefined");
-            setMadeLessons([]); // Set to an empty array as a fallback
         }
 
 
@@ -155,7 +147,6 @@ const Plans: React.FC = () => {
         const fetchData = async () => {
             const data = await apiService.getTimetables();
             setTimeTables(data); // Store fetched time tables in state
-            setGroupTypes(data[0]?.groups)
         };
 
         fetchData();
@@ -196,7 +187,6 @@ const Plans: React.FC = () => {
         if (subjectTypeId) {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
-                    console.log(item)
                     return item.details
                         .filter((detail) => detail.classType._id === id)
                         .flatMap((detail) =>
@@ -276,7 +266,6 @@ const Plans: React.FC = () => {
                 for (const [key, groupTypeList] of Object.entries(groupCounts)) {
                     for (let i = 0; i < groupTypeList.length; i++) {
                         if (groupTypeList[i]._id === event.target.value) {
-                            setSubjectTypeName(groupTypeList[i].name);
                             setSubjectTypeId(groupTypeList[i]._id);
                             setSelectedGroupTypeCount(Number(key)); // Set to the key value as a number
                             break;
@@ -435,33 +424,51 @@ const Plans: React.FC = () => {
 
     }, [selectedTimeTable, showCurrentDay, selectedGroupType]);
 
-    console.log(lessons)
-    console.log(lessonsOnBoard)
+    // console.log(lessons)
 
     useEffect(() => {
-        if (showCurrentDay && selectedGroupType && lessons && lessonsOnBoard){
+        if (selectedGroupType && lessons && lessonsOnBoard){
             const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+            const filteredLessons = []
             lessonsOnBoard.forEach(item  => {
                 // Loop through each student group
                 item.studentGroups.forEach(group => {
                     // Create the identifier by combining classType._id and the current student group
                     const identifier = `${item.subject._id}_${group}`;
-
                     // Filter out all lessons that have an id containing the identifier
                     setLessons(prevLessons => {
-                        const newLessons = prevLessons.filter(g => !g.id.includes(identifier));
-
+                        const newLessons = prevLessons.filter((lesson, index) => {
+                            const isMatch = lesson.id.includes(identifier);
+                            if (isMatch) {
+                                const ajdi = lesson.id.match(/_(.*?)_/)
+                                const helpid = Number(ajdi[1])
+                                lesson.groups = helpid
+                                lesson.teacher = item.organizer?.fullName
+                                lesson.isset = true
+                                lesson.room = item.room.number
+                                lesson.setday = item.weekday
+                                lesson.x = item.periodBlocks[index]
+                                lesson.y = helpid - 1
+                                filteredLessons.push(lesson);
+                            }
+                            return !isMatch;
+                        });
+                        filteredLessons.forEach(item =>{
+                            newGrid[item.x][item.y] = item;
+                        })
                         // Check if the length of lessons has changed
-                        if (newLessons.length < prevLessons.length) {
-                            console.log(`Match found and items removed for identifier: ${identifier}`);
-                        }
-
+                        // if (newLessons.length < prevLessons.length) {
+                        //     console.log(`Match found and items removed for identifier: ${identifier}`);
+                        // }
+                        // setGrid(newGrid)
                         return newLessons; // Update state with the new array
                     });
                 });
             });
+            setGrid(newGrid)
         }
     }, [lessonsOnBoard, selectedGroupType]);
+    console.log(grid)
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>

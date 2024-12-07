@@ -13,8 +13,8 @@ type Props = {
 }
 
 const RoomPopup: React.FC<Props> = (props: Props) => {
-    const [roomValue, setRoomValue] = useState<string>('Wybierz salę...');
-    const [teacherValue, setTeacherValue] = useState<string>('Wybierz nauczyciela...');
+    const [roomValue, setRoomValue] = useState<string>('');
+    const [teacherValue, setTeacherValue] = useState<string>('');
     const [newRooms, setNewRooms] = useState<RoomPopulated[]>([]);
     const [allTeachers, setAllTeachers] = useState<UserPopulated[]>([]);
     const [showAllRooms, setShowAllRooms] = useState<boolean>(false);
@@ -159,6 +159,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         Pokaż tylko wolne sale
                     </label><br/>
                     <SearchableDropdown
+                        placeholder = "Wybierz salę..."
                         options={ roomsList }
                         label="name"
                         id="id"
@@ -173,6 +174,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         Pokaż tylko dostępnych prowadzących
                     </label><br/>
                     <SearchableDropdown
+                        placeholder = "Wybierz nauczyciela..."
                         options={ teacherList }
                         label="name"
                         id="id"
