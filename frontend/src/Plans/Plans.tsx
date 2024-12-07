@@ -200,6 +200,8 @@ const Plans: React.FC = () => {
                                 isset: false,
                                 groups: groupNumber, // Set groups to current groupNumber
                                 setday: -1,
+                                teacher: detail.teacher,
+                                room: "none"
                             }))
                         );
                 });
@@ -404,7 +406,7 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
-console.log(lessons)
+console.log(grid)
 
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (

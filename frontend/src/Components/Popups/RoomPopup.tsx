@@ -71,14 +71,14 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
     useEffect(() => {
         setTeacherList(teacherSurnameList.map(teacher => ({
             _id: teacher._id,
-            fullName: teacher.fullName,
+            name: teacher.fullName,
         })))
     }, [teacherSurnameList]);
 
     useEffect(() => {
         setRoomsList(rooms.map(room => ({
             _id: room._id,
-            roomNumber: room.roomNumber,
+            name: room.roomNumber,
         })))
     }, [rooms, newRooms, !showAllRooms]);
 
@@ -163,7 +163,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ roomValue }
-                        handleChange={ (val) => val ? setRoomValue(val) : '' }
+                        handleChange={ (val) => setRoomValue(val ?? '') } // Set empty string if val is null
                     />
                 </div>
                 <div className="teacher p-2">
@@ -177,7 +177,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ teacherValue }
-                        handleChange={ (val) => val ? setTeacherValue(val) : '' }
+                        handleChange={ (val) => setTeacherValue(val ?? '') } // Set empty string if val is null
                     />
                 </div>
             </div>

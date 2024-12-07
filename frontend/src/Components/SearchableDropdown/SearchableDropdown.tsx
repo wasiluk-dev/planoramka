@@ -48,9 +48,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     };
 
     const getDisplayValue = (): string => {
-        if (query) return query;
-        if (selectedVal) return selectedVal;
-        return "";
+        return query || selectedVal || ""; // Prioritize query, then selectedVal
     };
 
     const filter = (options: Option[]): Option[] => {
@@ -66,17 +64,20 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             <div className="">
                 <div className="selected-value dropdown">
                     <input
-                        placeholder={selectedVal}
+                        placeholder="Wybierz nauczyciela..." // Always use the placeholder for empty input
                         className="form-control"
                         ref={inputRef}
                         type="text"
-                        value={getDisplayValue()}
+                        value={getDisplayValue()} // Dynamically update based on query and selectedVal
                         name="searchTerm"
                         onChange={(e) => {
-                            setQuery(e.target.value);
-                            handleChange(null);
+                            const inputValue = e.target.value;
+                            setQuery(inputValue); // Update query state
+                            if (!inputValue) {
+                                handleChange(null); // Reset selected value when cleared
+                            }
                         }}
-                        onClick={() => setIsOpen((prev) => !prev)}
+                        onClick={() => setIsOpen(true)} // Open dropdown on click
                     />
                 </div>
                 <div className={`arrow ${isOpen ? "open" : ""}`}></div>
@@ -92,7 +93,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                             }`}
                             key={`${id}-${index}`}
                         >
-                            {option[label]}
+                        {option[label]}
                         </div>
                     ))}
                 </div>
