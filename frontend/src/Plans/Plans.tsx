@@ -10,7 +10,13 @@ import './plans.css';
 import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
-import {RoomPopulated, SubjectDetailsPopulated, CoursePopulated, SemesterPopulated} from "../../services/databaseTypes.tsx";
+import {
+    RoomPopulated,
+    SubjectDetailsPopulated,
+    CoursePopulated,
+    SemesterPopulated,
+    ClassPopulated
+} from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
 
@@ -73,6 +79,10 @@ type Lessons = {
     subject: SubjectDetailsPopulated;
 }
 
+type LessonsOnBoard = {
+
+}
+
 
 const Plans: React.FC = () => {
 
@@ -90,6 +100,7 @@ const Plans: React.FC = () => {
     const [popup, setPopup] = useState<boolean>(false)
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
+    const [lessonsOnBoard, setlessonsOnBoard] = useState<Array<dataType.ClassPopulated>>([])
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
@@ -185,11 +196,12 @@ const Plans: React.FC = () => {
         if (subjectTypeId) {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
+                    console.log(item)
                     return item.details
                         .filter((detail) => detail.classType._id === id)
                         .flatMap((detail) =>
                             Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
-                                id: `${item._id}_${groupNumber}_${index}`, // Unique ID for each repetition
+                                id: `${item.subject._id}_${groupNumber}_${index}`, // Unique ID for each repetition
                                 name: `${item.subject.name} (gr. ${groupNumber})`,
                                 type: detail.classType.name,
                                 color: detail.classType.color,
@@ -200,7 +212,7 @@ const Plans: React.FC = () => {
                                 isset: false,
                                 groups: groupNumber, // Set groups to current groupNumber
                                 setday: -1,
-                                teacher: detail.teacher,
+                                teacher: "none",
                                 room: "none"
                             }))
                         );
@@ -406,8 +418,50 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
-console.log(grid)
 
+    useEffect(() => {
+        if (selectedTimeTable && selectedGroupType){
+            // Assuming the data is in a variable called `data`
+            const filterClasses = (weekday: number, classTypeId: string) => {
+                return selectedTimeTable.classes.filter(
+                    (cls) => cls.weekday === weekday && cls.classType._id === classTypeId
+                );
+            };
+
+// Example usage
+            const filteredClasses = filterClasses(showCurrentDay, selectedGroupType);
+            setlessonsOnBoard(filteredClasses)
+        }
+
+    }, [selectedTimeTable, showCurrentDay, selectedGroupType]);
+
+    console.log(lessons)
+    console.log(lessonsOnBoard)
+
+    useEffect(() => {
+        if (showCurrentDay && selectedGroupType && lessons && lessonsOnBoard){
+            const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+            lessonsOnBoard.forEach(item  => {
+                // Loop through each student group
+                item.studentGroups.forEach(group => {
+                    // Create the identifier by combining classType._id and the current student group
+                    const identifier = `${item.subject._id}_${group}`;
+
+                    // Filter out all lessons that have an id containing the identifier
+                    setLessons(prevLessons => {
+                        const newLessons = prevLessons.filter(g => !g.id.includes(identifier));
+
+                        // Check if the length of lessons has changed
+                        if (newLessons.length < prevLessons.length) {
+                            console.log(`Match found and items removed for identifier: ${identifier}`);
+                        }
+
+                        return newLessons; // Update state with the new array
+                    });
+                });
+            });
+        }
+    }, [lessonsOnBoard, selectedGroupType]);
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
