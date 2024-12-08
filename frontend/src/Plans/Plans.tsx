@@ -15,7 +15,6 @@ import {
     SubjectDetailsPopulated,
     CoursePopulated,
     SemesterPopulated,
-    ClassPopulated
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
@@ -97,6 +96,9 @@ const Plans: React.FC = () => {
     const [faculties, setFaculties] = useState<Array<Faculties>>([])
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
     const [lessonsOnBoard, setlessonsOnBoard] = useState<Array<dataType.ClassPopulated>>([])
+    const [lessons, setLessons] = useState([]);
+    const [lessonsBackup, setLessonsBackup] = useState([])
+    const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
@@ -215,6 +217,7 @@ const Plans: React.FC = () => {
                 allResults = [...allResults, ...result];
             }
             setLessons(allResults);
+            setLessonsBackup(allResults)
         }
     }, [subjectTypeId, showCurrentDay]);
 
@@ -290,24 +293,99 @@ const Plans: React.FC = () => {
         setSelectedGroupType("")
     };
 
-
-    const [lessons, setLessons] = useState([]);
-    const [grid, setGrid] = useState<Array<Array<ObiektNew | null>>>([]);
-
     useEffect(() => {
         const updatedGrid: Array<Array<ObiektNew | null>> = Array(fixedRows)
             .fill(null)
             .map(() => Array(selectedGroupTypeCount).fill(null));
+        ////////////////////////////////////
+        if (selectedGroupType && lessons && lessonsOnBoard){
+            // const updatedGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+            const filteredLessons = []
+            lessonsOnBoard.forEach(item  => {
+                // Loop through each student group
+                item.studentGroups.forEach(group => {
+                    // Create the identifier by combining classType._id and the current student group
+                    const identifier = `${item.subject._id}_${group}`;
+                    // Filter out all lessons that have an id containing the identifier
+                    setLessons(prevLessons => {
+                        const newLessons = prevLessons.filter((lesson, index) => {
+                            const isMatch = lesson.id.includes(identifier);
+                            if (isMatch) {
+                                const ajdi = lesson.id.match(/_(.*?)_/)
+                                const helpid = Number(ajdi[1])
+                                lesson.groups = helpid
+                                lesson.teacher = item.organizer?.fullName
+                                lesson.isset = true
+                                lesson.room = item.room.number
+                                lesson.setday = item.weekday
+                                lesson.x = item.periodBlocks[index] - 1
+                                lesson.y = helpid - 1
+                                filteredLessons.push(lesson);
+                            }
+                            return !isMatch;
+                        });
+                        filteredLessons.forEach(item =>{
+                            updatedGrid[item.x][item.y] = item;
+                        })
+                        return newLessons; // Update state with the new array
+                    });
+                });
+            });
+            setGrid(updatedGrid)
+            console.log("Update grid'a 3")
+        }else {
+            lessons.forEach(item => {
+                const { x, y } = item;
+                if (x >= 0 && x < fixedRows && y >= 0 && y < selectedGroupTypeCount) {
+                    updatedGrid[x][y] = item;
+                }
+            });
+            console.log("Update grid'a")
+            setGrid(updatedGrid);
+        }
+        ////////////////////////////////////
 
-        lessons.forEach(item => {
-            const { x, y } = item;
-            if (x >= 0 && x < fixedRows && y >= 0 && y < selectedGroupTypeCount) {
-                updatedGrid[x][y] = item;
-            }
-        });
-        setGrid(updatedGrid);
+    }, [fixedRows, selectedGroupTypeCount, subjectTypeId, showCurrentDay, lessonsOnBoard]);
 
-    }, [fixedRows, lessons,  selectedGroupTypeCount, subjectTypeId, showCurrentDay]);
+    // useEffect(() => {
+    //     if (selectedGroupType && lessons && lessonsOnBoard){
+    //         const gridWithoutLessons: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+    //         const filteredLessons = []
+    //         lessonsOnBoard.forEach(item  => {
+    //             // Loop through each student group
+    //             item.studentGroups.forEach(group => {
+    //                 // Create the identifier by combining classType._id and the current student group
+    //                 const identifier = `${item.subject._id}_${group}`;
+    //                 // Filter out all lessons that have an id containing the identifier
+    //                 setLessons(prevLessons => {
+    //                     const newLessons = prevLessons.filter((lesson, index) => {
+    //                         const isMatch = lesson.id.includes(identifier);
+    //                         if (isMatch) {
+    //                             const ajdi = lesson.id.match(/_(.*?)_/)
+    //                             const helpid = Number(ajdi[1])
+    //                             lesson.groups = helpid
+    //                             lesson.teacher = item.organizer?.fullName
+    //                             lesson.isset = true
+    //                             lesson.room = item.room.number
+    //                             lesson.setday = item.weekday
+    //                             lesson.x = item.periodBlocks[index]
+    //                             lesson.y = helpid - 1
+    //                             filteredLessons.push(lesson);
+    //                         }
+    //                         return !isMatch;
+    //                     });
+    //                     filteredLessons.forEach(item =>{
+    //                         gridWithoutLessons[item.x][item.y] = item;
+    //                     })
+    //                     return newLessons; // Update state with the new array
+    //                 });
+    //             });
+    //         });
+    //         console.log("Update grid'a 3")
+    //         setGrid(gridWithoutLessons)
+    //     }
+    // }, [lessonsOnBoard, selectedGroupType]);
+
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
@@ -362,7 +440,12 @@ const Plans: React.FC = () => {
         }
 
         const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
-        const draggedItem :ObiektNew = lessons.find(item => item.id === active.id);
+        let draggedItem :ObiektNew
+        if (lessons.length == 0){
+            draggedItem = lessonsBackup.find(item => item.id === active.id);
+        }else {
+            draggedItem = lessons.find(item => item.id === active.id);
+        }
 
         if(!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('ugabuga')){
             return
@@ -373,7 +456,7 @@ const Plans: React.FC = () => {
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
             //Wkładaniew pasek boczny
             if (toId.includes('ugabuga')) {
-                setLessons(prevLessons =>
+                setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id
                             ? { ...item, isset: false, x: -1, y: -1 }
@@ -386,7 +469,7 @@ const Plans: React.FC = () => {
                 setPopup(true);
                 if (grid[toRow][toCol]) return;
                 const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
-                setLessons(prevLessons =>
+                setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
                     )
@@ -397,11 +480,12 @@ const Plans: React.FC = () => {
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
                 setPopup(true);
-                setLessons(prevLessons =>
+                setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
                     )
                 );
+                newGrid[toRow][toCol] = updatedItem;
                 newGrid[draggedItem.x][draggedItem.y] = null;
             }
         }
@@ -423,51 +507,6 @@ const Plans: React.FC = () => {
         }
 
     }, [selectedTimeTable, showCurrentDay, selectedGroupType]);
-
-    // console.log(lessons)
-
-    useEffect(() => {
-        if (selectedGroupType && lessons && lessonsOnBoard){
-            const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
-            const filteredLessons = []
-            lessonsOnBoard.forEach(item  => {
-                // Loop through each student group
-                item.studentGroups.forEach(group => {
-                    // Create the identifier by combining classType._id and the current student group
-                    const identifier = `${item.subject._id}_${group}`;
-                    // Filter out all lessons that have an id containing the identifier
-                    setLessons(prevLessons => {
-                        const newLessons = prevLessons.filter((lesson, index) => {
-                            const isMatch = lesson.id.includes(identifier);
-                            if (isMatch) {
-                                const ajdi = lesson.id.match(/_(.*?)_/)
-                                const helpid = Number(ajdi[1])
-                                lesson.groups = helpid
-                                lesson.teacher = item.organizer?.fullName
-                                lesson.isset = true
-                                lesson.room = item.room.number
-                                lesson.setday = item.weekday
-                                lesson.x = item.periodBlocks[index]
-                                lesson.y = helpid - 1
-                                filteredLessons.push(lesson);
-                            }
-                            return !isMatch;
-                        });
-                        filteredLessons.forEach(item =>{
-                            newGrid[item.x][item.y] = item;
-                        })
-                        // Check if the length of lessons has changed
-                        // if (newLessons.length < prevLessons.length) {
-                        //     console.log(`Match found and items removed for identifier: ${identifier}`);
-                        // }
-                        // setGrid(newGrid)
-                        return newLessons; // Update state with the new array
-                    });
-                });
-            });
-            setGrid(newGrid)
-        }
-    }, [lessonsOnBoard, selectedGroupType]);
     console.log(grid)
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
@@ -610,7 +649,7 @@ const Plans: React.FC = () => {
                                             <Droppable id={`${rowIndex}_${colIndex}`}>
                                                 {item && (
                                                     <Draggable id={item.id} name={item.name} x={item.x} y={item.y} type={item.type} color={item.color} group={item.group}
-                                                               isset={true}>
+                                                               isset={item.isset}>
                                                         {item.name}
                                                     </Draggable>
                                                 )}
