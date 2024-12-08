@@ -13,8 +13,8 @@ type Props = {
 }
 
 const RoomPopup: React.FC<Props> = (props: Props) => {
-    const [roomValue, setRoomValue] = useState<string>('Wybierz salę...');
-    const [teacherValue, setTeacherValue] = useState<string>('Wybierz nauczyciela...');
+    const [roomValue, setRoomValue] = useState<string>('');
+    const [teacherValue, setTeacherValue] = useState<string>('');
     const [newRooms, setNewRooms] = useState<RoomPopulated[]>([]);
     const [allTeachers, setAllTeachers] = useState<UserPopulated[]>([]);
     const [showAllRooms, setShowAllRooms] = useState<boolean>(false);
@@ -71,14 +71,14 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
     useEffect(() => {
         setTeacherList(teacherSurnameList.map(teacher => ({
             _id: teacher._id,
-            fullName: teacher.fullName,
+            name: teacher.fullName,
         })))
     }, [teacherSurnameList]);
 
     useEffect(() => {
         setRoomsList(rooms.map(room => ({
             _id: room._id,
-            roomNumber: room.roomNumber,
+            name: room.roomNumber,
         })))
     }, [rooms, newRooms, !showAllRooms]);
 
@@ -159,11 +159,12 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         Pokaż tylko wolne sale
                     </label><br/>
                     <SearchableDropdown
+                        placeholder = "Wybierz salę..."
                         options={ roomsList }
                         label="name"
                         id="id"
                         selectedVal={ roomValue }
-                        handleChange={ (val) => val ? setRoomValue(val) : '' }
+                        handleChange={ (val) => setRoomValue(val ?? '') } // Set empty string if val is null
                     />
                 </div>
                 <div className="teacher p-2">
@@ -173,11 +174,12 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         Pokaż tylko dostępnych prowadzących
                     </label><br/>
                     <SearchableDropdown
+                        placeholder = "Wybierz nauczyciela..."
                         options={ teacherList }
                         label="name"
                         id="id"
                         selectedVal={ teacherValue }
-                        handleChange={ (val) => val ? setTeacherValue(val) : '' }
+                        handleChange={ (val) => setTeacherValue(val ?? '') } // Set empty string if val is null
                     />
                 </div>
             </div>
