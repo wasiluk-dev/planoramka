@@ -17,7 +17,6 @@ import {
     SemesterPopulated,
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
-import EWeekday from "../enums/EWeekday.ts";
 
 
 type ObiektNew = {
@@ -58,25 +57,11 @@ const day ={
     6: "Sobota",
 }
 
-type GroupInfo = {
-    classType: {
-        acronym: string;
-        _id: string;
-        }
-    groupCount: number;
-}
 
 type GroupInSemester = {
     acronym: string | null;
     name: string;
     _id: string;
-}
-
-type Lessons = {
-    periodBlocks: Array<number>;
-    studentGroups: Array<number>;
-    weekday: number;
-    subject: SubjectDetailsPopulated;
 }
 
 
@@ -142,18 +127,6 @@ const Plans: React.FC = () => {
             if (!Array.isArray(classesArray)) {
                 console.error("Classes is not an array or is undefined.");
             }
-
-            //
-            // const filteredLessons = classesArray
-            //     .filter((classItem: any) => {
-            //         return classItem?.classType?._id === selectedGroupType;
-            //     })
-            //     .map((classItem: any) => ({
-            //         studentGroups: classItem.studentGroups,
-            //         weekday: classItem.weekday,
-            //         periodBlocks: classItem.periodBlocks,
-            //         subject: classItem.subject,
-            //     }));
 
         }
 
@@ -234,7 +207,6 @@ const Plans: React.FC = () => {
             }
             setLessons(allResults);
             setLessonsBackup(allResults)
-            setTestLessons(allResults)
         }
     }, [subjectTypeId, showCurrentDay]);
 
@@ -310,7 +282,16 @@ const Plans: React.FC = () => {
         if (dayGrid.length > 0){
             setGrid(dayGrid[showCurrentDay])
         }
-    }, [dayGrid, showCurrentDay]);
+    }, [dayGrid, selectedGroupType]);
+
+
+    //To sprawia że działą dnd po zmienie dnia
+    useEffect(() => {
+        const filteredLessons = lessonsBackup.filter(
+            (lesson) => lesson.setday === showCurrentDay
+        );
+        setLessons(filteredLessons);
+    }, [grid]);
 
     // Initialize dayGrid when lessonPerDay or selectedGroupType changes
     useEffect(() => {
@@ -382,11 +363,8 @@ const Plans: React.FC = () => {
         };
 
         const newDayGrid = initializeDayGrid();
-        console.log(`Initialized dayGrid:`, newDayGrid); // Debug: Log full dayGrid
         setDayGrid(newDayGrid);
 
-        // Set the current day's grid
-        setGrid(newDayGrid[showCurrentDay] || []);
     }, [lessonPerDay, selectedGroupType, fixedRows, selectedGroupTypeCount]);
 
 
