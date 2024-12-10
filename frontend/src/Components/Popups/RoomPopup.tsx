@@ -6,10 +6,29 @@ import { FacultyPopulated, RoomPopulated, UserPopulated } from '../../../service
 import APIUtils from "../../utils/APIUtils.ts";
 import EUserRole from '../../../../backend/src/enums/EUserRole.ts';
 
+type SubjcetPopup = {
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
+    name: string;
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
+}
+
+
+
 type Props = {
     trigger: boolean;
     setTrigger: (trigger: boolean) => void;
     pickedFaculty?: FacultyPopulated;
+    subject?: SubjcetPopup;
 }
 
 const RoomPopup: React.FC<Props> = (props: Props) => {
@@ -98,6 +117,24 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
             (faculty) => faculty._id === selectedValue
         ))
     };
+
+    useEffect(() => {
+        if (!props.subject && props.trigger) {
+            console.error("Problem z przekazaniem obiektu zajęcia")
+        }else if (props.trigger) {
+            // console.log(props.subject);
+            if(props.subject?.teacher){
+                const selectTeacher = teacherList.filter((teacher) => teacher._id === props.subject?.teacher)
+                setTeacherValue(selectTeacher[0].name);
+            }
+            if (props.subject?.room){
+                const selectRoom = rooms.filter((room) => room._id === props.subject?.room)
+                console.log(selectRoom[0])
+                setRoomValue(selectRoom[0].roomNumber)
+
+            }
+        }
+    }, [teacherList, roomsList]);
 
     return (props.trigger) ? (
         <div className="popup">

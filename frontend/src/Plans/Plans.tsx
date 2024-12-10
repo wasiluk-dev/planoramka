@@ -14,21 +14,25 @@ import {
     RoomPopulated,
     SubjectDetailsPopulated,
     CoursePopulated,
-    SemesterPopulated,
+    SemesterPopulated, FacultyPopulated,
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
 
 type ObiektNew = {
-    id: string,
-    name: string,
-    type: string,
-    color: string,
-    isweekly: boolean,
-    x: number,
-    y: number,
-    isset: boolean
-    group?: number
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
+    name: string;
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
 };
 
 type Buildings = {
@@ -64,6 +68,23 @@ type GroupInSemester = {
     _id: string;
 }
 
+type SubjcetPopup = {
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
+    name: string;
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
+}
+
+
 
 const Plans: React.FC = () => {
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
@@ -76,21 +97,20 @@ const Plans: React.FC = () => {
     const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.TimetablePopulated>()
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
     const [popup, setPopup] = useState<boolean>(false)
-    const [faculties, setFaculties] = useState<Array<Faculties>>([])
+    const [faculties, setFaculties] = useState<Array<FacultyPopulated>>([])
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
-    const [lessonsOnBoard, setlessonsOnBoard] = useState<Array<dataType.ClassPopulated>>([])
     const [lessonPerDay, setLessonPerDay] = useState<Array<Array<dataType.ClassPopulated>>>([])
     const [lessons, setLessons] = useState([]);
-    const [testLessons, setTestLessons] = useState<Array<Array<dataType.ClassPopulated>>>([])
     const [lessonsBackup, setLessonsBackup] = useState([])
     const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
+    const [subjectPopup, setSubjectPopup] = useState<SubjcetPopup | null>(null)
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
-    const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
+    const [selectedFaculty, setSelectedFaculty] = useState<FacultyPopulated>();
     const [selectedCourseId, setSelectedCourseId] = useState<string>("");
     const [selectedCourse, setSelectedCourse] = useState<CoursePopulated>();
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
@@ -330,9 +350,9 @@ const Plans: React.FC = () => {
                                     }
 
                                     lesson.groups = helpid;
-                                    lesson.teacher = item.organizer?.fullName;
+                                    lesson.teacher = item.organizer?._id;
                                     lesson.isset = true;
-                                    lesson.room = item.room.number;
+                                    lesson.room = item.room._id;
                                     lesson.setday = item.weekday;
                                     lesson.x = item.periodBlocks[currentIndex] - 1; // Calculate x
                                     lesson.y = helpid - 1; // Calculate y based on helpid
@@ -447,9 +467,10 @@ const Plans: React.FC = () => {
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
-                setPopup(true);
                 if (grid[toRow][toCol]) return;
                 const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
+                setSubjectPopup(updatedItem)
+                setPopup(true);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
@@ -460,6 +481,7 @@ const Plans: React.FC = () => {
         } else {
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
+                setSubjectPopup(updatedItem)
                 setPopup(true);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
@@ -483,8 +505,6 @@ const Plans: React.FC = () => {
             };
 
 // Example usage
-            const filteredClasses = filterClasses(showCurrentDay, selectedGroupType);
-            setlessonsOnBoard(filteredClasses)
             let filteredClassesWeek : dataType.ClassPopulated[][] = []
             for (let i= 0; i < 7; i++){
                 filteredClassesWeek[i] = filterClasses(i, selectedGroupType);
@@ -558,7 +578,7 @@ const Plans: React.FC = () => {
                     </select>): ("Brak grup do wyświetlenia")
                 )}
             </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
+            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 {selectedSemesterId ? (
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
