@@ -29,6 +29,7 @@ type Props = {
     setTrigger: (trigger: boolean) => void;
     pickedFaculty?: FacultyPopulated;
     subject?: SubjcetPopup;
+    onSubjectChange?: (updatedSubject: SubjcetPopup) => void;
 }
 
 const RoomPopup: React.FC<Props> = (props: Props) => {
@@ -45,6 +46,11 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
     const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<Omit<FacultyPopulated, 'courses'>>();
     const [roomsList, setRoomsList] = useState<Pick<RoomPopulated, '_id' | 'roomNumber'>[]>([]);
     const [buildingName, setBuildingName] = useState<string>('');
+    const [localSubject, setLocalSubject] = useState<SubjcetPopup | undefined>(props.subject);
+
+    useEffect(() => {
+        setLocalSubject(props.subject); // Sync with incoming prop when `props.subject` changes
+    }, [props.subject]);
 
     useEffect(() => {
         const fetchData = async() => setAllFaculties(await APIService.getFaculties());
@@ -129,12 +135,30 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
             }
             if (props.subject?.room){
                 const selectRoom = rooms.filter((room) => room._id === props.subject?.room)
-                console.log(selectRoom[0])
                 setRoomValue(selectRoom[0].roomNumber)
 
             }
         }
     }, [teacherList, roomsList]);
+
+
+    const handleRoomChange = (val) =>{
+        if (localSubject) {
+            setRoomValue(val.name)
+            const updatedSubject = { ...localSubject, room: val._id  };
+            setLocalSubject(updatedSubject);
+            props.onSubjectChange?.(updatedSubject); // Notify parent
+        }
+    }
+
+    const handleTeacherChange = (val) =>{
+        if (localSubject) {
+            setTeacherValue(val.name)
+            const updatedSubject = { ...localSubject, teacher: val._id };
+            setLocalSubject(updatedSubject);
+            props.onSubjectChange?.(updatedSubject); // Notify parent
+        }
+    }
 
     return (props.trigger) ? (
         <div className="popup">
@@ -201,7 +225,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ roomValue }
-                        handleChange={ (val) => setRoomValue(val ?? '') } // Set empty string if val is null
+                        handleChange={ (val) => handleRoomChange(val) } // Set empty string if val is null
                     />
                 </div>
                 <div className="teacher p-2">
@@ -216,7 +240,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ teacherValue }
-                        handleChange={ (val) => setTeacherValue(val ?? '') } // Set empty string if val is null
+                        handleChange={ (val) => handleTeacherChange(val) } // Set empty string if val is null
                     />
                 </div>
             </div>

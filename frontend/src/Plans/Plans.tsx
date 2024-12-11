@@ -104,6 +104,7 @@ const Plans: React.FC = () => {
     const [lessonsBackup, setLessonsBackup] = useState([])
     const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
+    const [dayGridNew, setDayGridNew] = useState<Array<Array<Array<ObiektNew>>>>([])
     const [subjectPopup, setSubjectPopup] = useState<SubjcetPopup | null>(null)
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
@@ -195,7 +196,7 @@ const Plans: React.FC = () => {
     }, [selectedSemester]);
 
     useEffect(() => {
-        if (subjectTypeId) {
+        if (subjectTypeId && dayGridNew.length <= 0) {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
                     return item.details
@@ -204,7 +205,7 @@ const Plans: React.FC = () => {
                             Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
                                 id: `${item.subject._id}_${groupNumber}_${index}`, // Unique ID for each repetition
                                 name: `${item.subject.name} (gr. ${groupNumber})`,
-                                type: detail.classType.name,
+                                type: detail.classType._id,
                                 color: detail.classType.color,
                                 weeklyCount: detail.weeklyBlockCount,
                                 isweekly: detail.weeklyBlockCount > 0,
@@ -300,9 +301,14 @@ const Plans: React.FC = () => {
 
     useEffect(() => {
         if (dayGrid.length > 0){
-            setGrid(dayGrid[showCurrentDay])
+            if (dayGridNew.length > 0){
+                setGrid(dayGridNew[showCurrentDay])
+            }else {
+                setGrid(dayGrid[showCurrentDay])
+            }
+
         }
-    }, [dayGrid, selectedGroupType]);
+    }, [dayGrid, selectedGroupType, dayGridNew, showCurrentDay]);
 
 
     //To sprawia że działą dnd po zmienie dnia
@@ -315,7 +321,7 @@ const Plans: React.FC = () => {
 
     // Initialize dayGrid when lessonPerDay or selectedGroupType changes
     useEffect(() => {
-        if (!lessonPerDay.length || !selectedGroupType) return;
+        if (!lessonPerDay.length || !selectedGroupType || dayGridNew.length > 0) return;
 
         const initializeDayGrid = () => {
             const filteredsmth: Array<Array<Array<ObiektNew | null>>> = []; // Initialize day grid array
@@ -383,9 +389,15 @@ const Plans: React.FC = () => {
         };
 
         const newDayGrid = initializeDayGrid();
-        setDayGrid(newDayGrid);
 
-    }, [lessonPerDay, selectedGroupType, fixedRows, selectedGroupTypeCount]);
+        if (dayGridNew.length > 0){
+            setDayGrid(dayGridNew);
+        }else {
+            setDayGrid(newDayGrid);
+        }
+
+
+    }, [lessonPerDay, selectedGroupType, fixedRows]);
 
 
     const changeDay = (newDay: number) => {
@@ -513,6 +525,33 @@ const Plans: React.FC = () => {
         }
 
     }, [selectedTimeTable, showCurrentDay, selectedGroupType]);
+
+    const handleSubjectChange = (updatedSubject: SubjcetPopup) => {
+        console.log("Updated Subject:", updatedSubject);
+        setSubjectPopup(updatedSubject); // Update the parent's state or perform other actions
+        const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+        newGrid[updatedSubject.x][updatedSubject.y] = updatedSubject;
+        const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
+            if (selectedTimeTable?.schedules && dayGridNew.length <= 0){
+                let arr : number[] = []
+                selectedTimeTable.schedules.forEach((schedule) => {
+                    schedule.weekdays.forEach((day) => {
+                        arr[day] = schedule.periods.length
+                    })
+                })
+                    newDayGrid.forEach((item, index) => {
+                        if (item.length > arr[index]) {
+                            item.splice(index, item.length - arr[index])
+                        }
+                    })
+                newDayGrid[updatedSubject.setday]=newGrid;
+            } else {
+                newDayGrid[updatedSubject.setday]=newGrid;
+            }
+        // console.log(newDayGrid);
+        // newDayGrid[updatedSubject.setday]=newGrid;
+        setDayGridNew(newDayGrid);
+    };
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
@@ -578,7 +617,7 @@ const Plans: React.FC = () => {
                     </select>): ("Brak grup do wyświetlenia")
                 )}
             </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}/>
+            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}  onSubjectChange={handleSubjectChange}/>
             <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                 {selectedSemesterId ? (
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
