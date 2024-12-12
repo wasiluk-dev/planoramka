@@ -101,6 +101,7 @@ const Plans: React.FC = () => {
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
     const [lessonPerDay, setLessonPerDay] = useState<Array<Array<dataType.ClassPopulated>>>([])
     const [lessons, setLessons] = useState([]);
+    const [lessonsAvailable, setLessonsAvailable] = useState([])
     const [lessonsBackup, setLessonsBackup] = useState([])
     const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
@@ -110,6 +111,7 @@ const Plans: React.FC = () => {
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
+    const [oldGroupType, setOldGroupType] = useState<string>("")
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
     const [selectedFaculty, setSelectedFaculty] = useState<FacultyPopulated>();
     const [selectedCourseId, setSelectedCourseId] = useState<string>("");
@@ -269,6 +271,11 @@ const Plans: React.FC = () => {
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        if (selectedGroupType != oldGroupType) {
+            setDayGrid([])
+            setDayGridNew([])
+            setOldGroupType(selectedGroupType)
+        }
         // const selectedValue : string = event.target.value;
         setLessons([]);
         setSelectedGroupType(event.target.value);
@@ -397,7 +404,7 @@ const Plans: React.FC = () => {
         }
 
 
-    }, [lessonPerDay, selectedGroupType, fixedRows]);
+    }, [lessonPerDay, selectedGroupType, fixedRows, selectedGroupTypeCount]);
 
 
     const changeDay = (newDay: number) => {
@@ -423,6 +430,22 @@ const Plans: React.FC = () => {
         setFixedRows(epic.length);
     };
 
+
+    useEffect(() => {
+        const lessonsAvailableHelper = []
+        lessonsBackup.forEach((lesson) => {
+            console.log(lesson)
+            if (lesson.isset === false){
+                console.log("nieset")
+                console.log(lesson)
+                lessonsAvailableHelper.push(lesson)
+            }
+        })
+        setLessonsAvailable(lessonsAvailableHelper)
+    }, [lessonsBackup, lessons]);
+
+
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) {
@@ -430,9 +453,8 @@ const Plans: React.FC = () => {
         }
 
         const toId = over.id as string;
-        // @ts-ignore
+
         const fromRow = active.data.current.x;
-        // @ts-ignore
         const fromCol = active.data.current.y;
 
         let [toRow, toCol] = toId.split('_').map(Number);
@@ -467,9 +489,9 @@ const Plans: React.FC = () => {
         if (!draggedItem) return;
 
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
+            const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
             //Wkładanie w pasek boczny
             if (toId.includes('ugabuga')) {
-                const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id
@@ -480,10 +502,11 @@ const Plans: React.FC = () => {
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 newDayGrid[showCurrentDay] = newGrid;
                 setDayGridNew(newDayGrid)
+
                 //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
                 if (grid[toRow][toCol]) return;
-                const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
+                const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol, setday: showCurrentDay };
                 setSubjectPopup(updatedItem)
                 setPopup(true);
                 setLessonsBackup(prevLessons =>
@@ -492,6 +515,8 @@ const Plans: React.FC = () => {
                     )
                 );
                 newGrid[toRow][toCol] = updatedItem;
+                newDayGrid[showCurrentDay] = newGrid;
+                setDayGridNew(newDayGrid)
             }
         } else {
             if (grid[toRow][toCol] === null) {
@@ -509,7 +534,9 @@ const Plans: React.FC = () => {
         }
         setGrid(newGrid);
     };
-
+    // console.log(lessons)
+    // console.log(lessonsBackup)
+    console.log(lessonsAvailable)
     useEffect(() => {
         if (selectedTimeTable && selectedGroupType){
             // Assuming the data is in a variable called `data`
@@ -707,7 +734,7 @@ const Plans: React.FC = () => {
                         </table>
                         <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
                             <Droppable id='ugabuga'>
-                                {lessons.filter(item => !item.isset).map(item => (
+                                {lessonsAvailable.filter(item => !item.isset).map(item => (
                                     <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
                                                key={item.id} setday={item.setday}>
                                         {item.name}
