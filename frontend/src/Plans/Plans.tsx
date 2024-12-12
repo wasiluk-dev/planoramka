@@ -467,8 +467,9 @@ const Plans: React.FC = () => {
         if (!draggedItem) return;
 
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
-            //Wkładaniew pasek boczny
+            //Wkładanie w pasek boczny
             if (toId.includes('ugabuga')) {
+                const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id
@@ -477,6 +478,8 @@ const Plans: React.FC = () => {
                     )
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
+                newDayGrid[showCurrentDay] = newGrid;
+                setDayGridNew(newDayGrid)
                 //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
                 if (grid[toRow][toCol]) return;
@@ -548,8 +551,6 @@ const Plans: React.FC = () => {
             } else {
                 newDayGrid[updatedSubject.setday]=newGrid;
             }
-        // console.log(newDayGrid);
-        // newDayGrid[updatedSubject.setday]=newGrid;
         setDayGridNew(newDayGrid);
     };
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
