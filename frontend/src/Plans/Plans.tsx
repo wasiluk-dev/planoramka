@@ -14,10 +14,9 @@ import {
     RoomPopulated,
     SubjectDetailsPopulated,
     CoursePopulated,
-    SemesterPopulated, FacultyPopulated,
+    SemesterPopulated, FacultyPopulated, ClassPopulated,
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
-
 
 type ObiektNew = {
     color: string;
@@ -434,10 +433,7 @@ const Plans: React.FC = () => {
     useEffect(() => {
         const lessonsAvailableHelper = []
         lessonsBackup.forEach((lesson) => {
-            console.log(lesson)
             if (lesson.isset === false){
-                console.log("nieset")
-                console.log(lesson)
                 lessonsAvailableHelper.push(lesson)
             }
         })
@@ -478,8 +474,10 @@ const Plans: React.FC = () => {
         let draggedItem :ObiektNew
         if (lessons.length == 0){
             draggedItem = lessonsBackup.find(item => item.id === active.id);
+            console.log(lessonsBackup)
         }else {
             draggedItem = lessons.find(item => item.id === active.id);
+            console.log(lessons)
         }
 
         if(!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('ugabuga')){
@@ -501,8 +499,9 @@ const Plans: React.FC = () => {
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 newDayGrid[showCurrentDay] = newGrid;
+                console.log("odpalam")
                 setDayGridNew(newDayGrid)
-
+                setDayGrid(newDayGrid)
                 //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
                 if (grid[toRow][toCol]) return;
@@ -517,8 +516,10 @@ const Plans: React.FC = () => {
                 newGrid[toRow][toCol] = updatedItem;
                 newDayGrid[showCurrentDay] = newGrid;
                 setDayGridNew(newDayGrid)
+                setDayGrid(newDayGrid)
             }
         } else {
+            const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
                 setSubjectPopup(updatedItem)
@@ -530,13 +531,14 @@ const Plans: React.FC = () => {
                 );
                 newGrid[toRow][toCol] = updatedItem;
                 newGrid[draggedItem.x][draggedItem.y] = null;
+                newDayGrid[showCurrentDay] = newGrid;
+                setDayGridNew(newDayGrid)
+                setDayGrid(newDayGrid)
             }
         }
         setGrid(newGrid);
     };
-    // console.log(lessons)
-    // console.log(lessonsBackup)
-    console.log(lessonsAvailable)
+
     useEffect(() => {
         if (selectedTimeTable && selectedGroupType){
             // Assuming the data is in a variable called `data`
@@ -558,6 +560,16 @@ const Plans: React.FC = () => {
 
     const handleSubjectChange = (updatedSubject: SubjcetPopup) => {
         console.log("Updated Subject:", updatedSubject);
+        const newLessons = lessons.map(lesson => ({ ...lesson }));
+        const updatedLessons = newLessons.map(lesson =>
+            lesson.id === updatedSubject.id
+                ? { ...lesson, ...updatedSubject } // Update teacher property
+                : lesson
+        );
+        if (updatedSubject.setday == showCurrentDay){
+            setLessons(updatedLessons)
+            setLessonsBackup(updatedLessons)
+        }
         setSubjectPopup(updatedSubject); // Update the parent's state or perform other actions
         const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
         newGrid[updatedSubject.x][updatedSubject.y] = updatedSubject;
@@ -580,43 +592,95 @@ const Plans: React.FC = () => {
             }
         setDayGridNew(newDayGrid);
     };
+
+    const confirmSchedule = () => {
+        const rdyToSend : Array<ClassPopulated> = []
+        const subjectsToSend : Array<ObiektNew> = []
+        if (dayGridNew.length > 0 ){
+                for (let i = 0; i < dayGridNew.length; i++) {
+                    for (let j = 0; j < dayGridNew[i].length; j++) {
+                        for (let k = 0; k < dayGridNew[i][j].length; k++) {
+                            const element = dayGridNew[i][j][k];
+                            if (element !== null) {
+                                subjectsToSend.push(element)
+                            }
+                        }
+                    }
+                }
+        }else if (dayGrid.length > 0){
+                for (let i = 0; i < dayGrid.length; i++) {
+                    for (let j = 0; j < dayGrid[i].length; j++) {
+                        for (let k = 0; k < dayGrid[i][j].length; k++) {
+                            const element = dayGrid[i][j][k];
+                            if (element !== null) {
+                                subjectsToSend.push(element)
+                            }
+                        }
+                    }
+                }
+
+
+        }else {
+            console.error("Błąd podczas zbierania danych z tabeli!")
+        }
+        console.log(subjectsToSend)
+        if (subjectsToSend.length > 0){
+            subjectsToSend.forEach((subject) => {
+                const id : string = subject.id.split('_')[0]
+                const subjectHelper: ClassPopulated = {
+                    organizer: subject.teacher,
+                    subject: id,
+                    classType: subject.type,
+                    weekday: subject.setday,
+                    periodBlocks: [subject.x + 1], //TODO: nie wiem czy indeksowanie periodBlocks jest od 0 czy od 1, jeśli od 0, to wyjebać te +1
+                    room: subject.room,
+                    semester: selectedSemesterId,
+                    studentGroups: [subject.groups]
+                }
+                rdyToSend.push(subjectHelper)
+            })
+        }
+        console.log(rdyToSend)
+    }
+
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
-        <div className='d-flex flex-row p-3 mx-3'>
-            <div className="bg-secondary text-center w-15">
-                <select
-                    className="form-select"
-                    aria-label="Default select example"
-                    value={selectedFacultyId}
-                    onChange={handleFacultyChange}
-                >
-                    <option value="" disabled hidden>Wybierz Wydział</option>
-                    {faculties.map((faculty, index) => (
-                        <option key={faculty._id} value={faculty._id}>
-                            {faculty.name}
-                        </option>
-                    ))}
-                </select>
-                {selectedFacultyId && (
-                    selectedFaculty?.courses ? (
-                        <select
+            <div className='d-flex flex-row p-3 mx-3'>
+                <div className="bg-secondary text-center w-15">
+                    <select
                         className="form-select"
                         aria-label="Default select example"
-                        value={selectedCourseId}
-                        onChange={handleKierunekChange}
-                        >
-                        <option value="" disabled hidden>Wybierz kierunek</option>
-                        {courses.map((course) => (
-                            course.specialization ? (
-                                <option key={course._id} value={course._id}>{course.name + " (" + course.specialization + ")"}</option>
-                            ) : ( <option key={course._id} value={course._id}>{course.name}</option>)
+                        value={selectedFacultyId}
+                        onChange={handleFacultyChange}
+                    >
+                        <option value="" disabled hidden>Wybierz Wydział</option>
+                        {faculties.map((faculty, index) => (
+                            <option key={faculty._id} value={faculty._id}>
+                                {faculty.name}
+                            </option>
                         ))}
-                    </select>): ("Brak danych do wyświetlenia")
-                )}
-                {selectedFacultyId && selectedCourseId && (
-                    selectedCourse.semesters && selectedFaculty?.courses ? (
+                    </select>
+                    {selectedFacultyId && (
+                        selectedFaculty?.courses ? (
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedCourseId}
+                                onChange={handleKierunekChange}
+                            >
+                                <option value="" disabled hidden>Wybierz kierunek</option>
+                                {courses.map((course) => (
+                                    course.specialization ? (
+                                        <option key={course._id}
+                                                value={course._id}>{course.name + " (" + course.specialization + ")"}</option>
+                                    ) : (<option key={course._id} value={course._id}>{course.name}</option>)
+                                ))}
+                            </select>) : ("Brak danych do wyświetlenia")
+                    )}
+                    {selectedFacultyId && selectedCourseId && (
+                        selectedCourse.semesters && selectedFaculty?.courses ? (
                             <select
                                 className="form-select"
                                 aria-label="Default select example"
@@ -625,129 +689,142 @@ const Plans: React.FC = () => {
                             >
                                 <option value="" disabled hidden>Wybierz Semestr</option>
                                 {semesterList.map((semester) => (
-                                    <option key={semester._id} value={semester._id}>{"Semestr " + semester.index}</option>
+                                    <option key={semester._id}
+                                            value={semester._id}>{"Semestr " + semester.index}</option>
                                 ))}
                             </select>
-                    ):("")
-                )}
-                {selectedSemesterId && (
-                    groupTypeList.length > 0 ? (
-                        <select
-                        className="form-select"
-                        aria-label="Default select example"
-                        value={selectedGroupType}
-                        onChange={handleGroupChange}
-                    >
-                        <option value="" disabled hidden>Wybierz typ grupy</option>
-                        {groupTypeList.map((type) => (
-                            <option key={type._id} value={type._id}>{type.name}</option>
-                        ))}
-                    </select>): ("Brak grup do wyświetlenia")
-                )}
-            </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}  onSubjectChange={handleSubjectChange}/>
-            <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                {selectedSemesterId ? (
-                    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <table
-                            className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
-                            <tbody style={{height: '100%'}}>
-                            <tr className="table-dark text-center">
-                                <td className="table-dark text-center fw-bolder fs-5" colSpan={selectedGroupTypeCount + 1}>
-                                    <div className="d-flex justify-content-center"> {/* Flexbox container */}
-                                        {Object.entries(day)
-                                            .filter(([key]) => key !== '0') // Filter out the entry with key '0'
-                                            .map(([key, value]) => (
+                        ) : ("")
+                    )}
+                    {selectedSemesterId && (
+                        groupTypeList.length > 0 ? (
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedGroupType}
+                                onChange={handleGroupChange}
+                            >
+                                <option value="" disabled hidden>Wybierz typ grupy</option>
+                                {groupTypeList.map((type) => (
+                                    <option key={type._id} value={type._id}>{type.name}</option>
+                                ))}
+                            </select>) : ("Brak grup do wyświetlenia")
+                    )}
+                </div>
+                <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}
+                           onSubjectChange={handleSubjectChange}/>
+                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
+                    {selectedSemesterId ? (
+                        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <table
+                                className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
+                                <tbody style={{height: '100%'}}>
+                                <tr className="table-dark text-center">
+                                    <td className="table-dark text-center fw-bolder fs-5"
+                                        colSpan={selectedGroupTypeCount + 1}>
+                                        <div className="d-flex justify-content-center"> {/* Flexbox container */}
+                                            {Object.entries(day)
+                                                .filter(([key]) => key !== '0') // Filter out the entry with key '0'
+                                                .map(([key, value]) => (
+                                                    <div
+                                                        key={key}
+                                                        className="flex-fill text-center me-2" // Flex item
+                                                    >
+                                                        {key === showCurrentDay.toString() ? (
+                                                            <div className="fw-bold" role="button">{value}</div>
+                                                        ) : (
+                                                            <div className="fw-light" role="button"
+                                                                 onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                        )}
+
+                                                    </div>
+                                                ))
+                                            }
+
+                                            {/* Now display the entry with key '0' at the end */}
+                                            {day['0'] && (
                                                 <div
-                                                    key={key}
+                                                    key="0"
                                                     className="flex-fill text-center me-2" // Flex item
                                                 >
-                                                    {key === showCurrentDay.toString() ? (
-                                                        <div className="fw-bold" role="button">{value}</div>
+                                                    {showCurrentDay.toString() === '0' ? (
+                                                        <div className="fw-bold" role="button">{day['0']}</div>
                                                     ) : (
                                                         <div className="fw-light" role="button"
-                                                             onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                             onClick={() => changeDay(0)}>{day['0']}</div>
                                                     )}
-
                                                 </div>
-                                            ))
-                                        }
+                                            )}
 
-                                        {/* Now display the entry with key '0' at the end */}
-                                        {day['0'] && (
-                                            <div
-                                                key="0"
-                                                className="flex-fill text-center me-2" // Flex item
-                                            >
-                                                {showCurrentDay.toString() === '0' ? (
-                                                    <div className="fw-bold" role="button">{day['0']}</div>
-                                                ) : (
-                                                    <div className="fw-light" role="button"
-                                                         onClick={() => changeDay(0)}>{day['0']}</div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr className="table-dark text-center">
-                                <td className="fw-bold">
-                                    Godzina
-                                </td>
-                                {Array.from({ length: selectedGroupTypeCount }, (_, colIndex) => (
-                                    <td key={colIndex} className="col-3 text-center fw-bold" scope="col">
-                                        Grupa {colIndex+1}
+                                        </div>
                                     </td>
-                                ))}
-                            </tr>
-                            {grid.map((row, rowIndex) => (
-                                <tr key={rowIndex} className="table-dark w-100">
-                                    <th scope="col" className="col-1 text-nowrap">
-                                        {selectedTimeTable ? (
-                                            (showCurrentDay == 0 || showCurrentDay == 6) && selectedTimeTable ? (
-                                                selectedTimeTable?.schedules[1].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[1].periods[rowIndex].endTime
-                                            ) : (showCurrentDay > 0 && showCurrentDay < 6 && selectedTimeTable ? (
-                                                    selectedTimeTable?.schedules[0].periods[rowIndex] ? (
-                                                        selectedTimeTable?.schedules[0].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[0].periods[rowIndex].endTime
-                                                    ): ("Loading...")
-                                            ) : ("Error in showing period per day!"))
-                                        ) : (
-                                            <p>Loading...</p>
-                                        )}
-                                    </th>
-                                    {row.map((item, colIndex) => (
-                                        <td key={colIndex} className="col-3 text-center" scope="col">
-                                            <Droppable id={`${rowIndex}_${colIndex}`}>
-                                                {item && (
-                                                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} type={item.type} color={item.color} group={item.group}
-                                                               isset={item.isset}>
-                                                        {item.name}
-                                                    </Draggable>
-                                                )}
-                                            </Droppable>
+                                </tr>
+                                <tr className="table-dark text-center">
+                                    <td className="fw-bold">
+                                        Godzina
+                                    </td>
+                                    {Array.from({length: selectedGroupTypeCount}, (_, colIndex) => (
+                                        <td key={colIndex} className="col-3 text-center fw-bold" scope="col">
+                                            Grupa {colIndex + 1}
                                         </td>
                                     ))}
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                        <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
-                            <Droppable id='ugabuga'>
-                                {lessonsAvailable.filter(item => !item.isset).map(item => (
-                                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
-                                               key={item.id} setday={item.setday}>
-                                        {item.name}
-                                    </Draggable>
+                                {grid.map((row, rowIndex) => (
+                                    <tr key={rowIndex} className="table-dark w-100">
+                                        <th scope="col" className="col-1 text-nowrap">
+                                            {selectedTimeTable ? (
+                                                (showCurrentDay == 0 || showCurrentDay == 6) && selectedTimeTable ? (
+                                                    selectedTimeTable?.schedules[1].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[1].periods[rowIndex].endTime
+                                                ) : (showCurrentDay > 0 && showCurrentDay < 6 && selectedTimeTable ? (
+                                                    selectedTimeTable?.schedules[0].periods[rowIndex] ? (
+                                                        selectedTimeTable?.schedules[0].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[0].periods[rowIndex].endTime
+                                                    ) : ("Loading...")
+                                                ) : ("Error in showing period per day!"))
+                                            ) : (
+                                                <p>Loading...</p>
+                                            )}
+                                        </th>
+                                        {row.map((item, colIndex) => (
+                                            <td key={colIndex} className="col-3 text-center" scope="col">
+                                                <Droppable id={`${rowIndex}_${colIndex}`}>
+                                                    {item && (
+                                                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                                   type={item.type} color={item.color}
+                                                                   group={item.group}
+                                                                   isset={item.isset}>
+                                                            {item.name}
+                                                        </Draggable>
+                                                    )}
+                                                </Droppable>
+                                            </td>
+                                        ))}
+                                    </tr>
                                 ))}
-                            </Droppable>
-                        </div>
-                    </DndContext>
-                ) : (<div className="text-center fw-bold fs-5 align-content-center ms-auto me-auto">
-                    Wybierz dane z tabel
-                </div>)}
+                                </tbody>
+                            </table>
+                            <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
+                                <Droppable id='ugabuga'>
+                                    {lessonsAvailable.filter(item => !item.isset).map(item => (
+                                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                   isset={item.isset} type={item.type} color={item.color}
+                                                   group={item.group}
+                                                   key={item.id} setday={item.setday}>
+                                            {item.name}
+                                        </Draggable>
+                                    ))}
+                                </Droppable>
+                            </div>
+                        </DndContext>
+                    ) : (<div className="text-center fw-bold fs-5 align-content-center ms-auto me-auto">
+                        Wybierz dane z tabel
+                    </div>)}
+                </div>
             </div>
-        </div>
+            {selectedGroupType ? (
+                <div className="text-center">
+                    {/*TODO: Add prompt "Are you sure?"*/}
+                    <button className="btn btn-success" onClick={confirmSchedule}>Zatwierdź</button>
+                </div>
+            ) : ("")}
         </>
     );
 };
