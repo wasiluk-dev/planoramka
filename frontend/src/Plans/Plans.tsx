@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import Draggable from "./Draggable.tsx";
-import Droppable from "./Droppable.tsx";
+import React, { useEffect, useState } from 'react';
+import { closestCenter, DndContext, DragEndEvent } from '@dnd-kit/core';
+import Draggable from './Draggable.tsx';
+import Droppable from './Droppable.tsx';
 import './plans.css';
-import apiService from "../../services/apiService.tsx";
-import * as dataType from "../../services/databaseTypes.tsx";
-import APIUtils from "../utils/APIUtils.ts";
+import APIService from '../../services/apiService.tsx';
+import APIUtils from '../utils/APIUtils.ts';
 import {
     SubjectDetailsPopulated,
     CoursePopulated,
@@ -44,8 +39,8 @@ const day ={
 }
 
 
-type GroupInSemester = {
-    acronym: string | null;
+type ClassDraggable = {
+    id: string;
     name: string;
     _id: string;
 }
@@ -67,6 +62,15 @@ type SubjcetPopup = {
 }
 
 
+const day = {
+    0: 'Niedziela',
+    1: 'Poniedziałek',
+    2: 'Wtorek',
+    3: 'Środa',
+    4: 'Czwartek',
+    5: 'Piątek',
+    6: 'Sobota',
+};
 
 const Plans: React.FC = () => {
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
@@ -119,15 +123,14 @@ const Plans: React.FC = () => {
     }, [selectedTimeTable]);
 
     useEffect(() => {
-        if(selectedSemesterId && timeTables){
-            setSelectedTimeTable(timeTables.find((item) => item.semester === selectedSemesterId))
+        if (selectedSemesterId && timetables) {
+            setSelectedTimetable(timetables.find((item) => item.semester === selectedSemesterId));
         }
-
     }, [selectedSemesterId]);
 
     useEffect(() => {
-        if (selectedTimeTable && typeof selectedTimeTable === "object") {
-            const classesArray = selectedTimeTable?.classes;
+        if (selectedTimetable && typeof selectedTimetable === "object") {
+            const classesArray = selectedTimetable.classes;
 
             if (!Array.isArray(classesArray)) {
                 console.error("Classes is not an array or is undefined.");
@@ -136,8 +139,7 @@ const Plans: React.FC = () => {
         }
 
 
-    }, [selectedTimeTable, selectedGroupType]);
-
+    }, [selectedTimetable, selectedClassType]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -145,38 +147,35 @@ const Plans: React.FC = () => {
             setTimeTables(data); // Store fetched time tables in state
         };
 
-        fetchData();
+        fetchData().then();
     }, []);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getFaculties();
+        const fetchData = async() => {
+            const data = await APIService.getFaculties();
+            data.sort((a, b) => a.name.localeCompare(b.name));
             setFaculties(data);
         };
 
-        fetchData();
+        fetchData().then();
     }, []);
 
     useEffect(() => {
-
-    }, []);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getSubjectDetails();
-            setTest(data)
+        const fetchData = async() => {
+            const data = await APIService.getSubjectDetails();
+            setSubjectsDetails(data);
         };
 
-        fetchData();
+        fetchData().then();
     }, []);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, [Number(selectedSemester)]);
-            setSubjects(data)
+        const fetchData = async() => {
+            const data = APIUtils.getSubjectDetailsForSpecificSemesters(subjectsDetails, [Number(selectedSemester)]);
+            setSubjectsDetails(data);
         };
 
-        fetchData();
+        fetchData().then();
     }, [selectedSemester]);
 
     useEffect(() => {
@@ -187,7 +186,7 @@ const Plans: React.FC = () => {
                         .filter((detail) => detail.classType._id === id)
                         .flatMap((detail) =>
                             Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
-                                id: `${item.subject._id}_${groupNumber}_${index}`, // Unique ID for each repetition
+                                id: `${item.subject._id}_${groupNumber}_${index}`,
                                 name: `${item.subject.name} (gr. ${groupNumber})`,
                                 type: detail.classType._id,
                                 color: detail.classType.color,
@@ -196,59 +195,73 @@ const Plans: React.FC = () => {
                                 x: -1,
                                 y: -1,
                                 isset: false,
-                                groups: groupNumber, // Set groups to current groupNumber
+                                groups: groupNumber,
                                 setday: -1,
                                 teacher: "none",
-                                room: "none"
+                                room: "none",
                             }))
                         );
                 });
             }
 
-            let allResults: ObiektNew[] = [];
+            let allResults: ClassDraggable[] = [];
             for (let i = 1; i <= selectedGroupTypeCount; i++) {
-                const result = getObiektyById(subjects, selectedGroupType, i);
+                const result = getObiektyById(subjectsDetails, selectedClassType, i);
                 allResults = [...allResults, ...result];
             }
+
             setLessons(allResults);
             setLessonsBackup(allResults)
         }
-    }, [subjectTypeId, showCurrentDay]);
+    }, [subjectTypeId, currentDay]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getTimetables();
-            setTimeTables(data); // Store fetched time tables in state
-            for (let i:number = 0; i < 7; i++){
-                if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
-                    setFixedRows(data[0]?.schedules[i].periods.length);
+        const fetchData = async() => {
+            const data = await APIService.getTimetables();
+            setTimetables(data);
+
+            for (let i: number = 0; i < 7; i++) {
+                if (data[0].schedules[i].weekdays.includes(currentDay)) {
+                    setFixedRows(data[0].schedules[i].periods.length);
                     break;
                 }
             }
         };
-        fetchData();
+
+        fetchData().then();
     }, []);
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedFacultyId(event.target.value);
-        setLessons([])
-        setSelectedSemesterId("")
-        setSelectedCourseId("")
-        const faculty = faculties.find((faculty) => faculty._id === event.target.value);
+        const selectedFacultyId = event.target.value;
+        setSelectedFacultyId(selectedFacultyId);
+        setSelectedCourseId('');
+        setSelectedSemesterId('');
+        setSelectedClassType('');
+        setLessons([]);
+
+        const faculty = faculties.find((faculty) => faculty._id === selectedFacultyId);
         setSelectedFaculty(faculty);
-        setCourses(faculty.courses)
-        setSelectedGroupType("")
+
+        if (faculty) {
+            const courses = faculty.courses;
+            courses.sort((a, b) => a.code.localeCompare(b.code));
+            setCourses(courses);
+        }
     };
 
     const handleSemesterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedSemesterId(event.target.value);
-        setLessons([])
-        setSelectedGroupType("")
-        const getsemester = semesterList.find((semester) => semester._id === event.target.value);
-        setSelectedSemester(getsemester.index);
-        const selectedSemesterGroups = APIUtils.getSemesterClassTypes(semesterList, event.target.value)
-        if(selectedSemesterGroups){
-            setGroupTypeList(selectedSemesterGroups)
+        setLessons([]);
+        setSelectedClassType('');
+
+        const semester = semesters.find((semester) => semester._id === event.target.value);
+        if (semester) {
+            setSelectedSemester(semester.index);
+        }
+
+        const selectedSemesterClassTypes = APIUtils.getSemesterClassTypes(semesters, event.target.value)
+        if (selectedSemesterClassTypes) {
+            setClassTypes(selectedSemesterClassTypes);
         }
     };
 
@@ -260,9 +273,9 @@ const Plans: React.FC = () => {
         }
         // const selectedValue : string = event.target.value;
         setLessons([]);
-        setSelectedGroupType(event.target.value);
-        if (selectedTimeTable){
-            const groupCounts = APIUtils.getTimetableGroupCounts(timeTables, selectedTimeTable._id);
+        setSelectedClassType(event.target.value);
+        if (selectedTimetable) {
+            const groupCounts = APIUtils.getTimetableGroupCounts(timetables, selectedTimetable._id);
 
             if (groupCounts) { // Ensure groupCounts is not null
                 for (const [key, groupTypeList] of Object.entries(groupCounts)) {
@@ -276,16 +289,6 @@ const Plans: React.FC = () => {
                 }
             }
         }
-    };
-    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = event.target.value;
-        const course = courses.find((course) => course._id === event.target.value);
-        setSelectedCourseId(selectedValue);
-        setSelectedCourse(course)
-        setLessons([])
-        setSelectedSemesterId("")
-        setSemesterList(course.semesters || [])
-        setSelectedGroupType("")
     };
 
     useEffect(() => {
@@ -390,7 +393,8 @@ const Plans: React.FC = () => {
 
 
     const changeDay = (newDay: number) => {
-        setShowCurrentDay(newDay); // Set the new current day
+        setCurrentDay(newDay);
+
         let i: number = 0;
         if (newDay == 0 || newDay == 6) {
             i = 1;
@@ -401,15 +405,15 @@ const Plans: React.FC = () => {
             return;
         }
 
-        const epic = selectedTimeTable?.schedules[i]?.periods;
+        const periods = selectedTimetable?.schedules[i]?.periods;
 
-        if (!epic) {
+        if (!periods) {
             console.error(`No schedule data available for day ${newDay}`);
-            setFixedRows(0); // Or handle the error in a user-friendly way
+            setFixedRows(0);
             return;
         }
 
-        setFixedRows(epic.length);
+        setFixedRows(periods.length);
     };
 
 
@@ -427,7 +431,7 @@ const Plans: React.FC = () => {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        if (!over) {
+        if (!over || !active.data.current) {
             return;
         }
 
@@ -437,11 +441,10 @@ const Plans: React.FC = () => {
         const fromCol = active.data.current.y;
 
         let [toRow, toCol] = toId.split('_').map(Number);
-        if (toId.includes('ugabuga')) {
+        if (toId.includes('droppable-sidebar')) {
             toRow = -1;
             toCol = -1;
         }
-
 
         if (isNaN(fromRow) || isNaN(fromCol) || isNaN(toRow) || isNaN(toCol)) {
             console.log("AjDi not walid");
@@ -517,14 +520,14 @@ const Plans: React.FC = () => {
                 setDayGrid(newDayGrid)
             }
         }
+
         setGrid(newGrid);
     };
 
     useEffect(() => {
-        if (selectedTimeTable && selectedGroupType){
-            // Assuming the data is in a variable called `data`
+        if (selectedTimetable && selectedClassType) {
             const filterClasses = (weekday: number, classTypeId: string) => {
-                return selectedTimeTable.classes.filter(
+                return selectedTimetable.classes.filter(
                     (cls) => cls.weekday === weekday && cls.classType._id === classTypeId
                 );
             };
@@ -747,7 +750,7 @@ const Plans: React.FC = () => {
                                         <td key={colIndex} className="col-3 text-center fw-bold" scope="col">
                                             Grupa {colIndex + 1}
                                         </td>
-                                    ))}
+                                    )) }
                                 </tr>
                                 {grid.map((row, rowIndex) => (
                                     <tr key={rowIndex} className="table-dark w-100">
@@ -811,7 +814,3 @@ const Plans: React.FC = () => {
 };
 
 export default Plans;
-
-
-
-

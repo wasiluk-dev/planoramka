@@ -8,7 +8,8 @@ export type UserPopulated = {
     _id: string;
     username: string;
     password: string | null;
-    fullName: string;
+    names: string;
+    surnames: string;
     // TODO: uncomment fields after implementing
     // title: EUserTitle | null;
     // email: string;
@@ -86,7 +87,7 @@ export type RoomPopulated = {
 // timetable
 export type ClassPopulated = {
     _id: string;
-    organizer: Pick<UserPopulated, '_id' | 'fullName'> | null;
+    organizer: Pick<UserPopulated, '_id' | 'names' | 'surnames'> | null;
     subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'> | null;
     classType: ClassTypePopulated;
     weekday: number;
