@@ -11,7 +11,6 @@ import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
 import {
-    RoomPopulated,
     SubjectDetailsPopulated,
     CoursePopulated,
     SemesterPopulated, FacultyPopulated, ClassPopulated,
@@ -33,22 +32,6 @@ type ObiektNew = {
     x: number;
     y: number;
 };
-
-type Buildings = {
-    id: string,
-    acronym: string,
-    name: string,
-    address: string;
-    rooms: Array<RoomPopulated>;
-}
-
-type Faculties = {
-    _id: string;
-    acronym: string;
-    name: string;
-    buildings: Array<Buildings>;
-    courses: Array<CoursePopulated>;
-}
 
 const day ={
     0: "Niedziela",
@@ -474,10 +457,8 @@ const Plans: React.FC = () => {
         let draggedItem :ObiektNew
         if (lessons.length == 0){
             draggedItem = lessonsBackup.find(item => item.id === active.id);
-            console.log(lessonsBackup)
         }else {
             draggedItem = lessons.find(item => item.id === active.id);
-            console.log(lessons)
         }
 
         if(!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('ugabuga')){
