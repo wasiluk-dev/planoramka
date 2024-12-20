@@ -17,7 +17,11 @@ export const UserDefinition = {
         minLength: 8,
         required: true,
     },
-    fullName: {
+    names: {
+        type: String,
+        required: true,
+    },
+    surnames: {
         type: String,
         required: true,
     },

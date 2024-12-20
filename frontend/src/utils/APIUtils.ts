@@ -1,11 +1,13 @@
 import EWeekday from '../enums/EWeekday.ts';
 import {
     ClassPopulated,
+    CoursePopulated,
     RoomPopulated,
     SemesterPopulated,
     SubjectDetailsPopulated,
     TimetablePopulated, UserPopulated
 } from '../../services/databaseTypes.tsx';
+import ECourseCycle from '../../../backend/src/enums/ECourseCycle.ts';
 import EUserRole from '../../../backend/src/enums/EUserRole.ts';
 
 export default class APIUtils {
@@ -68,6 +70,28 @@ export default class APIUtils {
         }
 
         return unoccupiedRooms.sort((a, b) => a._id.localeCompare(b._id));
+    }
+
+    // Courses
+    static getCourseCycles(courses: CoursePopulated[]) {
+        const degrees: ECourseCycle[] = [];
+        for (const c of courses) {
+            if (!degrees.includes(c.cycle)) {
+                degrees.push(c.cycle);
+            }
+        }
+
+        return degrees.sort((a, b) => a - b);
+    }
+    static getCoursesOfCycle(courses: CoursePopulated[], cycle: ECourseCycle) {
+        const coursesOfCycle: CoursePopulated[] = [];
+        for (const c of courses) {
+            if (c.cycle === cycle) {
+                coursesOfCycle.push(c);
+            }
+        }
+
+        return coursesOfCycle;
     }
 
     // Semester
@@ -148,6 +172,29 @@ export default class APIUtils {
     }
 
     // User
+    static getFreeProfessors(users: UserPopulated[], classes: ClassPopulated[], weekday: EWeekday, periodBlock: number) {
+        const freeProfessors: UserPopulated[] = [];
+        for (const u of users) {
+            if (u.role === EUserRole.Professor) {
+                freeProfessors.push(u);
+            }
+        }
+
+        try {
+            for (const p of freeProfessors) {
+                if (this.isProfessorBusy(classes, p._id, weekday, periodBlock)) {
+                    const i: number = freeProfessors.indexOf(p);
+                    if (i !== -1) {
+                        freeProfessors.splice(i, 1);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return freeProfessors.sort((a, b) => a.surnames.localeCompare(b.surnames));
+    }
     static getUsersWithRole(users: UserPopulated[], role: EUserRole) {
         const usersWithRole: UserPopulated[] = [];
         try {
