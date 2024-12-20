@@ -12,7 +12,7 @@ export const ClassDefinition = {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            select: '_id fullName', // TODO: add title later
+            select: '_id names surnames', // TODO: add title later
         },
         default: null,
     },

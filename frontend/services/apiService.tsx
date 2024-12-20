@@ -81,11 +81,12 @@ export default class APIService {
     static async getUsers(): Promise<UserPopulated[]> {
         return this.fetchAPIResponse('/users');
     }
-    static async registerUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password' | 'fullName'>) {
+    static async registerUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password' | 'names' | 'surnames'>) {
         const body = new URLSearchParams();
         body.append('username', registerData.username);
         body.append('password', registerData.password);
-        body.append('fullName', registerData.fullName);
+        body.append('names', registerData.names);
+        body.append('surnames', registerData.surnames);
 
         try {
             const response: Response = await fetch(dbUrl + '/auth/register', {
@@ -97,14 +98,16 @@ export default class APIService {
             if (!response.ok) {
                 console.error(response.statusText);
             }
+
+            return response;
         } catch (err) {
             console.error(err);
         }
     }
-    static async loginUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password'>) {
+    static async loginUser(loginData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password'>) {
         const body = new URLSearchParams();
-        body.append('username', registerData.username);
-        body.append('password', registerData.password);
+        body.append('username', loginData.username);
+        body.append('password', loginData.password);
 
         try {
             const response: Response = await fetch(dbUrl + '/auth/login', {
@@ -116,6 +119,8 @@ export default class APIService {
 
             if (!response.ok) {
                 console.error(response.statusText);
+            } else {
+                return response.json();
             }
         } catch (err) {
             console.error(err);
@@ -135,6 +140,19 @@ export default class APIService {
             }
         } catch (err) {
             console.error(err);
+        }
+    }
+    static async isUserLoggedIn() {
+        try {
+            const response: Response = await fetch(dbUrl + '/auth/session', {
+                method: 'GET',
+                headers: headers,
+            });
+
+            return response.ok;
+        } catch (err) {
+            console.error(err);
+            return false;
         }
     }
 }

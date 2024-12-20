@@ -40,7 +40,8 @@ export default class AuthRoutes {
                                     // TODO: decide which user properties to return
                                     req.session.user = {
                                         username: user.username,
-                                        fullName: user.fullName,
+                                        names: user.names,
+                                        surnames: user.surnames,
                                         courses: user.courses,
                                         role: user.role,
                                     };
@@ -71,17 +72,19 @@ export default class AuthRoutes {
             });
         });
         app.post(this.prefix + '/register', (req: Request, res: Response) => {
-            const { username, password, fullName } = req.body;
+            const { username, password, names, surnames } = req.body;
             new User().create({
                 username: username,
                 password: password,
-                fullName: fullName,
+                names: names,
+                surnames: surnames,
             } as HydratedDocumentFromSchema<typeof UserSchema>)
                 .then((result: HydratedDocumentFromSchema<typeof UserSchema>) => {
                     // TODO: make it return only values needed for the req.session
                     res.status(EHttpStatusCode.Created).json({
                         username: result.username,
-                        fullName: result.fullName,
+                        names: result.names,
+                        surnames: result.surnames,
                         role: result.role,
                         courses: result.courses,
                     });
