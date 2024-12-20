@@ -11,41 +11,27 @@ import apiService from "../../services/apiService.tsx";
 import * as dataType from "../../services/databaseTypes.tsx";
 import APIUtils from "../utils/APIUtils.ts";
 import {
-    RoomPopulated,
     SubjectDetailsPopulated,
     CoursePopulated,
-    SemesterPopulated,
+    SemesterPopulated, FacultyPopulated, ClassPopulated,
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
 
-
 type ObiektNew = {
-    id: string,
-    name: string,
-    type: string,
-    color: string,
-    isweekly: boolean,
-    x: number,
-    y: number,
-    isset: boolean
-    group?: number
-};
-
-type Buildings = {
-    id: string,
-    acronym: string,
-    name: string,
-    address: string;
-    rooms: Array<RoomPopulated>;
-}
-
-type Faculties = {
-    _id: string;
-    acronym: string;
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
     name: string;
-    buildings: Array<Buildings>;
-    courses: Array<CoursePopulated>;
-}
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
+};
 
 const day ={
     0: "Niedziela",
@@ -57,13 +43,6 @@ const day ={
     6: "Sobota",
 }
 
-type GroupInfo = {
-    classType: {
-        acronym: string;
-        _id: string;
-        }
-    groupCount: number;
-}
 
 type GroupInSemester = {
     acronym: string | null;
@@ -71,16 +50,22 @@ type GroupInSemester = {
     _id: string;
 }
 
-type Lessons = {
-    periodBlocks: Array<number>;
-    studentGroups: Array<number>;
-    weekday: number;
-    subject: SubjectDetailsPopulated;
+type SubjcetPopup = {
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
+    name: string;
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
 }
 
-type LessonsOnBoard = {
-
-}
 
 
 const Plans: React.FC = () => {
@@ -89,28 +74,49 @@ const Plans: React.FC = () => {
     const [test, setTest] = useState<Array<SubjectDetailsPopulated>>([]);
     const [showCurrentDay, setShowCurrentDay] = useState<number>(5);
     const [fixedRows, setFixedRows]= useState<number>(1)
+    const [fixedRowsPerDay, setFixedRowsPerDay] = useState<Array<number>>([])
     const [timeTables, setTimeTables] = useState<Array<dataType.TimetablePopulated>>([]);// Fetch data from API when component mounts
     const [selectedTimeTable, setSelectedTimeTable] = useState<dataType.TimetablePopulated>()
     const [selectedGroupTypeCount, setSelectedGroupTypeCount] = useState<number>(1)
     const [popup, setPopup] = useState<boolean>(false)
-    const [faculties, setFaculties] = useState<Array<Faculties>>([])
+    const [faculties, setFaculties] = useState<Array<FacultyPopulated>>([])
     const [courses, setCourses] = useState<Array<CoursePopulated>>([])
-    const [lessonsOnBoard, setlessonsOnBoard] = useState<Array<dataType.ClassPopulated>>([])
+    const [lessonPerDay, setLessonPerDay] = useState<Array<Array<dataType.ClassPopulated>>>([])
     const [lessons, setLessons] = useState([]);
+    const [lessonsAvailable, setLessonsAvailable] = useState([])
     const [lessonsBackup, setLessonsBackup] = useState([])
     const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
+    const [dayGridNew, setDayGridNew] = useState<Array<Array<Array<ObiektNew>>>>([])
+    const [subjectPopup, setSubjectPopup] = useState<SubjcetPopup | null>(null)
 
     const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
     const [groupTypeList, setGroupTypeList] = useState<Array<GroupInSemester>>([])
     const [selectedGroupType, setSelectedGroupType] = useState<string>("");
+    const [oldGroupType, setOldGroupType] = useState<string>("")
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
-    const [selectedFaculty, setSelectedFaculty] = useState<Faculties>();
+    const [selectedFaculty, setSelectedFaculty] = useState<FacultyPopulated>();
     const [selectedCourseId, setSelectedCourseId] = useState<string>("");
     const [selectedCourse, setSelectedCourse] = useState<CoursePopulated>();
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
     const [selectedSemester, setSelectedSemester] = useState<number>(0);
 
+    useEffect(() => {
+        if (selectedSemesterId && selectedTimeTable){
+        // Create a temporary array to store periods for each weekday
+            const tempPeriods = [...fixedRowsPerDay];
+
+            // Process each schedule to populate the periods count
+            selectedTimeTable.schedules.forEach((schedule) => {
+                schedule.weekdays.forEach((day) => {
+                    tempPeriods[day] = schedule.periods.length;
+                });
+            });
+
+            // Update the state with the computed periods per day
+            setFixedRowsPerDay(tempPeriods);
+        }
+    }, [selectedTimeTable]);
 
     useEffect(() => {
         if(selectedSemesterId && timeTables){
@@ -126,18 +132,6 @@ const Plans: React.FC = () => {
             if (!Array.isArray(classesArray)) {
                 console.error("Classes is not an array or is undefined.");
             }
-
-
-            const filteredLessons = classesArray
-                .filter((classItem: any) => {
-                    return classItem?.classType?._id === selectedGroupType;
-                })
-                .map((classItem: any) => ({
-                    studentGroups: classItem.studentGroups,
-                    weekday: classItem.weekday,
-                    periodBlocks: classItem.periodBlocks,
-                    subject: classItem.subject,
-                }));
 
         }
 
@@ -186,7 +180,7 @@ const Plans: React.FC = () => {
     }, [selectedSemester]);
 
     useEffect(() => {
-        if (subjectTypeId) {
+        if (subjectTypeId && dayGridNew.length <= 0) {
             function getObiektyById(subjects: any[], id: string, groupNumber: number): ObiektNew[] {
                 return subjects.flatMap((item) => {
                     return item.details
@@ -195,7 +189,7 @@ const Plans: React.FC = () => {
                             Array.from({ length: detail.weeklyBlockCount }).map((_, index) => ({
                                 id: `${item.subject._id}_${groupNumber}_${index}`, // Unique ID for each repetition
                                 name: `${item.subject.name} (gr. ${groupNumber})`,
-                                type: detail.classType.name,
+                                type: detail.classType._id,
                                 color: detail.classType.color,
                                 weeklyCount: detail.weeklyBlockCount,
                                 isweekly: detail.weeklyBlockCount > 0,
@@ -259,6 +253,11 @@ const Plans: React.FC = () => {
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        if (selectedGroupType != oldGroupType) {
+            setDayGrid([])
+            setDayGridNew([])
+            setOldGroupType(selectedGroupType)
+        }
         // const selectedValue : string = event.target.value;
         setLessons([]);
         setSelectedGroupType(event.target.value);
@@ -275,11 +274,7 @@ const Plans: React.FC = () => {
                         }
                     }
                 }
-            } else {
-                console.error("Group counts are null");
             }
-        }else {
-            console.error("Error w wybranym timetable")
         }
     };
     const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -294,97 +289,104 @@ const Plans: React.FC = () => {
     };
 
     useEffect(() => {
-        const updatedGrid: Array<Array<ObiektNew | null>> = Array(fixedRows)
-            .fill(null)
-            .map(() => Array(selectedGroupTypeCount).fill(null));
-        ////////////////////////////////////
-        if (selectedGroupType && lessons && lessonsOnBoard){
-            // const updatedGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
-            const filteredLessons = []
-            lessonsOnBoard.forEach(item  => {
-                // Loop through each student group
-                item.studentGroups.forEach(group => {
-                    // Create the identifier by combining classType._id and the current student group
-                    const identifier = `${item.subject._id}_${group}`;
-                    // Filter out all lessons that have an id containing the identifier
-                    setLessons(prevLessons => {
-                        const newLessons = prevLessons.filter((lesson, index) => {
-                            const isMatch = lesson.id.includes(identifier);
-                            if (isMatch) {
-                                const ajdi = lesson.id.match(/_(.*?)_/)
-                                const helpid = Number(ajdi[1])
-                                lesson.groups = helpid
-                                lesson.teacher = item.organizer?.fullName
-                                lesson.isset = true
-                                lesson.room = item.room.number
-                                lesson.setday = item.weekday
-                                lesson.x = item.periodBlocks[index] - 1
-                                lesson.y = helpid - 1
-                                filteredLessons.push(lesson);
-                            }
-                            return !isMatch;
-                        });
-                        filteredLessons.forEach(item =>{
-                            updatedGrid[item.x][item.y] = item;
-                        })
-                        return newLessons; // Update state with the new array
-                    });
-                });
-            });
-            setGrid(updatedGrid)
-            console.log("Update grid'a 3")
-        }else {
-            lessons.forEach(item => {
-                const { x, y } = item;
-                if (x >= 0 && x < fixedRows && y >= 0 && y < selectedGroupTypeCount) {
-                    updatedGrid[x][y] = item;
-                }
-            });
-            console.log("Update grid'a")
-            setGrid(updatedGrid);
+        if (dayGrid.length > 0){
+            if (dayGridNew.length > 0){
+                setGrid(dayGridNew[showCurrentDay])
+            }else {
+                setGrid(dayGrid[showCurrentDay])
+            }
+
         }
-        ////////////////////////////////////
+    }, [dayGrid, selectedGroupType, dayGridNew, showCurrentDay]);
 
-    }, [fixedRows, selectedGroupTypeCount, subjectTypeId, showCurrentDay, lessonsOnBoard]);
 
-    // useEffect(() => {
-    //     if (selectedGroupType && lessons && lessonsOnBoard){
-    //         const gridWithoutLessons: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
-    //         const filteredLessons = []
-    //         lessonsOnBoard.forEach(item  => {
-    //             // Loop through each student group
-    //             item.studentGroups.forEach(group => {
-    //                 // Create the identifier by combining classType._id and the current student group
-    //                 const identifier = `${item.subject._id}_${group}`;
-    //                 // Filter out all lessons that have an id containing the identifier
-    //                 setLessons(prevLessons => {
-    //                     const newLessons = prevLessons.filter((lesson, index) => {
-    //                         const isMatch = lesson.id.includes(identifier);
-    //                         if (isMatch) {
-    //                             const ajdi = lesson.id.match(/_(.*?)_/)
-    //                             const helpid = Number(ajdi[1])
-    //                             lesson.groups = helpid
-    //                             lesson.teacher = item.organizer?.fullName
-    //                             lesson.isset = true
-    //                             lesson.room = item.room.number
-    //                             lesson.setday = item.weekday
-    //                             lesson.x = item.periodBlocks[index]
-    //                             lesson.y = helpid - 1
-    //                             filteredLessons.push(lesson);
-    //                         }
-    //                         return !isMatch;
-    //                     });
-    //                     filteredLessons.forEach(item =>{
-    //                         gridWithoutLessons[item.x][item.y] = item;
-    //                     })
-    //                     return newLessons; // Update state with the new array
-    //                 });
-    //             });
-    //         });
-    //         console.log("Update grid'a 3")
-    //         setGrid(gridWithoutLessons)
-    //     }
-    // }, [lessonsOnBoard, selectedGroupType]);
+    //To sprawia że działą dnd po zmienie dnia
+    useEffect(() => {
+        const filteredLessons = lessonsBackup.filter(
+            (lesson) => lesson.setday === showCurrentDay
+        );
+        setLessons(filteredLessons);
+    }, [grid]);
+
+    // Initialize dayGrid when lessonPerDay or selectedGroupType changes
+    useEffect(() => {
+        if (!lessonPerDay.length || !selectedGroupType || dayGridNew.length > 0) return;
+
+        const initializeDayGrid = () => {
+            const filteredsmth: Array<Array<Array<ObiektNew | null>>> = []; // Initialize day grid array
+
+            lessonPerDay.forEach((value, index) => {
+
+                // Create a fresh grid for the current day
+                const currentGrid: Array<Array<ObiektNew | null>> = Array(fixedRows)
+                    .fill(null)
+                    .map(() => Array(selectedGroupTypeCount).fill(null));
+
+                if (value.length > 0) {
+                    value.forEach((item) => {
+                        const filteredLessons: Array<ObiektNew> = [];
+                        const lessonIndices = new Map<string, number>(); // Track indices for each identifier
+
+                        item.studentGroups.forEach(group => {
+                            const identifier = `${item.subject._id}_${group}`;
+                            lessonIndices.set(identifier, 0); // Initialize index for this identifier
+
+                            lessons.forEach((lesson) => {
+                                const isMatch = lesson.id.includes(identifier);
+                                if (isMatch) {
+                                    // Get the index for this identifier and increment it
+                                    const currentIndex = lessonIndices.get(identifier) ?? 0;
+
+                                    // Extract helpid correctly (second number between underscores)
+                                    const ajdi = lesson.id.match(/_(\d+)_/);
+                                    const helpid = ajdi ? Number(ajdi[1]) : -1; // Default to -1 if extraction fails
+                                    if (helpid === -1) {
+                                        return; // Skip invalid IDs
+                                    }
+
+                                    lesson.groups = helpid;
+                                    lesson.teacher = item.organizer?._id;
+                                    lesson.isset = true;
+                                    lesson.room = item.room._id;
+                                    lesson.setday = item.weekday;
+                                    lesson.x = item.periodBlocks[currentIndex] - 1; // Calculate x
+                                    lesson.y = helpid - 1; // Calculate y based on helpid
+
+                                    // Ensure lessons matching the current weekday are added
+                                    if (item.weekday === index) {
+                                        filteredLessons.push(lesson);
+                                    }
+
+                                    // Increment the index for this identifier
+                                    lessonIndices.set(identifier, currentIndex + 1);
+                                }
+                            });
+
+                            // Place filtered lessons into the grid
+                            filteredLessons.forEach(lesson => {
+                                currentGrid[lesson.x][lesson.y] = lesson;
+
+                            });
+                        });
+                    });
+                }
+
+                filteredsmth[index] = currentGrid; // Assign the grid for this weekday
+            });
+
+            return filteredsmth;
+        };
+
+        const newDayGrid = initializeDayGrid();
+
+        if (dayGridNew.length > 0){
+            setDayGrid(dayGridNew);
+        }else {
+            setDayGrid(newDayGrid);
+        }
+
+
+    }, [lessonPerDay, selectedGroupType, fixedRows, selectedGroupTypeCount]);
 
 
     const changeDay = (newDay: number) => {
@@ -410,6 +412,19 @@ const Plans: React.FC = () => {
         setFixedRows(epic.length);
     };
 
+
+    useEffect(() => {
+        const lessonsAvailableHelper = []
+        lessonsBackup.forEach((lesson) => {
+            if (lesson.isset === false){
+                lessonsAvailableHelper.push(lesson)
+            }
+        })
+        setLessonsAvailable(lessonsAvailableHelper)
+    }, [lessonsBackup, lessons]);
+
+
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) {
@@ -417,9 +432,8 @@ const Plans: React.FC = () => {
         }
 
         const toId = over.id as string;
-        // @ts-ignore
+
         const fromRow = active.data.current.x;
-        // @ts-ignore
         const fromCol = active.data.current.y;
 
         let [toRow, toCol] = toId.split('_').map(Number);
@@ -454,7 +468,8 @@ const Plans: React.FC = () => {
         if (!draggedItem) return;
 
         if (draggedItem.isset === false || toId.includes('ugabuga')) {
-            //Wkładaniew pasek boczny
+            const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
+            //Wkładanie w pasek boczny
             if (toId.includes('ugabuga')) {
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
@@ -464,21 +479,31 @@ const Plans: React.FC = () => {
                     )
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
+                newDayGrid[showCurrentDay] = newGrid;
+                console.log("odpalam")
+                setDayGridNew(newDayGrid)
+                setDayGrid(newDayGrid)
                 //Wyjmowanie z paska bocznego
             } else if (draggedItem.isset === false) {
-                setPopup(true);
                 if (grid[toRow][toCol]) return;
-                const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol };
+                const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol, setday: showCurrentDay };
+                setSubjectPopup(updatedItem)
+                setPopup(true);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
                     )
                 );
                 newGrid[toRow][toCol] = updatedItem;
+                newDayGrid[showCurrentDay] = newGrid;
+                setDayGridNew(newDayGrid)
+                setDayGrid(newDayGrid)
             }
         } else {
+            const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
+                setSubjectPopup(updatedItem)
                 setPopup(true);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
@@ -487,6 +512,9 @@ const Plans: React.FC = () => {
                 );
                 newGrid[toRow][toCol] = updatedItem;
                 newGrid[draggedItem.x][draggedItem.y] = null;
+                newDayGrid[showCurrentDay] = newGrid;
+                setDayGridNew(newDayGrid)
+                setDayGrid(newDayGrid)
             }
         }
         setGrid(newGrid);
@@ -502,49 +530,138 @@ const Plans: React.FC = () => {
             };
 
 // Example usage
-            const filteredClasses = filterClasses(showCurrentDay, selectedGroupType);
-            setlessonsOnBoard(filteredClasses)
+            let filteredClassesWeek : dataType.ClassPopulated[][] = []
+            for (let i= 0; i < 7; i++){
+                filteredClassesWeek[i] = filterClasses(i, selectedGroupType);
+            }
+            setLessonPerDay(filteredClassesWeek)
         }
 
     }, [selectedTimeTable, showCurrentDay, selectedGroupType]);
-    console.log(grid)
+
+    const handleSubjectChange = (updatedSubject: SubjcetPopup) => {
+        console.log("Updated Subject:", updatedSubject);
+        const newLessons = lessons.map(lesson => ({ ...lesson }));
+        const updatedLessons = newLessons.map(lesson =>
+            lesson.id === updatedSubject.id
+                ? { ...lesson, ...updatedSubject } // Update teacher property
+                : lesson
+        );
+        if (updatedSubject.setday == showCurrentDay){
+            setLessons(updatedLessons)
+            setLessonsBackup(updatedLessons)
+        }
+        setSubjectPopup(updatedSubject); // Update the parent's state or perform other actions
+        const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
+        newGrid[updatedSubject.x][updatedSubject.y] = updatedSubject;
+        const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
+            if (selectedTimeTable?.schedules && dayGridNew.length <= 0){
+                let arr : number[] = []
+                selectedTimeTable.schedules.forEach((schedule) => {
+                    schedule.weekdays.forEach((day) => {
+                        arr[day] = schedule.periods.length
+                    })
+                })
+                    newDayGrid.forEach((item, index) => {
+                        if (item.length > arr[index]) {
+                            item.splice(index, item.length - arr[index])
+                        }
+                    })
+                newDayGrid[updatedSubject.setday]=newGrid;
+            } else {
+                newDayGrid[updatedSubject.setday]=newGrid;
+            }
+        setDayGridNew(newDayGrid);
+    };
+
+    const confirmSchedule = () => {
+        const rdyToSend : Array<ClassPopulated> = []
+        const subjectsToSend : Array<ObiektNew> = []
+        if (dayGridNew.length > 0 ){
+                for (let i = 0; i < dayGridNew.length; i++) {
+                    for (let j = 0; j < dayGridNew[i].length; j++) {
+                        for (let k = 0; k < dayGridNew[i][j].length; k++) {
+                            const element = dayGridNew[i][j][k];
+                            if (element !== null) {
+                                subjectsToSend.push(element)
+                            }
+                        }
+                    }
+                }
+        }else if (dayGrid.length > 0){
+                for (let i = 0; i < dayGrid.length; i++) {
+                    for (let j = 0; j < dayGrid[i].length; j++) {
+                        for (let k = 0; k < dayGrid[i][j].length; k++) {
+                            const element = dayGrid[i][j][k];
+                            if (element !== null) {
+                                subjectsToSend.push(element)
+                            }
+                        }
+                    }
+                }
+
+
+        }else {
+            console.error("Błąd podczas zbierania danych z tabeli!")
+        }
+        console.log(subjectsToSend)
+        if (subjectsToSend.length > 0){
+            subjectsToSend.forEach((subject) => {
+                const id : string = subject.id.split('_')[0]
+                const subjectHelper: ClassPopulated = {
+                    organizer: subject.teacher,
+                    subject: id,
+                    classType: subject.type,
+                    weekday: subject.setday,
+                    periodBlocks: [subject.x + 1], //TODO: nie wiem czy indeksowanie periodBlocks jest od 0 czy od 1, jeśli od 0, to wyjebać te +1
+                    room: subject.room,
+                    semester: selectedSemesterId,
+                    studentGroups: [subject.groups]
+                }
+                rdyToSend.push(subjectHelper)
+            })
+        }
+        console.log(rdyToSend)
+    }
+
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
-        <div className='d-flex flex-row p-3 mx-3'>
-            <div className="bg-secondary text-center w-15">
-                <select
-                    className="form-select"
-                    aria-label="Default select example"
-                    value={selectedFacultyId}
-                    onChange={handleFacultyChange}
-                >
-                    <option value="" disabled hidden>Wybierz Wydział</option>
-                    {faculties.map((faculty, index) => (
-                        <option key={faculty._id} value={faculty._id}>
-                            {faculty.name}
-                        </option>
-                    ))}
-                </select>
-                {selectedFacultyId && (
-                    selectedFaculty?.courses ? (
-                        <select
+            <div className='d-flex flex-row p-3 mx-3'>
+                <div className="bg-secondary text-center w-15">
+                    <select
                         className="form-select"
                         aria-label="Default select example"
-                        value={selectedCourseId}
-                        onChange={handleKierunekChange}
-                        >
-                        <option value="" disabled hidden>Wybierz kierunek</option>
-                        {courses.map((course) => (
-                            course.specialization ? (
-                                <option key={course._id} value={course._id}>{course.name + " (" + course.specialization + ")"}</option>
-                            ) : ( <option key={course._id} value={course._id}>{course.name}</option>)
+                        value={selectedFacultyId}
+                        onChange={handleFacultyChange}
+                    >
+                        <option value="" disabled hidden>Wybierz Wydział</option>
+                        {faculties.map((faculty, index) => (
+                            <option key={faculty._id} value={faculty._id}>
+                                {faculty.name}
+                            </option>
                         ))}
-                    </select>): ("Brak danych do wyświetlenia")
-                )}
-                {selectedFacultyId && selectedCourseId && (
-                    selectedCourse.semesters && selectedFaculty?.courses ? (
+                    </select>
+                    {selectedFacultyId && (
+                        selectedFaculty?.courses ? (
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedCourseId}
+                                onChange={handleKierunekChange}
+                            >
+                                <option value="" disabled hidden>Wybierz kierunek</option>
+                                {courses.map((course) => (
+                                    course.specialization ? (
+                                        <option key={course._id}
+                                                value={course._id}>{course.name + " (" + course.specialization + ")"}</option>
+                                    ) : (<option key={course._id} value={course._id}>{course.name}</option>)
+                                ))}
+                            </select>) : ("Brak danych do wyświetlenia")
+                    )}
+                    {selectedFacultyId && selectedCourseId && (
+                        selectedCourse.semesters && selectedFaculty?.courses ? (
                             <select
                                 className="form-select"
                                 aria-label="Default select example"
@@ -553,129 +670,142 @@ const Plans: React.FC = () => {
                             >
                                 <option value="" disabled hidden>Wybierz Semestr</option>
                                 {semesterList.map((semester) => (
-                                    <option key={semester._id} value={semester._id}>{"Semestr " + semester.index}</option>
+                                    <option key={semester._id}
+                                            value={semester._id}>{"Semestr " + semester.index}</option>
                                 ))}
                             </select>
-                    ):("")
-                )}
-                {selectedSemesterId && (
-                    groupTypeList.length > 0 ? (
-                        <select
-                        className="form-select"
-                        aria-label="Default select example"
-                        value={selectedGroupType}
-                        onChange={handleGroupChange}
-                    >
-                        <option value="" disabled hidden>Wybierz typ grupy</option>
-                        {groupTypeList.map((type) => (
-                            <option key={type._id} value={type._id}>{type.name}</option>
-                        ))}
-                    </select>): ("Brak grup do wyświetlenia")
-                )}
-            </div>
-            <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty}/>
-            <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                {selectedSemesterId ? (
-                    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <table
-                            className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
-                            <tbody style={{height: '100%'}}>
-                            <tr className="table-dark text-center">
-                                <td className="table-dark text-center fw-bolder fs-5" colSpan={selectedGroupTypeCount + 1}>
-                                    <div className="d-flex justify-content-center"> {/* Flexbox container */}
-                                        {Object.entries(day)
-                                            .filter(([key]) => key !== '0') // Filter out the entry with key '0'
-                                            .map(([key, value]) => (
+                        ) : ("")
+                    )}
+                    {selectedSemesterId && (
+                        groupTypeList.length > 0 ? (
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedGroupType}
+                                onChange={handleGroupChange}
+                            >
+                                <option value="" disabled hidden>Wybierz typ grupy</option>
+                                {groupTypeList.map((type) => (
+                                    <option key={type._id} value={type._id}>{type.name}</option>
+                                ))}
+                            </select>) : ("Brak grup do wyświetlenia")
+                    )}
+                </div>
+                <RoomPopup trigger={popup} setTrigger={setPopup} pickedFaculty={selectedFaculty} subject={subjectPopup}
+                           onSubjectChange={handleSubjectChange}/>
+                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
+                    {selectedSemesterId ? (
+                        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <table
+                                className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
+                                <tbody style={{height: '100%'}}>
+                                <tr className="table-dark text-center">
+                                    <td className="table-dark text-center fw-bolder fs-5"
+                                        colSpan={selectedGroupTypeCount + 1}>
+                                        <div className="d-flex justify-content-center"> {/* Flexbox container */}
+                                            {Object.entries(day)
+                                                .filter(([key]) => key !== '0') // Filter out the entry with key '0'
+                                                .map(([key, value]) => (
+                                                    <div
+                                                        key={key}
+                                                        className="flex-fill text-center me-2" // Flex item
+                                                    >
+                                                        {key === showCurrentDay.toString() ? (
+                                                            <div className="fw-bold" role="button">{value}</div>
+                                                        ) : (
+                                                            <div className="fw-light" role="button"
+                                                                 onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                        )}
+
+                                                    </div>
+                                                ))
+                                            }
+
+                                            {/* Now display the entry with key '0' at the end */}
+                                            {day['0'] && (
                                                 <div
-                                                    key={key}
+                                                    key="0"
                                                     className="flex-fill text-center me-2" // Flex item
                                                 >
-                                                    {key === showCurrentDay.toString() ? (
-                                                        <div className="fw-bold" role="button">{value}</div>
+                                                    {showCurrentDay.toString() === '0' ? (
+                                                        <div className="fw-bold" role="button">{day['0']}</div>
                                                     ) : (
                                                         <div className="fw-light" role="button"
-                                                             onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                             onClick={() => changeDay(0)}>{day['0']}</div>
                                                     )}
-
                                                 </div>
-                                            ))
-                                        }
+                                            )}
 
-                                        {/* Now display the entry with key '0' at the end */}
-                                        {day['0'] && (
-                                            <div
-                                                key="0"
-                                                className="flex-fill text-center me-2" // Flex item
-                                            >
-                                                {showCurrentDay.toString() === '0' ? (
-                                                    <div className="fw-bold" role="button">{day['0']}</div>
-                                                ) : (
-                                                    <div className="fw-light" role="button"
-                                                         onClick={() => changeDay(0)}>{day['0']}</div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr className="table-dark text-center">
-                                <td className="fw-bold">
-                                    Godzina
-                                </td>
-                                {Array.from({ length: selectedGroupTypeCount }, (_, colIndex) => (
-                                    <td key={colIndex} className="col-3 text-center fw-bold" scope="col">
-                                        Grupa {colIndex+1}
+                                        </div>
                                     </td>
-                                ))}
-                            </tr>
-                            {grid.map((row, rowIndex) => (
-                                <tr key={rowIndex} className="table-dark w-100">
-                                    <th scope="col" className="col-1 text-nowrap">
-                                        {selectedTimeTable ? (
-                                            (showCurrentDay == 0 || showCurrentDay == 6) && selectedTimeTable ? (
-                                                selectedTimeTable?.schedules[1].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[1].periods[rowIndex].endTime
-                                            ) : (showCurrentDay > 0 && showCurrentDay < 6 && selectedTimeTable ? (
-                                                    selectedTimeTable?.schedules[0].periods[rowIndex] ? (
-                                                        selectedTimeTable?.schedules[0].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[0].periods[rowIndex].endTime
-                                                    ): ("Loading...")
-                                            ) : ("Error in showing period per day!"))
-                                        ) : (
-                                            <p>Loading...</p>
-                                        )}
-                                    </th>
-                                    {row.map((item, colIndex) => (
-                                        <td key={colIndex} className="col-3 text-center" scope="col">
-                                            <Droppable id={`${rowIndex}_${colIndex}`}>
-                                                {item && (
-                                                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} type={item.type} color={item.color} group={item.group}
-                                                               isset={item.isset}>
-                                                        {item.name}
-                                                    </Draggable>
-                                                )}
-                                            </Droppable>
+                                </tr>
+                                <tr className="table-dark text-center">
+                                    <td className="fw-bold">
+                                        Godzina
+                                    </td>
+                                    {Array.from({length: selectedGroupTypeCount}, (_, colIndex) => (
+                                        <td key={colIndex} className="col-3 text-center fw-bold" scope="col">
+                                            Grupa {colIndex + 1}
                                         </td>
                                     ))}
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                        <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
-                            <Droppable id='ugabuga'>
-                                {lessons.filter(item => !item.isset).map(item => (
-                                    <Draggable id={item.id} name={item.name} x={item.x} y={item.y} isset={item.isset} type={item.type} color={item.color} group={item.group}
-                                               key={item.id} setday={item.setday}>
-                                        {item.name}
-                                    </Draggable>
+                                {grid.map((row, rowIndex) => (
+                                    <tr key={rowIndex} className="table-dark w-100">
+                                        <th scope="col" className="col-1 text-nowrap">
+                                            {selectedTimeTable ? (
+                                                (showCurrentDay == 0 || showCurrentDay == 6) && selectedTimeTable ? (
+                                                    selectedTimeTable?.schedules[1].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[1].periods[rowIndex].endTime
+                                                ) : (showCurrentDay > 0 && showCurrentDay < 6 && selectedTimeTable ? (
+                                                    selectedTimeTable?.schedules[0].periods[rowIndex] ? (
+                                                        selectedTimeTable?.schedules[0].periods[rowIndex].startTime + ' - ' + selectedTimeTable?.schedules[0].periods[rowIndex].endTime
+                                                    ) : ("Loading...")
+                                                ) : ("Error in showing period per day!"))
+                                            ) : (
+                                                <p>Loading...</p>
+                                            )}
+                                        </th>
+                                        {row.map((item, colIndex) => (
+                                            <td key={colIndex} className="col-3 text-center" scope="col">
+                                                <Droppable id={`${rowIndex}_${colIndex}`}>
+                                                    {item && (
+                                                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                                   type={item.type} color={item.color}
+                                                                   group={item.group}
+                                                                   isset={item.isset}>
+                                                            {item.name}
+                                                        </Draggable>
+                                                    )}
+                                                </Droppable>
+                                            </td>
+                                        ))}
+                                    </tr>
                                 ))}
-                            </Droppable>
-                        </div>
-                    </DndContext>
-                ) : (<div className="text-center fw-bold fs-5 align-content-center ms-auto me-auto">
-                    Wybierz dane z tabel
-                </div>)}
+                                </tbody>
+                            </table>
+                            <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
+                                <Droppable id='ugabuga'>
+                                    {lessonsAvailable.filter(item => !item.isset).map(item => (
+                                        <Draggable id={item.id} name={item.name} x={item.x} y={item.y}
+                                                   isset={item.isset} type={item.type} color={item.color}
+                                                   group={item.group}
+                                                   key={item.id} setday={item.setday}>
+                                            {item.name}
+                                        </Draggable>
+                                    ))}
+                                </Droppable>
+                            </div>
+                        </DndContext>
+                    ) : (<div className="text-center fw-bold fs-5 align-content-center ms-auto me-auto">
+                        Wybierz dane z tabel
+                    </div>)}
+                </div>
             </div>
-        </div>
+            {selectedGroupType ? (
+                <div className="text-center">
+                    {/*TODO: Add prompt "Are you sure?"*/}
+                    <button className="btn btn-success" onClick={confirmSchedule}>Zatwierdź</button>
+                </div>
+            ) : ("")}
         </>
     );
 };

@@ -10,7 +10,7 @@ interface SearchableDropdownProps {
     label: string;
     id: string;
     selectedVal: string;
-    handleChange: (value: string | null) => void;
+    handleChange: (value: Option | null) => void;
     maxOptions?: number; // Optional prop to cap the number of options
     placeholder: string
 }
@@ -45,7 +45,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 
     const selectOption = (option: Option) => {
         setQuery("");
-        handleChange(option[label]);
+        handleChange(option);
         setIsOpen(false);
     };
 

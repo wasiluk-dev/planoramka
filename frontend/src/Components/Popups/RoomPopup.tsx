@@ -2,21 +2,44 @@ import React, { useEffect, useState } from 'react';
 import './Popup.css';
 import SearchableDropdown from '../SearchableDropdown/SearchableDropdown.tsx';
 import APIService from '../../../services/apiService.tsx';
-import { FacultyPopulated, RoomPopulated, UserPopulated } from '../../../services/databaseTypes.tsx';
+import {ClassPopulated, FacultyPopulated, RoomPopulated, UserPopulated} from '../../../services/databaseTypes.tsx';
 import APIUtils from "../../utils/APIUtils.ts";
 import EUserRole from '../../../../backend/src/enums/EUserRole.ts';
+
+type SubjcetPopup = {
+    color: string;
+    groups: number;
+    id: string;
+    isset: boolean;
+    isweekly: boolean;
+    name: string;
+    room: string;
+    setday: number;
+    teacher: string;
+    type: string;
+    weeklyCount: number;
+    x: number;
+    y: number;
+}
+
+
 
 type Props = {
     trigger: boolean;
     setTrigger: (trigger: boolean) => void;
     pickedFaculty?: FacultyPopulated;
+    subject?: SubjcetPopup;
+    onSubjectChange?: (updatedSubject: SubjcetPopup) => void;
 }
 
 const RoomPopup: React.FC<Props> = (props: Props) => {
     const [roomValue, setRoomValue] = useState<string>('');
     const [teacherValue, setTeacherValue] = useState<string>('');
     const [newRooms, setNewRooms] = useState<RoomPopulated[]>([]);
+    const [classes, setClasses] = useState<Array<ClassPopulated>>([])
     const [allTeachers, setAllTeachers] = useState<UserPopulated[]>([]);
+    const [showOnlyFreeTeachers, setShowOnlyFreeTeachers] = useState<boolean>(false)
+    const [showOnlyFreeRooms, setShowOnlyFreeRooms] = useState<boolean>(false)
     const [showAllRooms, setShowAllRooms] = useState<boolean>(false);
     const [rooms, setRooms] = useState<RoomPopulated[]>([]);
     const [teacherList, setTeacherList] = useState<Pick<UserPopulated, '_id' | 'fullName'>[]>([]);
@@ -26,11 +49,21 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
     const [selectedFacultyBuildings, setSelectedFacultyBuildings] = useState<Omit<FacultyPopulated, 'courses'>>();
     const [roomsList, setRoomsList] = useState<Pick<RoomPopulated, '_id' | 'roomNumber'>[]>([]);
     const [buildingName, setBuildingName] = useState<string>('');
+    const [localSubject, setLocalSubject] = useState<SubjcetPopup | undefined>(props.subject);
+
+    useEffect(() => {
+        setLocalSubject(props.subject); // Sync with incoming prop when `props.subject` changes
+    }, [props.subject]);
 
     useEffect(() => {
         const fetchData = async() => setAllFaculties(await APIService.getFaculties());
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchData = async() => setClasses(await APIService.getClasses());
+        fetchData();
+    }, [props.trigger]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,17 +132,82 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
         ))
     };
 
+    useEffect(() => {
+        if (!props.subject && props.trigger) {
+            console.error("Problem z przekazaniem obiektu zajęcia")
+        }else if (props.trigger) {
+            // console.log(props.subject);
+            if(props.subject?.teacher){
+                const selectTeacher = teacherList.filter((teacher) => teacher._id === props.subject?.teacher)
+                setTeacherValue(selectTeacher[0].name);
+            }
+            if (props.subject?.room){
+                const selectRoom = rooms.filter((room) => room._id === props.subject?.room)
+                setRoomValue(selectRoom[0].roomNumber)
+
+            }
+        }
+    }, [teacherList, roomsList]);
+
+    useEffect(() => {
+        if (showOnlyFreeRooms && props.trigger){
+            if (localSubject && classes.length > 0){
+                const freeRooms: Array<RoomPopulated> = APIUtils.getUnoccupiedRooms(classes, rooms, localSubject?.setday, localSubject?.x + 1)
+                const setroom = freeRooms.find(room => room.roomNumber === roomValue) || null
+                if (setroom === null){ //nwm czemu to nie działa, ale trudno
+                    setRoomValue('')
+                }
+                setRoomsList(freeRooms.map(room => ({
+                    _id: room._id,
+                    name: room.roomNumber,
+                })))
+            }else {
+                console.error("Error localsubjectu lub classes!")
+            }
+
+        }else if (!showOnlyFreeRooms && props.trigger){
+            const selectRoom = rooms.filter((room) => room._id === props.subject?.room)
+            setRoomValue(selectRoom[0].roomNumber)
+            setRoomsList(rooms.map(room => ({
+                _id: room._id,
+                name: room.roomNumber,
+            })))
+        }else if (props.trigger) {
+            console.error("Nieoczekiwany błąd!")
+        }
+    }, [showOnlyFreeRooms]);
+
+
+    const handleRoomChange = (val) =>{
+        if (localSubject) {
+            setRoomValue(val.name)
+            const updatedSubject = { ...localSubject, room: val._id  };
+            setLocalSubject(updatedSubject);
+            props.onSubjectChange?.(updatedSubject); // Notify parent
+        }
+    }
+
+    const handleTeacherChange = (val) =>{
+        if (localSubject) {
+            setTeacherValue(val.name)
+            const updatedSubject = { ...localSubject, teacher: val._id };
+            setLocalSubject(updatedSubject);
+            props.onSubjectChange?.(updatedSubject); // Notify parent
+        }
+    }
+
     return (props.trigger) ? (
         <div className="popup">
             <div className="popup-inner position-relative p-5, w-100 d-flex pt-4">
                 <div className="buttons position-absolute">
-                    <button className="btn btn-success close-btn me-2"
-                            // onClick={ () => props.setTrigger(false) }
-                        >
-                        Zatwierdź
-                    </button>
-                    <button className="btn btn-secondary close-btn"
-                            onClick={ () => props.setTrigger(false) }
+                    <button className="btn btn-secondary close-btn me-2 mb-2"
+                            onClick={ () => {
+                                props.setTrigger(false)
+                                setShowOnlyFreeRooms(false)
+                                setShowOnlyFreeTeachers(false)
+                                setShowAllRooms(false)
+                                setFacultyId("")
+                            }}
                     >
                         Zamknij
                     </button>
@@ -154,7 +252,9 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                             ) : (<><span className="fw-bold fs-3">ERROR</span><br/></>)
                         ) : ('') }
                     </>) : ('') }
-                    <input className="form-check-input me-2 mb-2" type="checkbox" value="" id="flexCheckDefault"/>
+                    <input className="form-check-input me-2 mb-2" type="checkbox"
+                           onChange={() => setShowOnlyFreeRooms(!showOnlyFreeRooms)} id="flexCheckDefault"
+                    />
                     <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
                         Pokaż tylko wolne sale
                     </label><br/>
@@ -164,7 +264,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ roomValue }
-                        handleChange={ (val) => setRoomValue(val ?? '') } // Set empty string if val is null
+                        handleChange={ (val) => handleRoomChange(val) } // Set empty string if val is null
                     />
                 </div>
                 <div className="teacher p-2">
@@ -179,7 +279,7 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
                         label="name"
                         id="id"
                         selectedVal={ teacherValue }
-                        handleChange={ (val) => setTeacherValue(val ?? '') } // Set empty string if val is null
+                        handleChange={ (val) => handleTeacherChange(val) } // Set empty string if val is null
                     />
                 </div>
             </div>
