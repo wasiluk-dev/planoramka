@@ -13,6 +13,8 @@ interface DraggableProps {
     color: string,
     group?: number,
     setday?: number,
+    teacher?: string,
+    room?: string,
 }
 
 const Draggable: React.FC<DraggableProps> = (props) => {
@@ -36,7 +38,8 @@ const Draggable: React.FC<DraggableProps> = (props) => {
     };
 
     return (
-            <button className='btn btn-light fw-bold' ref={setNodeRef} style={style} {...listeners} {...attributes} id={props.id}>
+            <button className='btn btn-light fw-bold' ref={setNodeRef} style={style} {...listeners} {...attributes} id={props.id}
+                    title={ props.teacher && props.room ? ("Prowadzący: " + props.teacher + "\nSala: " + props.room) : ("")}>
                 {props.children}
             </button>
 
