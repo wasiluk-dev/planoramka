@@ -18,7 +18,9 @@ export default abstract class BaseController<T extends Document> {
             .then(result => {
                 response.status(EHttpStatusCode.Ok).json(result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     };
 
     // PATCH /documents
@@ -31,7 +33,9 @@ export default abstract class BaseController<T extends Document> {
             .then((result): void => {
                 this.patch(response, result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
     // DELETE /documents
@@ -43,7 +47,9 @@ export default abstract class BaseController<T extends Document> {
             .then((result: DeleteResult): void => {
                 this.delete(response, result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
     // GET /documents/:documentId
@@ -52,7 +58,9 @@ export default abstract class BaseController<T extends Document> {
             .then(result => {
                 response.status(EHttpStatusCode.Ok).json(result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
     // PATCH /documents/:documentId
@@ -61,7 +69,9 @@ export default abstract class BaseController<T extends Document> {
             .then((result: UpdateResult): void => {
                 this.patch(response, result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
     // DELETE /documents/:documentId
@@ -70,17 +80,20 @@ export default abstract class BaseController<T extends Document> {
             .then((result: DeleteResult): void => {
                 this.delete(response, result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
-    // TODO: implement creating multiple documents at once
     // POST /documents
-    post(response: Response, body: T) {
-        this._base.create(body)
+    post(response: Response, documents: T | T[]) {
+        this._base.create(documents)
             .then((result) => {
-                    response.status(EHttpStatusCode.Created).json(result);
+                response.status(EHttpStatusCode.Created).json(result);
             })
-            .catch(err => response.status(EHttpStatusCode.InternalServerError).json(err));
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err)
+            });
     }
 
     protected patch(response: Response, result: UpdateResult): void {

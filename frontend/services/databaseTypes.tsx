@@ -78,10 +78,10 @@ export type FacultyPopulated = {
 }
 export type RoomPopulated = {
     _id: string;
-    number: string | null; // TODO: remove null
+    number: string;
     numberSecondary: string | null;
     capacity: number | null;
-    roomNumber: string | null; // virtual field (number / numberSecondary / number + numberSecondary), TODO: remove null
+    roomNumber: string; // virtual field (number / numberSecondary / number + numberSecondary)
 }
 
 // timetable

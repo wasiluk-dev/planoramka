@@ -20,8 +20,12 @@ abstract class BaseRoutes<T extends Document> {
         app.route(this.prefix)
             .get((req: Request, res: Response) => this._controller.getByFilter(res, req.body))
             .post((req: Request, res: Response) => {
-                if (req.is('application/x-www-form-urlencoded')) this._controller.post(res, req.body);
-                else {
+                if (
+                    req.is('application/x-www-form-urlencoded')
+                    || req.is('application/json')
+                ) {
+                    this._controller.post(res, req.body);
+                } else {
                     res.sendStatus(EHttpStatusCode.UnsupportedMediaType);
                     // TODO-ish: return a RFC 7807 compliant error response instead (https://www.mscharhag.com/api-design/rest-error-format)
                     // TODO-ish: return an accepted Content-Type in the Accept header (https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/415)
@@ -29,7 +33,7 @@ abstract class BaseRoutes<T extends Document> {
                     //     {
                     //         "type": "https://api.my-cool-example.com/problems/required-field-missing", // link to error's documentation
                     //         "title": "Unsupported media type",
-                    //         "detail": "The endpoint accepts only 'application/x-www-url-encoded'.",
+                    //         "detail": "The endpoint accepts only 'application/x-www-url-encoded' or 'application/json'.",
                     //         "status": EHttpStatusCode.UnsupportedMediaType,
                     //         "instance": this.prefix,
                     //     }

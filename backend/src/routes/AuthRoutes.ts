@@ -79,15 +79,30 @@ export default class AuthRoutes {
                 names: names,
                 surnames: surnames,
             } as HydratedDocumentFromSchema<typeof UserSchema>)
-                .then((result: HydratedDocumentFromSchema<typeof UserSchema>) => {
-                    // TODO: make it return only values needed for the req.session
-                    res.status(EHttpStatusCode.Created).json({
-                        username: result.username,
-                        names: result.names,
-                        surnames: result.surnames,
-                        role: result.role,
-                        courses: result.courses,
-                    });
+                .then((docs) => {
+                    // TODO: decide what fields should be saved in req.session
+                    if (docs instanceof Array) {
+                        const body = [];
+                        for (const doc of docs) {
+                            body.push({
+                                username: doc.username,
+                                names: doc.names,
+                                surnames: doc.surnames,
+                                role: doc.role,
+                                courses: doc.courses,
+                            });
+                        }
+
+                        res.status(EHttpStatusCode.Created).json(body);
+                    } else {
+                        res.status(EHttpStatusCode.Created).json({
+                            username: docs.username,
+                            names: docs.names,
+                            surnames: docs.surnames,
+                            role: docs.role,
+                            courses: docs.courses,
+                        });
+                    }
                 })
                 .catch((err) => {
                     res.status(EHttpStatusCode.InternalServerError).json(err.toString());

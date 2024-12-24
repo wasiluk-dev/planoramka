@@ -39,8 +39,8 @@ export default abstract class Base<T extends Document> {
                 throw err;
             });
 
-    create = (body: T) =>
-        DBUtils.create(this._model, body)
+    create = (documents: T | T[]) =>
+        DBUtils.create(this._model, documents)
             .then((result) => {
                 return result;
             })
