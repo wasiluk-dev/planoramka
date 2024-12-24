@@ -101,6 +101,7 @@ export default class APIUtils {
                 return f.courses;
             }
         }
+      
         return [];
     }
 
