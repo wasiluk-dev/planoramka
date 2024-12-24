@@ -13,14 +13,14 @@ type PeriodBlockProps = {
 
 const PeriodBlock: React.FC<PeriodBlockProps> = (props: PeriodBlockProps) => {
     return(
-        <div className="text-black cell-content perioddiv d-grid"
+        <div className="text-black cell-content perioddiv d-grid p-1"
             style={{
                 backgroundColor: props.color
             }}>
             <div className="fw-bold">
                     {props.subjectName}
             </div>
-            <div className="mb-2">
+            <div className="">
                 {props.roomNumber}, {props.organizer.names + " " + props.organizer.surnames}
             </div>
 

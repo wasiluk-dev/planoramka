@@ -32,11 +32,14 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    height: 100%;
+    font-size: calc(0.55vw + 0.55vh);
 }
 
 .table-equal-rows tbody tr {
     flex-grow: 1; /* Each row will take up an equal amount of available height */
     display: flex; /* Apply Flexbox to each row */
+    height: 100%;
 }
 
 .table-equal-rows tbody tr td {
@@ -45,6 +48,7 @@
     align-items: center; /* Center vertically */
     flex-grow: 1; /* Ensure cells within each row expand equally */
     text-align: center;
+    height: 100%;
 }
 
 .table-equal-rows tbody tr td .cell-content {
@@ -57,6 +61,7 @@
 
 .table.even {
     z-index: 2; /* This will be on top */
+    height: 100%;
 }
 
 .table.odd {
@@ -70,4 +75,50 @@
 .transparent{
     background-color: transparent;
     opacity: 0.5;
+}
+
+.table-combo{
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.table-combo-child{
+    background-color: rgba(0,0,0,0.5);
+    grid-row-start: 1;
+    grid-column-start: 1;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    .table-combo {
+        flex-direction: column; /* Stack tables on smaller screens */
+        height: 100%;
+    }
+
+    .table-combo-child {
+        width: 100%;
+        height: 100%;/* Ensure full width */
+    }
+}
+
+.table-equal-rows tbody tr {
+    height: 100%; /* Adjust as needed to make rows smaller */
+    line-height: 1.2; /* Reduce line height for compact text */
+}
+
+/* Reduce padding inside table cells */
+.table-equal-rows tbody tr > td {
+    padding: 0.25rem; /* Smaller padding for tighter rows */
+}
+
+/* Ensure consistent styling */
+.table-equal-rows th, .table-equal-rows td {
+    font-size: 0.85rem; /* Adjust font size for smaller rows if necessary */
+    vertical-align: middle; /* Align content to the middle */
+}
+
+/* Make the tables visually appealing */
+.table-combo-child {
+    border-spacing: 0; /* Remove gaps between cells */
+    border-collapse: collapse; /* Combine borders for a compact look */
 }

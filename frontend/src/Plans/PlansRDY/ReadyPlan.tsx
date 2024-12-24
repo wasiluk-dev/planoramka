@@ -443,10 +443,10 @@ const  ReadyPlan: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
+                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100 table-combo">
                     {/*TABELA ZAJĘCIOWA*/}
                     {selectedTimetable ? (
-                        <table className="table table-bordered border-primary me-4 table-fixed-height"
+                        <table className="table table-bordered border-primary me-4 table-fixed-height table-combo-child"
                                style={{height: '100%'}}>
                             <tbody style={{height: '100%'}}>
                             <tr className="table-dark text-center">
@@ -529,7 +529,7 @@ const  ReadyPlan: React.FC = () => {
                                         {/* Rowspan column */}
                                         {rowIndex === 0 && (
                                             <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
-                                                <div className="table-container p-0 w-100 h-100"
+                                                <div className="table-container p-0 w-100 h-100 table-combo"
                                                      style={{position: 'relative'}}>
                                                     {Object.keys(tableData || {}).map((acronym, idx) => {
                                                         // Check if the tableData for this acronym contains non-null values
@@ -548,7 +548,7 @@ const  ReadyPlan: React.FC = () => {
                                                             return (
                                                                 <table
                                                                     key={acronym}
-                                                                    className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent"
+                                                                    className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent table-combo-child"
                                                                 >
                                                                     <tbody>
                                                                     {tableData[acronym].map((cellData, rowIndex) => (
@@ -574,7 +574,7 @@ const  ReadyPlan: React.FC = () => {
                                                             return (
                                                                 <table
                                                                     key={acronym}
-                                                                    className={`table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-${zIndex} bg-transparent`}
+                                                                    className={`table table-bordered table-dark border-black table-equal-rows position-relative bg-transparent table-combo-child`}
                                                                 >
                                                                     <tbody>
                                                                     {tableData[acronym].map((cellData, rowIndex) => (
