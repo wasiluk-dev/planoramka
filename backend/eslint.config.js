@@ -3,7 +3,6 @@ import eslintJs from '@eslint/js';
 import stylisticJs from '@stylistic/eslint-plugin-js'
 import eslintImport from 'eslint-plugin-import';
 import docJs from 'eslint-plugin-jsdoc';
-import eslintReact from 'eslint-plugin-react/configs/recommended.js';
 import globals from 'globals';
 import eslintTs from 'typescript-eslint';
 
@@ -56,5 +55,4 @@ export default [
     docJs.configs['flat/recommended'],
     eslintJs.configs.recommended,
     ...eslintTs.configs.recommended,
-    ...fixupConfigRules(eslintReact),
 ];
