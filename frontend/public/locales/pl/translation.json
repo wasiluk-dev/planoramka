@@ -1,0 +1,44 @@
+{
+  "app_name": "Planoramka",
+
+  "nav_route_main": "Strona główna",
+  "nav_route_main_short": "Start",
+  "nav_route_timetables": "Plany zajęć",
+  "nav_route_timetables_short": "Plany",
+  "nav_route_timetable_maker": "Kreator planów",
+  "nav_route_rooms": "Zajętość sal",
+  "nav_route_rooms_short": "Sale",
+  "nav_route_admin_panel": "Panel administratora",
+  "nav_route_login": "Logowanie",
+  "nav_route_logout_tooltip": "Wyloguj się",
+  "nav_route_register": "Rejestracja",
+  "nav_route_profile": "Profil użytkownika",
+  "nav_route_profile_short": "Profil",
+  "nav_route_profile_tooltip": "Przejdź do profilu",
+
+  "form_username": "Nazwa użytkownika",
+  "form_username_error_length": "Nazwa użytkownika musi mieć co najmniej 3 znaki.",
+  "form_password": "Hasło",
+  "form_password_error_length": "Hasło musi mieć co najmniej 8 znaków.",
+  "form_names": "Imię (imiona)",
+  "form_names_error_case": "Imię (imiona) powinny zaczynać się od wielkiej litery.",
+  "form_surnames": "Nazwisko",
+  "form_surnames_error_case": "Nazwisko powinno zaczynać się od wielkiej litery.",
+  "form_email": "Adres e-mail",
+  "form_button_register": "Zarejestruj się",
+  "form_button_login": "Zaloguj się",
+
+  "rooms_error_faculties_missing_title": "Nie znaleziono żadnych wydziałów.",
+  "rooms_error_faculties_missing_message": "Albo żadnych nie utworzono, albo strona po prostu się jeszcze ładuje ;)",
+
+  "table_pagination_rows_per_page": "Ilość wierszy na stronę",
+  "table_pagination_of": "z",
+
+  "monday": "Poniedziałek",
+  "tuesday": "Wtorek",
+  "wednesday": "Środa",
+  "thursday": "Czwartek",
+  "friday": "Piątek",
+  "saturday": "Sobota",
+  "sunday": "Niedziela"
+}
