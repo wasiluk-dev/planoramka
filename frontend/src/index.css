@@ -1,14 +1,20 @@
-:root{
-  background-color: #888888;
-}
-body{
-  margin: 0;
+:root {
+    --color-primary: #f2e399;
 }
 
-.not-found{
-  color: red;
+header, footer {
+    background: var(--color-primary);
 }
-a{
-  text-decoration: none;
-  color: white;
+
+body {
+    margin: 0;
+}
+
+.not-found {
+    color: red;
+}
+
+a {
+    text-decoration: none;
+    color: white;
 }

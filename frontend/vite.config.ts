@@ -1,11 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: '127.0.0.1', // Change this to 127.0.0.1
-    port: 5173,         // You can specify any port if needed
-  },
+    plugins: [
+        react(),
+    ],
+    // TODO: change on release
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+    },
 })

@@ -2,6 +2,7 @@ import EWeekday from '../enums/EWeekday.ts';
 import {
     ClassPopulated,
     CoursePopulated,
+    FacultyPopulated,
     RoomPopulated,
     SemesterPopulated,
     SubjectDetailsPopulated,
@@ -92,6 +93,17 @@ export default class APIUtils {
         }
 
         return coursesOfCycle;
+    }
+
+    // Faculties
+    static getFacultyCourses(faculties: FacultyPopulated[], facultyId: string) {
+        for (const f of faculties) {
+            if (f._id === facultyId) {
+                return f.courses;
+            }
+        }
+
+        return [];
     }
 
     // Semester
