@@ -6,7 +6,7 @@ import Base from '../Base';
 export const RoomDefinition = {
     number: {
         type: String,
-        // required: true, TODO: uncomment after fixing data
+        required: true,
     },
     numberSecondary: {
         type: String,
@@ -21,11 +21,6 @@ export const RoomSchema = new Schema(RoomDefinition);
 
 RoomSchema.virtual('roomNumber')
     .get(function() {
-        // TODO: remove after making number field required
-        if (!this.number && !this.numberSecondary) {
-            return null;
-        }
-
         if (!this.numberSecondary) {
             return this.number;
         } else if (!this.number) {
