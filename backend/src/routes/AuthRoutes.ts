@@ -73,26 +73,36 @@ export default class AuthRoutes {
         });
         app.post(this.prefix + '/register', (req: Request, res: Response) => {
             const { username, password, names, surnames } = req.body;
-            new User().create([{
+            new User().create({
                 username: username,
                 password: password,
                 names: names,
                 surnames: surnames,
-            }] as HydratedDocumentFromSchema<typeof UserSchema>[])
-                .then((documents: HydratedDocumentFromSchema<typeof UserSchema>[]) => {
+            } as HydratedDocumentFromSchema<typeof UserSchema>)
+                .then((docs) => {
                     // TODO: decide what fields should be saved in req.session
-                    const body = [];
-                    for (const r of documents) {
-                        body.push({
-                            username: r.username,
-                            names: r.names,
-                            surnames: r.surnames,
-                            role: r.role,
-                            courses: r.courses,
+                    if (docs instanceof Array) {
+                        const body = [];
+                        for (const doc of docs) {
+                            body.push({
+                                username: doc.username,
+                                names: doc.names,
+                                surnames: doc.surnames,
+                                role: doc.role,
+                                courses: doc.courses,
+                            });
+                        }
+
+                        res.status(EHttpStatusCode.Created).json(body);
+                    } else {
+                        res.status(EHttpStatusCode.Created).json({
+                            username: docs.username,
+                            names: docs.names,
+                            surnames: docs.surnames,
+                            role: docs.role,
+                            courses: docs.courses,
                         });
                     }
-
-                    res.status(EHttpStatusCode.Created).json(body);
                 })
                 .catch((err) => {
                     res.status(EHttpStatusCode.InternalServerError).json(err.toString());

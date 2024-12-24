@@ -86,7 +86,7 @@ export default abstract class BaseController<T extends Document> {
     }
 
     // POST /documents
-    post(response: Response, documents: T[]) {
+    post(response: Response, documents: T | T[]) {
         this._base.create(documents)
             .then((result) => {
                 response.status(EHttpStatusCode.Created).json(result);
