@@ -73,21 +73,26 @@ export default class AuthRoutes {
         });
         app.post(this.prefix + '/register', (req: Request, res: Response) => {
             const { username, password, names, surnames } = req.body;
-            new User().create({
+            new User().create([{
                 username: username,
                 password: password,
                 names: names,
                 surnames: surnames,
-            } as HydratedDocumentFromSchema<typeof UserSchema>)
-                .then((result: HydratedDocumentFromSchema<typeof UserSchema>) => {
-                    // TODO: make it return only values needed for the req.session
-                    res.status(EHttpStatusCode.Created).json({
-                        username: result.username,
-                        names: result.names,
-                        surnames: result.surnames,
-                        role: result.role,
-                        courses: result.courses,
-                    });
+            }] as HydratedDocumentFromSchema<typeof UserSchema>[])
+                .then((documents: HydratedDocumentFromSchema<typeof UserSchema>[]) => {
+                    // TODO: decide what fields should be saved in req.session
+                    const body = [];
+                    for (const r of documents) {
+                        body.push({
+                            username: r.username,
+                            names: r.names,
+                            surnames: r.surnames,
+                            role: r.role,
+                            courses: r.courses,
+                        });
+                    }
+
+                    res.status(EHttpStatusCode.Created).json(body);
                 })
                 .catch((err) => {
                     res.status(EHttpStatusCode.InternalServerError).json(err.toString());
