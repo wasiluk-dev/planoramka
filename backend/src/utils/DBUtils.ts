@@ -12,14 +12,19 @@ export default class DBUtils {
             });
     }
 
-    static async create<T extends Document>(model: Model<T>, document: T): Promise<HydratedDocument<T>> {
-        return new model(document).save()
-            .then((doc: HydratedDocument<T>) => {
-                return doc;
-            })
-            .catch((err) => {
-                throw err;
-            });
+    static async create<T extends Document>(model: Model<T>, documents: T[]): Promise<HydratedDocument<T>[]> {
+        const savedDocuments: HydratedDocument<T>[] = [];
+        for (const d of documents) {
+            new model(d).save()
+                .then((hd: HydratedDocument<T>) => {
+                    savedDocuments.push(hd);
+                })
+                .catch((err) => {
+                    throw err;
+                });
+        }
+
+        return savedDocuments;
     }
 
     // TODO: implement validation
