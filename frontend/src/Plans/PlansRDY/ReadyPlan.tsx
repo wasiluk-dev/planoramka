@@ -1,26 +1,18 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import apiService from "../../../services/apiService.tsx";
 import * as dataType from "../../../services/databaseTypes.tsx";
-import {TimeTables} from "../../../services/databaseTypes.tsx";
+import {
+    ClassPopulated,
+    CoursePopulated,
+    FacultyPopulated,
+    SemesterPopulated,
+    TimetablePopulated
+} from "../../../services/databaseTypes.tsx";
 import './planrdy.css'
+import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
+import APIUtils from "../../utils/APIUtils.ts";
+import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 
-const kierunki: { [key: number]: { [key: number]: string } } = {
-    1: {
-        1: 'K1_1',
-        2: 'K1_2',
-        3: 'K1_3'
-    },
-    2: {
-        1: 'K2_1',
-        2: 'K2_2',
-        3: 'K2_3'
-    },
-    3: {
-        1: 'K3_1',
-        2: 'K3_2',
-        3: 'K3_3'
-    }
-};
 
 type ClassTypeHelper ={
     acronym: string;
@@ -44,10 +36,29 @@ const day ={
 
 
 const  ReadyPlan: React.FC = () => {
+
+    //Some data in hooks is not used, but it may be used later, dunno
+    const [facultyCycles, setFacultyCycles] = useState<Array<ECourseCycle>>([])
+    const [selectedFacultyCourses, setSelectedFacultyCourses] = useState<Array<Pick<CoursePopulated, "_id" | "code" | "name" | "specialization" | "semesters">>>([])
+    const [timetables, setTimetables] = useState<Array<TimetablePopulated>>([])
+    const [selectedTimetable, setSelectedTimetable] = useState<TimetablePopulated>()
+    const [selectedCycle, setSelectedCycle] = useState<string>("")
+    const [faculties, setFaculties] = useState<Array<FacultyPopulated>>([])
+    const [selectedFaculty, setSelectedFaculty] = useState<FacultyPopulated>()
+    const [selectedFacultyId, setSelectedFacultyId] = useState<string>("")
+    const [selectedStudyMode, setSelectedStudyMode] = useState<string>()
+    const [selectedStudyModeNum, setSelectedStudyModeNum] = useState<ECourseMode>(0)
+    const [courses, setCourses] = useState<Array<CoursePopulated>>([])
+    const [availableCourses, setAvailableCourses] = useState<Array<CoursePopulated>>([])
+    const [selectedCourse, setSelectedCourse] = useState<CoursePopulated>()
+    const [selectedCourseId, setSelectedCourseId] = useState<string>("")
+    const [semesterList, setSemesterList] = useState<Array<SemesterPopulated>>([])
+    const [selectedSemesterId, setSelectedSemesterId] = useState<string>("")
+
+    const [grid, setGrid] = useState<Array<Array<ClassPopulated | null>>>([]);
     const [showCurrentDay, setShowCurrentDay] = useState<number>(6);
-    const [timeTables , setTimeTables] = useState<dataType.Classdata | null>(null);// Fetch data from API when component mounts
-    const [periods, setPeriods] = useState<Array<dataType.Periods> | null>([])
-    const [zajecia, setZajecia] = useState([])
+    const [periods, setPeriods] = useState<Array<dataType.PeriodPopulated> | null>([])
+    const [zajecia, setZajecia] = useState<Array<ClassPopulated>>([])
     const [groupNumber, setGroupNumber] = useState<number>(0)
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [groupNames, setGroupNames] = useState({});
@@ -56,26 +67,35 @@ const  ReadyPlan: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            const data = await apiService.getFaculties();
+            setFaculties(data);
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getCourses();
+            setCourses(data);
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
             const data = await apiService.getTimetables();
-            setTimeTables(data); // Store fetched time tables in state
-            setZajecia(data[0]?.classes)
-            setGroupTypes(data[0]?.groups)
-            for (let i:number = 0; i < 7; i++){
-                if(data[0]?.schedules[i].weekdays.includes(showCurrentDay)){
-                    setFixedRows(data[0]?.schedules[i].periods.length);
-                    break;
-                }
-            }
+            setTimetables(data)
         };
         fetchData();
     }, []);
 
     useEffect(() => {
-        if (groupTypes.length > 0) { // Check if groupTypes is populated
+        if (groupTypes && groupTypes.length > 0) { // Check if groupTypes is populated
             const names = groupTypes.reduce((accumulator, current) => {
                 const acronym = current.classType.acronym; // Get the acronym
-                const count = current.groupCount; // Get the groupCount
-                accumulator[acronym] = count; // Set the acronym as key and count as value
+                accumulator[acronym] = current.groupCount; // Set the acronym as key and count as value
                 return accumulator; // Return the updated accumulator
             }, {} as Record<string, number>); // Initialize as an empty object with string keys and number values
 
@@ -102,22 +122,70 @@ const  ReadyPlan: React.FC = () => {
         fetchData();
     }, []);
 
-    const [selectedWydzial, setSelectedWydzial] = useState<string>("");
-    const [selectedKierunek, setSelectedKierunek] = useState<string>("");
-
-    const handleWydzialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedWydzial(event.target.value);
-        setSelectedKierunek("");
+    const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const faculty = faculties.find((faculty) => faculty._id === event.target.value);
+        setSelectedFaculty(faculty)
+        setSelectedFacultyId(event.target.value)
+        setSelectedStudyMode("")
+        setSelectedFacultyCourses(APIUtils.getFacultyCourses(faculties, event.target.value))
+        setFacultyCycles(APIUtils.getCourseCycles(courses))
+        setSelectedStudyMode("");
+        setSelectedSemesterId("")
+        setSelectedCourseId("")
+        setSelectedCycle("")
     };
 
-    const handleKierunekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = event.target.value;
-        setSelectedKierunek(selectedValue);
+    const handleModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value as keyof typeof ECourseMode;
+        const selectedStudyMode = ECourseMode[value as keyof typeof ECourseMode];
+        setSelectedStudyMode(event.target.value);
+        setSelectedStudyModeNum(selectedStudyMode)
+        setSelectedSemesterId("")
+        setSelectedCourseId("")
+        setSelectedCycle("")
     };
 
-    const kierunkiOptions = selectedWydzial ? Object.entries(kierunki[parseInt(selectedWydzial)]) : [];
-
-    const [grid, setGrid] = useState<Array<Array<TimeTables | null>>>([]);
+    const handleCycleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value as keyof typeof ECourseCycle;
+        const selectedCycle = ECourseCycle[value as keyof typeof ECourseCycle];
+        setSelectedCycle(event.target.value)
+        setAvailableCourses(APIUtils.getCoursesOfCycle(courses, selectedCycle))
+        setSelectedSemesterId("")
+        setSelectedCourseId("")
+    }
+    const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSemesterId("")
+        setSelectedCourseId(event.target.value)
+        const selected = courses.find((course) => course._id === event.target.value)
+        setSelectedCourse(selected)
+        if (selected?.semesters && selected?.semesters.length > 0){
+            setSemesterList(selected?.semesters)
+        }else {
+            setSemesterList([])
+        }
+    }
+    const handleSemesterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSemesterId(event.target.value)
+        if (timetables){
+            const pickedTimetable = timetables.find(timetable => timetable.semester === event.target.value);
+            if (pickedTimetable) {
+                setSelectedTimetable(pickedTimetable);
+                setZajecia(pickedTimetable.classes)
+                console.log(pickedTimetable)
+                setGroupTypes(pickedTimetable.groups)
+                for (let i:number = 0; i < 7; i++){
+                    if(pickedTimetable.schedules[i].weekdays.includes(showCurrentDay)){
+                        setFixedRows(pickedTimetable.schedules[i].periods.length);
+                        break;
+                    }
+                }
+            }else {
+                setSelectedTimetable(undefined);
+            }
+        }else {
+            console.warn("Tajmtejbyls nie istnieje")
+        }
+    }
 
     const normal = useMemo(() => {
         return periods?.filter((item) =>
@@ -129,7 +197,7 @@ const  ReadyPlan: React.FC = () => {
         // Check if `normal` is defined and has a valid length
         if (!normal || normal.length === 0) return;
 
-        const updatedGrid: Array<Array<TimeTables | null>> = Array(fixedRows)
+        const updatedGrid: Array<Array<ClassPopulated | null>> = Array(fixedRows)
             .fill(null)
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
@@ -137,7 +205,7 @@ const  ReadyPlan: React.FC = () => {
 
     // Update tableData whenever input changes
     useEffect(() => {
-        if (groupTypes.length > 0) {
+        if (groupTypes && groupTypes.length > 0) {
             const newTableData = groupTypes.reduce((acc, item) => {
                 const acronym = item.classType.acronym;
                 acc[acronym] = Array(fixedRows).fill(null);
@@ -148,10 +216,8 @@ const  ReadyPlan: React.FC = () => {
         }
     }, [groupTypes, showCurrentDay, fixedRows]);
 
-// Assuming `tableData` and `setTableData` are already defined using useState
-
     useEffect(() => {
-        // Example filteredClasses for demonstration; replace with actual logic
+        //
         const filteredClasses = zajecia.filter(
             (classItem) => classItem.weekday === showCurrentDay
         );
@@ -163,7 +229,7 @@ const  ReadyPlan: React.FC = () => {
 
             // Populate table data with class items based on acronym and periodLocks
             filteredClasses.forEach((classItem) => {
-                const { acronym, color } = classItem.classType;
+                const { acronym } = classItem.classType;
 
                 // Ensure `newTableData[acronym]` exists before accessing
                 if (newTableData[acronym]) {
@@ -220,7 +286,7 @@ const  ReadyPlan: React.FC = () => {
                 (classItem) => classItem.weekday === showCurrentDay
             );
 
-            setTableData((prevTableData) => {
+            setTableData(() => {
                 const newTableData = {};
 
                 // Initialize the table data for each group
@@ -251,16 +317,20 @@ const  ReadyPlan: React.FC = () => {
 
     const changeDay = (newDay: number) => {
         setShowCurrentDay(newDay); // Set the new current day
-        const schedule = timeTables[0]?.schedules.find(schedule => schedule.weekdays.includes(newDay));
-        if (schedule) {
-            setFixedRows(schedule.periods.length);
+        if (selectedTimetable){
+            const schedule = selectedTimetable.schedules.find(schedule => schedule.weekdays.includes(newDay));
+            if (schedule) {
+                setFixedRows(schedule.periods.length);
+            }
+            updateTableData(); // Update table data whenever the day changes
+        } else {
+            console.warn("Nie wybrano TimeTable")
         }
-        updateTableData(); // Update table data whenever the day changes
     };
 
     // Update grid based on fixedRows and groupNumber
     useEffect(() => {
-        const updatedGrid: Array<Array<TimeTables | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
+        const updatedGrid: Array<Array<ClassPopulated | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
         setGrid(updatedGrid);
     }, [fixedRows, groupNumber]);
 
@@ -269,7 +339,7 @@ const  ReadyPlan: React.FC = () => {
         updateTableData();
     }, [zajecia, showCurrentDay, fixedRows]);
 
-    console.log(timeTables)
+
     return (
         <>
             <h1 className='text-center'> PLAN ZAJĘĆ</h1>
@@ -278,180 +348,222 @@ const  ReadyPlan: React.FC = () => {
                     <select
                         className="form-select"
                         aria-label="Default select example"
-                        value={selectedWydzial}
-                        onChange={handleWydzialChange}
+                        value={selectedFacultyId}
+                        onChange={handleFacultyChange}
                     >
-                        <option value="" disabled hidden>Wybierz wydział</option>
-                        <option value="1">Wydział 1</option>
-                        <option value="2">Wydział 2</option>
-                        <option value="3">Wydział 3</option>
+                        <option value="" disabled hidden>Wybierz Wydział</option>
+                        {faculties.map((faculty) => (
+                            faculty.courses.length > 0 ? (
+                                <option key={faculty._id} value={faculty._id}>
+                                    {faculty.name}
+                                </option>
+                            ):
+                                (<option disabled key={faculty._id} value={faculty._id}>
+                                {faculty.name}
+                            </option>)
+                        ))}
                     </select>
 
-                    {selectedWydzial && (
-                        <div className="">
-                            <select
+                    {selectedFacultyId && (
+                        <div className="mt-2">
+                        <select
                                 className="form-select"
                                 aria-label="Default select example"
-                                value={selectedKierunek}
-                                onChange={handleKierunekChange}
+                                value={selectedStudyMode}
+                                onChange={handleModeChange}
                             >
-                                <option value="" disabled hidden>Wybierz kierunek</option>
-                                {kierunkiOptions.map(([key, value]) => (
-                                    <option key={key} value={key}>{value}</option>
-                                ))}
+                                <option value="" disabled hidden>Wybierz Tryb</option>
+                                {Object.values(ECourseMode)
+                                    .filter((value) => isNaN(Number(value)))
+                                    .map((value) =>
+                                    <option key={value} value={value}>
+                                        {value}
+                                    </option>
+                                )}
                             </select>
                         </div>
                     )}
 
-                    {selectedKierunek && (
+                    {selectedFacultyId && selectedStudyMode && (
                         <div className="mt-2">
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedCycle}
+                                onChange={handleCycleChange}
+                            >
+                                <option value="" disabled hidden>Wybierz Cykl</option>
+                                {Object.values(ECourseCycle)
+                                    .filter((value) => isNaN(Number(value)))
+                                    .map((value, index) =>
+                                        facultyCycles.includes(index) ? (
+                                            <option key={value} value={value}>
+                                                {value}
+                                            </option>
+                                        ) : (
+                                            <option key={value} disabled value={value}>
+                                                {value}
+                                            </option>
+                                        )
+                                    )}
+                            </select>
+                        </div>
+                    )}
+                    {selectedFacultyId && selectedStudyMode && selectedCycle &&(
+                        <div className="mt-2">
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedCourseId}
+                                onChange={handleCourseChange}
+                            >
+                                <option value="" disabled hidden>Wybierz kierunek</option>
+                                {availableCourses.map((course) => (
+                                    course.mode === selectedStudyModeNum ? (
+                                        <option key={course._id} value={course._id}>
+                                            {course.name + (course.specialization ? (` (${course.specialization})`) : (""))}
+                                        </option>
+                                    ) : null
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    {selectedFacultyId && selectedStudyMode && selectedCycle && selectedCourseId &&(
+                        <div className="mt-2">
+                            {semesterList.length > 0 ? (
+                                <select
+                                    className="form-select"
+                                    aria-label="Default select example"
+                                    value={selectedSemesterId}
+                                    onChange={handleSemesterChange}
+                                >
+                                    <option value="" disabled hidden>Wybierz Semestr</option>
+                                    {semesterList.map((semester) => (
+                                        <option key={semester._id}
+                                                value={semester._id}>{"Semestr " + semester.index}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                "Brak semestrów do wyświetlenia"
+                            )}
                         </div>
                     )}
                 </div>
                 <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
                     {/*TABELA ZAJĘCIOWA*/}
-                    <table className="table table-bordered border-primary me-4 table-fixed-height"
-                           style={{height: '100%'}}>
-                        <tbody style={{height: '100%'}}>
-                        <tr className="table-dark text-center">
-                            <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber + 1}>
-                                <div className="d-flex justify-content-center"> {/* Flexbox container */}
-                                    {Object.entries(day)
-                                        .filter(([key]) => key !== '0') // Filter out the entry with key '0'
-                                        .map(([key, value]) => (
+                    {selectedTimetable ? (
+                        <table className="table table-bordered border-primary me-4 table-fixed-height"
+                               style={{height: '100%'}}>
+                            <tbody style={{height: '100%'}}>
+                            <tr className="table-dark text-center">
+                                <td className="table-dark text-center fw-bolder fs-5" colSpan={groupNumber + 1}>
+                                    <div className="d-flex justify-content-center"> {/* Flexbox container */}
+                                        {Object.entries(day)
+                                            .filter(([key]) => key !== '0') // Filter out the entry with key '0'
+                                            .map(([key, value]) => (
+                                                <div
+                                                    key={key}
+                                                    className="flex-fill text-center me-2" // Flex item
+                                                >
+                                                    {key === showCurrentDay.toString() ? (
+                                                        <div className="fw-bold" role="button">{value}</div>
+                                                    ) : (
+                                                        <div className="fw-light" role="button" onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                    )}
+
+                                                </div>
+                                            ))
+                                        }
+
+                                        {/* Now display the entry with key '0' at the end */}
+                                        {day['0'] && (
                                             <div
-                                                key={key}
+                                                key="0"
                                                 className="flex-fill text-center me-2" // Flex item
                                             >
-                                                {key === showCurrentDay.toString() ? (
-                                                    <div className="fw-bold" role="button">{value}</div>
+                                                {showCurrentDay.toString() === '0' ? (
+                                                    <div className="fw-bold"  role="button">{day['0']}</div>
                                                 ) : (
-                                                    <div className="fw-light" role="button" onClick={() => changeDay(parseInt(key))}>{value}</div>
+                                                    <div className="fw-light" role="button" onClick={() => changeDay(0)}>{day['0']}</div>
                                                 )}
-
                                             </div>
-                                        ))
-                                    }
+                                        )}
 
-                                    {/* Now display the entry with key '0' at the end */}
-                                    {day['0'] && (
-                                        <div
-                                            key="0"
-                                            className="flex-fill text-center me-2" // Flex item
-                                        >
-                                            {showCurrentDay.toString() === '0' ? (
-                                                <div className="fw-bold"  role="button">{day['0']}</div>
-                                            ) : (
-                                                <div className="fw-light" role="button" onClick={() => changeDay(0)}>{day['0']}</div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                </div>
-                            </td>
-                        </tr>
-                        <tr className="table-dark godzina">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr className="table-dark godzina">
+                                {groupTypes ? (
+                                    <th className='text-center' rowSpan={groupTypes.length-2}>Godzina</th>
+                                ) : (
+                                    <th className='text-center'>Godzina</th>
+                                )}
+                            </tr>
                             {groupTypes ? (
-                            <th className='text-center' rowSpan={groupTypes.length-2}>Godzina</th>
-                            ) : (
-                                <th className='text-center'>Godzina</th>
-                            )}
-                        </tr>
-                        {groupTypes ? (
-                            groupTypes.map((group) => (
-                                <tr className="table-dark d-flex flex-row" key={group.classType._id}>
+                                groupTypes.map((group) => (
+                                    <tr className="table-dark d-flex flex-row" key={group.classType._id}>
                                         {Array.from({length: group.groupCount}).map((_, i) => (
-                                                <th key={i} className="text-center w-100 border-secondary border border-1 grupy">
-                                                    {group.classType.acronym} {i + 1}
-                                                </th>
+                                            <th key={i} className="text-center w-100 border-secondary border border-1 grupy">
+                                                {group.classType.acronym} {i + 1}
+                                            </th>
 
                                         ))}
-                                </tr>
-                            ))
+                                    </tr>
+                                ))
                             ) : (
-                            <tr>
-                                <th>Error</th>
-                            </tr>
-                        )}
+                                <tr>
+                                    <th>Error</th>
+                                </tr>
+                            )}
 
 
-                        {grid.map((row, rowIndex) => {
-                            return (
-                                <tr key={rowIndex} className="table-dark text-center">
-                                    {/* Time column */}
-                                    <th scope="col" className="col-2">
-                                        {timeTables ? (
-                                            (showCurrentDay == 0 || showCurrentDay == 6) && timeTables[0]?.schedules[1]?.periods[rowIndex] ? (
-                                                timeTables[0].schedules[1].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[1].periods[rowIndex].endTime
-                                            ) : (showCurrentDay > 0 && showCurrentDay < 6 && timeTables[0]?.schedules[0]?.periods[rowIndex] ? (
-                                                timeTables[0].schedules[0].periods[rowIndex].startTime + ' - ' + timeTables[0].schedules[0].periods[rowIndex].endTime
-                                            ) : ("Error in showing period per day!"))
-                                        ) : (
-                                            <p>Loading...</p>
-                                        )}
-                                    </th>
-                                    {/* Rowspan column */}
-                                    {rowIndex === 0 && (
-                                        <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
-                                            <div className="table-container p-0 w-100 h-100"
-                                                 style={{position: 'relative'}}>
-                                                {Object.keys(tableData || {}).map((acronym, idx) => {
-                                                    // Check if the tableData for this acronym contains non-null values
-                                                    const hasData = tableData[acronym]?.some((cellData) => cellData !== null);
+                            {grid.map((_row, rowIndex) => {
+                                return (
+                                    <tr key={rowIndex} className="table-dark text-center">
+                                        {/* Time column */}
+                                        <th scope="col" className="col-2">
+                                            {selectedTimetable ? (
+                                                (showCurrentDay == 0 || showCurrentDay == 6) && selectedTimetable.schedules[1]?.periods[rowIndex] ? (
+                                                    selectedTimetable.schedules[1].periods[rowIndex].startTime + ' - ' + selectedTimetable.schedules[1].periods[rowIndex].endTime
+                                                ) : (showCurrentDay > 0 && showCurrentDay < 6 && selectedTimetable.schedules[0]?.periods[rowIndex] ? (
+                                                    selectedTimetable.schedules[0].periods[rowIndex].startTime + ' - ' + selectedTimetable.schedules[0].periods[rowIndex].endTime
+                                                ) : ("Error in showing period per day!"))
+                                            ) : (
+                                                <p>Loading...</p>
+                                            )}
+                                        </th>
+                                        {/* Rowspan column */}
+                                        {rowIndex === 0 && (
+                                            <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
+                                                <div className="table-container p-0 w-100 h-100"
+                                                     style={{position: 'relative'}}>
+                                                    {Object.keys(tableData || {}).map((acronym, idx) => {
+                                                        // Check if the tableData for this acronym contains non-null values
+                                                        const hasData = tableData[acronym]?.some((cellData) => cellData !== null);
 
-                                                    if (!hasData) return null; // Skip empty groups
+                                                        if (!hasData) return null; // Skip empty groups
 
-                                                    // Determine `z-index` for stacking
-                                                    const zIndex = idx + 1;
+                                                        // Determine `z-index` for stacking
+                                                        const zIndex = idx + 1;
 
-                                                    // Number of columns for this acronym based on groupNames
-                                                    const columnCount = groupNames[acronym] || 1;
+                                                        // Number of columns for this acronym based on groupNames
+                                                        const columnCount = groupNames[acronym] || 1;
 
-                                                    // First table formatting
-                                                    if (idx === 0) {
-                                                        return (
-                                                            <table
-                                                                key={acronym}
-                                                                className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent"
-                                                            >
-                                                                <tbody>
-                                                                {tableData[acronym].map((cellData, rowIndex) => (
-                                                                    <tr key={rowIndex}>
-                                                                        <td scope="row" className="p-0">
-                                                                            {cellData ? (
-                                                                                <div
-                                                                                    className="text-black fw-bolder cell-content"
-                                                                                    style={{backgroundColor: cellData.classType.color}}>
-                                                                                    {cellData.subject.name}
-                                                                                </div>
-                                                                            ) : (
-                                                                                <span
-                                                                                    className="text-black fw-bolder"></span>
-                                                                            )}
-                                                                        </td>
-                                                                    </tr>
-                                                                ))}
-                                                                </tbody>
-                                                            </table>
-                                                        );
-                                                    } else {
-                                                        // Subsequent tables formatting
-                                                        return (
-                                                            <table
-                                                                key={acronym}
-                                                                className={`table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-${zIndex} bg-transparent`}
-                                                            >
-                                                                <tbody>
-                                                                {tableData[acronym].map((cellData, rowIndex) => (
-                                                                    <tr key={rowIndex}>
-                                                                        {Array.from({length: columnCount}, (_, colIndex) => (
-                                                                            <td key={colIndex} scope="col"
-                                                                                className="bg-transparent p-0 col-1">
-                                                                                {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
+                                                        // First table formatting
+                                                        if (idx === 0) {
+                                                            return (
+                                                                <table
+                                                                    key={acronym}
+                                                                    className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent"
+                                                                >
+                                                                    <tbody>
+                                                                    {tableData[acronym].map((cellData, rowIndex) => (
+                                                                        <tr key={rowIndex}>
+                                                                            <td scope="row" className="p-0">
+                                                                                {cellData ? (
                                                                                     <div
                                                                                         className="text-black fw-bolder cell-content"
-                                                                                        style={{backgroundColor: cellData.classType.color}}
-                                                                                    >
+                                                                                        style={{backgroundColor: cellData.classType.color}}>
                                                                                         {cellData.subject.name}
                                                                                     </div>
                                                                                 ) : (
@@ -459,23 +571,54 @@ const  ReadyPlan: React.FC = () => {
                                                                                         className="text-black fw-bolder"></span>
                                                                                 )}
                                                                             </td>
-                                                                        ))}
-                                                                    </tr>
-                                                                ))}
-                                                                </tbody>
-                                                            </table>
-                                                        );
-                                                    }
-                                                })}
-                                            </div>
+                                                                        </tr>
+                                                                    ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            );
+                                                        } else {
+                                                            // Subsequent tables formatting
+                                                            return (
+                                                                <table
+                                                                    key={acronym}
+                                                                    className={`table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-${zIndex} bg-transparent`}
+                                                                >
+                                                                    <tbody>
+                                                                    {tableData[acronym].map((cellData, rowIndex) => (
+                                                                        <tr key={rowIndex}>
+                                                                            {Array.from({length: columnCount}, (_, colIndex) => (
+                                                                                <td key={colIndex} scope="col"
+                                                                                    className="bg-transparent p-0 col-1">
+                                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
+                                                                                        <div
+                                                                                            className="text-black fw-bolder cell-content"
+                                                                                            style={{backgroundColor: cellData.classType.color}}
+                                                                                        >
+                                                                                            {cellData.subject.name}
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <span
+                                                                                            className="text-black fw-bolder"></span>
+                                                                                    )}
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            );
+                                                        }
+                                                    })}
+                                                </div>
 
-                                        </td>
-                                    )}
-                                </tr>
-                            );
-                        })}
-                        </tbody>
-                    </table>
+                                            </td>
+                                        )}
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    ) : null}
                 </div>
                 <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
                     Tutaj bendom szczegóły, szczególiki

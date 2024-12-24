@@ -1,8 +1,7 @@
 import EWeekday from '../enums/EWeekday.ts';
 import {
     ClassPopulated,
-    CoursePopulated,
-    FacultyPopulated,
+    CoursePopulated, FacultyPopulated,
     RoomPopulated,
     SemesterPopulated,
     SubjectDetailsPopulated,
@@ -84,6 +83,7 @@ export default class APIUtils {
 
         return degrees.sort((a, b) => a - b);
     }
+
     static getCoursesOfCycle(courses: CoursePopulated[], cycle: ECourseCycle) {
         const coursesOfCycle: CoursePopulated[] = [];
         for (const c of courses) {
@@ -95,14 +95,13 @@ export default class APIUtils {
         return coursesOfCycle;
     }
 
-    // Faculties
     static getFacultyCourses(faculties: FacultyPopulated[], facultyId: string) {
         for (const f of faculties) {
             if (f._id === facultyId) {
                 return f.courses;
             }
         }
-
+      
         return [];
     }
 
