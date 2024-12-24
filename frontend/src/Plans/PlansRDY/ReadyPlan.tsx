@@ -98,10 +98,10 @@ const  ReadyPlan: React.FC = () => {
                 accumulator[acronym] = current.groupCount; // Set the acronym as key and count as value
                 return accumulator; // Return the updated accumulator
             }, {} as Record<string, number>); // Initialize as an empty object with string keys and number values
-
+            console.log(names)
             setGroupNames(names); // Update groupNames with the transformed data
         }
-    }, [groupTypes]);
+    }, [groupTypes,selectedSemesterId]);
 
 
     useEffect(() => {
@@ -171,7 +171,6 @@ const  ReadyPlan: React.FC = () => {
             if (pickedTimetable) {
                 setSelectedTimetable(pickedTimetable);
                 setZajecia(pickedTimetable.classes)
-                console.log(pickedTimetable)
                 setGroupTypes(pickedTimetable.groups)
                 for (let i:number = 0; i < 7; i++){
                     if(pickedTimetable.schedules[i].weekdays.includes(showCurrentDay)){
@@ -182,9 +181,11 @@ const  ReadyPlan: React.FC = () => {
             }else {
                 setSelectedTimetable(undefined);
             }
+            updateTableData();
         }else {
             console.warn("Tajmtejbyls nie istnieje")
         }
+
     }
 
     const normal = useMemo(() => {
@@ -201,7 +202,7 @@ const  ReadyPlan: React.FC = () => {
             .fill(null)
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
-    }, [normal, groupNumber]);
+    }, [normal, groupNumber, selectedSemesterId]);
 
     // Update tableData whenever input changes
     useEffect(() => {
@@ -214,7 +215,7 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(newTableData);
         }
-    }, [groupTypes, showCurrentDay, fixedRows]);
+    }, [groupTypes, showCurrentDay, fixedRows, selectedSemesterId]);
 
     useEffect(() => {
         //
@@ -246,7 +247,7 @@ const  ReadyPlan: React.FC = () => {
 
             return newTableData; // Return the updated tableData
         });
-    }, [zajecia, showCurrentDay, fixedRows, setTableData]);
+    }, [zajecia, showCurrentDay, fixedRows, setTableData, selectedSemesterId]);
 
 
         useEffect(() => {
@@ -276,9 +277,7 @@ const  ReadyPlan: React.FC = () => {
         } else {
             setTableData({});
         }
-    }, [zajecia, showCurrentDay, fixedRows, grid]);
-
-    // console.log(tableData)
+    }, [zajecia, showCurrentDay, fixedRows, grid, selectedSemesterId]);
 
     const updateTableData = () => {
         if (zajecia.length > 0) {
@@ -288,15 +287,12 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(() => {
                 const newTableData = {};
-
                 // Initialize the table data for each group
                 Object.keys(groupNames).forEach(acronym => {
                     newTableData[acronym] = Array(fixedRows).fill(null); // Create an array with nulls
                 });
-
                 filteredClasses.forEach((classItem) => {
                     const { acronym } = classItem.classType;
-
                     if (newTableData[acronym]) {
                         classItem.periodBlocks.forEach((period) => {
                             if (period <= fixedRows) {
@@ -307,7 +303,6 @@ const  ReadyPlan: React.FC = () => {
                         });
                     }
                 });
-
                 return newTableData;
             });
         } else {
@@ -332,13 +327,12 @@ const  ReadyPlan: React.FC = () => {
     useEffect(() => {
         const updatedGrid: Array<Array<ClassPopulated | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
         setGrid(updatedGrid);
-    }, [fixedRows, groupNumber]);
+    }, [fixedRows, groupNumber, selectedSemesterId]);
 
     // Update table data when zajecia, showCurrentDay or fixedRows change
     useEffect(() => {
         updateTableData();
-    }, [zajecia, showCurrentDay, fixedRows]);
-
+    }, [zajecia, showCurrentDay, fixedRows, selectedSemesterId, groupNames]);
 
     return (
         <>
