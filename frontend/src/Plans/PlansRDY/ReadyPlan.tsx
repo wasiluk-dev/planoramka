@@ -12,6 +12,7 @@ import './planrdy.css'
 import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
+import PeriodBlock from "../../Components/PeriodBlock/PeriodBlock.tsx";
 
 
 type ClassTypeHelper ={
@@ -336,7 +337,6 @@ const  ReadyPlan: React.FC = () => {
 
     return (
         <>
-            <h1 className='text-center'> PLAN ZAJĘĆ</h1>
             <div className='d-flex flex-row p-3'>
                 <div className="bg-secondary text-center w-15">
                     <select
@@ -555,11 +555,10 @@ const  ReadyPlan: React.FC = () => {
                                                                         <tr key={rowIndex}>
                                                                             <td scope="row" className="p-0">
                                                                                 {cellData ? (
-                                                                                    <div
-                                                                                        className="text-black fw-bolder cell-content"
-                                                                                        style={{backgroundColor: cellData.classType.color}}>
-                                                                                        {cellData.subject.name}
-                                                                                    </div>
+                                                                                    <PeriodBlock color={cellData.classType.color}
+                                                                                                 organizer={cellData.organizer}
+                                                                                                 roomNumber={cellData.room.roomNumber}
+                                                                                                 subjectName={cellData.subject.name}/>
                                                                                 ) : (
                                                                                     <span
                                                                                         className="text-black fw-bolder"></span>
@@ -579,17 +578,15 @@ const  ReadyPlan: React.FC = () => {
                                                                 >
                                                                     <tbody>
                                                                     {tableData[acronym].map((cellData, rowIndex) => (
-                                                                        <tr key={rowIndex}>
+                                                                        <tr key={rowIndex} className="">
                                                                             {Array.from({length: columnCount}, (_, colIndex) => (
                                                                                 <td key={colIndex} scope="col"
                                                                                     className="bg-transparent p-0 col-1">
                                                                                     {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
-                                                                                        <div
-                                                                                            className="text-black fw-bolder cell-content"
-                                                                                            style={{backgroundColor: cellData.classType.color}}
-                                                                                        >
-                                                                                            {cellData.subject.name}
-                                                                                        </div>
+                                                                                        <PeriodBlock color={cellData.classType.color}
+                                                                                                     organizer={cellData.organizer}
+                                                                                                     roomNumber={cellData.room.roomNumber}
+                                                                                                     subjectName={cellData.subject.name}/>
                                                                                     ) : (
                                                                                         <span
                                                                                             className="text-black fw-bolder"></span>
@@ -613,9 +610,6 @@ const  ReadyPlan: React.FC = () => {
                             </tbody>
                         </table>
                     ) : null}
-                </div>
-                <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
-                    Tutaj bendom szczegóły, szczególiki
                 </div>
             </div>
         </>
