@@ -13,6 +13,7 @@ import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 import PeriodBlock from "../../Components/PeriodBlock/PeriodBlock.tsx";
+import {TestContext} from "node:test";
 
 
 type ClassTypeHelper ={
@@ -100,7 +101,6 @@ const  ReadyPlan: React.FC = () => {
                 accumulator[acronym] = current.groupCount; // Set the acronym as key and count as value
                 return accumulator; // Return the updated accumulator
             }, {} as Record<string, number>); // Initialize as an empty object with string keys and number values
-            console.log(names)
             setGroupNames(names); // Update groupNames with the transformed data
         }
     }, [groupTypes,selectedSemesterId]);
@@ -209,50 +209,48 @@ const  ReadyPlan: React.FC = () => {
     // Update tableData whenever input changes
     useEffect(() => {
         if (groupTypes && groupTypes.length > 0) {
-            const newTableData = groupTypes.reduce((acc, item) => {
-                const acronym = item.classType.acronym;
-                acc[acronym] = Array(fixedRows).fill(null);
+            const newTableData = groupTypes.reduce((acc, group) => {
+                const acronym = group.classType.acronym;
+                acc[acronym] = Array.from({ length: fixedRows }, () =>
+                    Array(group.groupCount).fill(null)
+                ); // Nested array: rows × groupCount
                 return acc;
-            }, {} as Record<string, (null | any)[]>);
-            console.log(newTableData)
+            }, {} as Record<string, (null | any)[][]>);
             setTableData(newTableData);
         }
     }, [groupTypes, showCurrentDay, fixedRows, selectedSemesterId]);
 
     useEffect(() => {
-        //
         const filteredClasses = zajecia.filter(
             (classItem) => classItem.weekday === showCurrentDay
         );
 
-        // Update `tableData` based on `filteredClasses`
         setTableData((prevTableData) => {
-            // Create a copy of the existing tableData to avoid direct mutation
             const newTableData = { ...prevTableData };
 
-            // Populate table data with class items based on acronym and periodLocks
             filteredClasses.forEach((classItem) => {
                 const { acronym } = classItem.classType;
+                const groups = classItem.studentGroups || [];
 
-                // Ensure `newTableData[acronym]` exists before accessing
                 if (newTableData[acronym]) {
                     classItem.periodBlocks.forEach((period) => {
                         if (period <= fixedRows) {
-                            // Update the newTableData for the corresponding period
-                            newTableData[acronym][period - 1] = {
-                                ...classItem, // Spread operator to include the whole classItem object
-                            };
+                            groups.forEach((groupIdx) => {
+                                newTableData[acronym][period - 1][groupIdx - 1] = {
+                                    ...classItem,
+                                };
+                            });
                         }
                     });
                 }
             });
 
-            return newTableData; // Return the updated tableData
+            return newTableData;
         });
     }, [zajecia, showCurrentDay, fixedRows, setTableData, selectedSemesterId]);
 
 
-        useEffect(() => {
+    useEffect(() => {
         if (zajecia.length > 0) {
             const filteredClasses = zajecia.filter(
                 (classItem) => classItem.weekday === showCurrentDay
@@ -261,14 +259,28 @@ const  ReadyPlan: React.FC = () => {
             setTableData((prevTableData) => {
                 const newTableData = { ...prevTableData };
 
+                // Ensure all acronyms are initialized correctly
+                Object.keys(groupNames).forEach((acronym) => {
+                    const groupCount = groupNames[acronym] || 1; // Default to 1 group if undefined
+                    newTableData[acronym] = Array.from({ length: fixedRows }, () =>
+                        Array(groupCount).fill(null)
+                    );
+                });
+
+                // Populate filtered classes into the table data
                 filteredClasses.forEach((classItem) => {
                     const { acronym } = classItem.classType;
+                    const groups = classItem.studentGroups || []; // Groups this class applies to
+
                     if (newTableData[acronym]) {
                         classItem.periodBlocks.forEach((period) => {
                             if (period <= fixedRows) {
-                                newTableData[acronym][period - 1] = {
-                                    ...classItem,
-                                };
+                                groups.forEach((groupIdx) => {
+                                    // Update the specific cell for the group
+                                    newTableData[acronym][period - 1][groupIdx - 1] = {
+                                        ...classItem,
+                                    };
+                                });
                             }
                         });
                     }
@@ -279,7 +291,8 @@ const  ReadyPlan: React.FC = () => {
         } else {
             setTableData({});
         }
-    }, [zajecia, showCurrentDay, fixedRows, grid, selectedSemesterId]);
+    }, [zajecia, showCurrentDay, fixedRows, groupNames, selectedSemesterId]);
+
 
     const updateTableData = () => {
         if (zajecia.length > 0) {
@@ -289,24 +302,37 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(() => {
                 const newTableData = {};
+
                 // Initialize the table data for each group
-                Object.keys(groupNames).forEach(acronym => {
-                    newTableData[acronym] = Array(fixedRows).fill(null); // Create an array with nulls
+                Object.keys(groupNames).forEach((acronym) => {
+                    const groupCount = groupNames[acronym] || 1; // Number of groups for this acronym
+                    newTableData[acronym] = Array.from({ length: fixedRows }, () =>
+                        Array(groupCount).fill(null) // Create a 2D array: rows × groupCount
+                    );
                 });
+
+                // Populate the table data based on filteredClasses
                 filteredClasses.forEach((classItem) => {
                     const { acronym } = classItem.classType;
+                    const groups = classItem.studentGroups || []; // Groups the class is associated with
+
                     if (newTableData[acronym]) {
                         classItem.periodBlocks.forEach((period) => {
                             if (period <= fixedRows) {
-                                newTableData[acronym][period - 1] = {
-                                    ...classItem,
-                                };
+                                groups.forEach((groupIdx) => {
+                                    // Place data into the corresponding row and group column
+                                    newTableData[acronym][period - 1][groupIdx - 1] = {
+                                        ...classItem,
+                                    };
+                                });
                             }
                         });
                     }
                 });
+
                 return newTableData;
             });
+
         } else {
             setTableData({});
         }
@@ -335,6 +361,8 @@ const  ReadyPlan: React.FC = () => {
     useEffect(() => {
         updateTableData();
     }, [zajecia, showCurrentDay, fixedRows, selectedSemesterId, groupNames]);
+
+    console.log(tableData)
 
     return (
         <>
@@ -552,22 +580,32 @@ const  ReadyPlan: React.FC = () => {
                                                                     className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent table-combo-child"
                                                                 >
                                                                     <tbody>
-                                                                    {tableData[acronym].map((cellData, rowIndex) => (
+                                                                    {tableData[acronym]?.map((row, rowIndex) => (
                                                                         <tr key={rowIndex}>
-                                                                            <td scope="row" className="p-0">
-                                                                                {cellData ? (
-                                                                                    <PeriodBlock color={cellData.classType.color}
-                                                                                                 organizer={cellData.organizer}
-                                                                                                 roomNumber={cellData.room.roomNumber}
-                                                                                                 subjectName={cellData.subject.name}/>
-                                                                                ) : (
-                                                                                    <span
-                                                                                        className="text-black fw-bolder"></span>
-                                                                                )}
-                                                                            </td>
+                                                                            {Array.isArray(row) ? (
+                                                                                row.map((cellData, colIndex) => (
+                                                                                    <td key={colIndex} scope="col"
+                                                                                        className="p-0">
+                                                                                        {cellData ? (
+                                                                                            <PeriodBlock
+                                                                                                color={cellData.classType.color}
+                                                                                                organizer={cellData.organizer}
+                                                                                                roomNumber={cellData.room.roomNumber}
+                                                                                                subjectName={cellData.subject.name}
+                                                                                            />
+                                                                                        ) : (
+                                                                                            <span
+                                                                                                className="text-black fw-bolder"></span> // Empty cell placeholder
+                                                                                        )}
+                                                                                    </td>
+                                                                                ))
+                                                                            ) : (
+                                                                                <td colSpan={1}>Invalid Row Data</td> // Fallback if `row` isn't an array
+                                                                            )}
                                                                         </tr>
                                                                     ))}
                                                                     </tbody>
+
                                                                 </table>
                                                             );
                                                         } else {
@@ -578,24 +616,29 @@ const  ReadyPlan: React.FC = () => {
                                                                     className={`table table-bordered table-dark border-black table-equal-rows position-relative bg-transparent table-combo-child`}
                                                                 >
                                                                     <tbody>
-                                                                    {tableData[acronym].map((cellData, rowIndex) => (
-                                                                        <tr key={rowIndex} className="">
-                                                                            {Array.from({length: columnCount}, (_, colIndex) => (
-                                                                                <td key={colIndex} scope="col"
-                                                                                    className="bg-transparent p-0 col-1">
-                                                                                    {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
-                                                                                        <PeriodBlock color={cellData.classType.color}
-                                                                                                     organizer={cellData.organizer}
-                                                                                                     roomNumber={cellData.room.roomNumber}
-                                                                                                     subjectName={cellData.subject.name}/>
-                                                                                    ) : (
-                                                                                        <span
-                                                                                            className="text-black fw-bolder"></span>
-                                                                                    )}
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    ))}
+                                                                    {Array.isArray(tableData[acronym]) &&
+                                                                        tableData[acronym].map((row, rowIndex) =>
+                                                                            Array.isArray(row) ? (
+                                                                                <tr key={rowIndex}>
+                                                                                    {row.map((cellData, colIndex) => (
+                                                                                        <td key={colIndex} scope="col"
+                                                                                            className="bg-transparent p-0 col-1">
+                                                                                            {cellData ? (
+                                                                                                <PeriodBlock
+                                                                                                    color={cellData.classType.color}
+                                                                                                    organizer={cellData.organizer}
+                                                                                                    roomNumber={cellData.room.roomNumber}
+                                                                                                    subjectName={cellData.subject.name}
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span
+                                                                                                    className="text-black fw-bolder"></span>
+                                                                                            )}
+                                                                                        </td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            ) : null
+                                                                        )}
                                                                     </tbody>
                                                                 </table>
                                                             );
