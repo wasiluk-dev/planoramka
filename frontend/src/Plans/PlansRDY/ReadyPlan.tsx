@@ -64,7 +64,8 @@ const  ReadyPlan: React.FC = () => {
     const [groupTypes, setGroupTypes] = useState<Array<GroupInfo> | null>([])
     const [groupNames, setGroupNames] = useState({});
     const [fixedRows, setFixedRows]= useState<number>(14)
-    const [tableData, setTableData] = useState<Record<string, (null | any)[]>>({}); // Initialize as an empty object
+    const [tableData, setTableData] = useState<Record<string, (null | any)[][]>>({});// Initialize as an empty object
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -213,7 +214,7 @@ const  ReadyPlan: React.FC = () => {
                 acc[acronym] = Array(fixedRows).fill(null);
                 return acc;
             }, {} as Record<string, (null | any)[]>);
-
+            console.log(newTableData)
             setTableData(newTableData);
         }
     }, [groupTypes, showCurrentDay, fixedRows, selectedSemesterId]);

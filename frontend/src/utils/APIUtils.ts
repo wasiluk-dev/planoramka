@@ -126,7 +126,9 @@ export default class APIUtils {
                     },
                 });
             });
-
+        for (let i: EWeekday = 0; i < 7; i++) {
+            professorClasses[i].sort(c => c.period.startTime.localeCompare(c.period.startTime));
+        }
         return professorClasses;
     }
     static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
