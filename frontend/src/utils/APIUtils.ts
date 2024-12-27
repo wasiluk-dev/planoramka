@@ -1,15 +1,29 @@
-import EWeekday from '../enums/EWeekday.ts';
 import {
     ClassPopulated,
+    ClassTypePopulated,
     CoursePopulated,
     FacultyPopulated,
+    PeriodPopulated,
     RoomPopulated,
     SemesterPopulated,
     SubjectDetailsPopulated,
-    TimetablePopulated, UserPopulated
+    SubjectPopulated,
+    TimetablePopulated,
+    UserPopulated,
 } from '../../services/databaseTypes.tsx';
 import ECourseCycle from '../../../backend/src/enums/ECourseCycle.ts';
 import EUserRole from '../../../backend/src/enums/EUserRole.ts';
+import EWeekday from '../enums/EWeekday.ts';
+
+type PeriodBlock = {
+    classType: ClassTypePopulated;
+    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'>;
+    room: Pick<RoomPopulated, '_id' | 'roomNumber'>;
+    period: Pick<PeriodPopulated, 'startTime' | 'endTime'>;
+    faculty: Pick<FacultyPopulated, '_id' | 'name' | 'acronym'>;
+    course: Pick<CoursePopulated, '_id' | 'code'>;
+    semester: Pick<SemesterPopulated, '_id' | 'index'> & { year: number };
+}
 
 export default class APIUtils {
     // Class
@@ -57,6 +71,63 @@ export default class APIUtils {
         }
 
         return false;
+    }
+    static getProfessorClasses(classes: ClassPopulated[], timetables: TimetablePopulated[], faculties: FacultyPopulated[], userId: string) {
+        const professorClasses: Record<EWeekday, PeriodBlock[]> = {
+            0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
+        };
+
+        classes.filter((c) => (c.organizer?._id === userId))
+            .map((c) => {
+                const periods = this.getClassPeriods(timetables, c._id).sort((a, b) => a.startTime.localeCompare(b.startTime));
+                let semester: SemesterPopulated | undefined;
+                let course: Pick<CoursePopulated, '_id' | 'code' | 'name' | 'specialization' | 'semesters'> | undefined;
+                const faculty = faculties.find(faculty => {
+                    course = faculty.courses.find(course => {
+                        semester = course.semesters.find(semester => semester._id === c.semester);
+                        return semester;
+                    });
+
+                    return course;
+                });
+
+                if (!faculty || !course || !semester) {
+                    return;
+                }
+
+                professorClasses[c.weekday as EWeekday].push({
+                    classType: c.classType,
+                    subject: {
+                        _id: c.subject!._id,
+                        name: c.subject!.name,
+                        shortName: c.subject!.shortName,
+                    },
+                    room: {
+                        _id: c.room._id,
+                        roomNumber: c.room.roomNumber,
+                    },
+                    period: {
+                        startTime: periods[0].startTime,
+                        endTime: periods[periods.length - 1].endTime,
+                    },
+                    faculty: {
+                        _id: faculty._id,
+                        name: faculty.name,
+                        acronym: faculty.acronym,
+                    },
+                    course: {
+                        _id: course._id,
+                        code: course.code,
+                    },
+                    semester: {
+                        _id: semester._id,
+                        index: semester.index,
+                        year: Math.round(semester.index / 2),
+                    },
+                });
+            });
+
+        return professorClasses;
     }
     static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
         const unoccupiedRooms: RoomPopulated[] = [];
@@ -155,6 +226,19 @@ export default class APIUtils {
     }
 
     // Timetable
+    static getClassPeriods(timetables: TimetablePopulated[], classId: string) {
+        const timetable = timetables.find(t =>
+            t.classes.find(c => c._id === classId)
+        );
+
+        const timetableClass = timetable?.classes.find(c => c._id === classId)!;
+        const timetableSchedule = timetable?.schedules.find(s =>
+            s.weekdays.includes(timetableClass.weekday)
+        )!;
+
+        const periods = timetableSchedule.periods.filter(p => timetableClass?.periodBlocks.includes(p.order));
+        return periods.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
     static getTimetableGroupCounts(timetables: TimetablePopulated[], timetableId: string) {
         const groups: TimetablePopulated['groups'] = [];
         try {
