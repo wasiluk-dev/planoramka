@@ -10,8 +10,9 @@ interface SearchableDropdownProps {
     label: string;
     id: string;
     selectedVal: string;
-    handleChange: (value: string | null) => void;
+    handleChange: (value: Option | null) => void;
     maxOptions?: number; // Optional prop to cap the number of options
+    placeholder: string
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
@@ -21,6 +22,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                                                                    selectedVal,
                                                                    handleChange,
                                                                    maxOptions = 99, // Default to show up to 10 options if not provided
+                                                                    placeholder
                                                                }) => {
     const [query, setQuery] = useState<string>("");
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -43,7 +45,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 
     const selectOption = (option: Option) => {
         setQuery("");
-        handleChange(option[label]);
+        handleChange(option);
         setIsOpen(false);
     };
 
@@ -64,7 +66,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             <div className="">
                 <div className="selected-value dropdown">
                     <input
-                        placeholder="Wybierz nauczyciela..." // Always use the placeholder for empty input
+                        placeholder={placeholder} // Always use the placeholder for empty input
                         className="form-control"
                         ref={inputRef}
                         type="text"
