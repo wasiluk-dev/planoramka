@@ -582,29 +582,51 @@ const  ReadyPlan: React.FC = () => {
                                                                     <tbody>
                                                                     {tableData[acronym]?.map((row, rowIndex) => (
                                                                         <tr key={rowIndex}>
-                                                                            {Array.isArray(row) ? (
-                                                                                row.map((cellData, colIndex) => (
-                                                                                    <td key={colIndex} scope="col"
-                                                                                        className="p-0">
-                                                                                        {cellData ? (
-                                                                                            <PeriodBlock
-                                                                                                color={cellData.classType.color}
-                                                                                                organizer={cellData.organizer}
-                                                                                                roomNumber={cellData.room.roomNumber}
-                                                                                                subjectName={cellData.subject.name}
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <span
-                                                                                                className="text-black fw-bolder"></span> // Empty cell placeholder
-                                                                                        )}
-                                                                                    </td>
-                                                                                ))
-                                                                            ) : (
-                                                                                <td colSpan={1}>Invalid Row Data</td> // Fallback if `row` isn't an array
-                                                                            )}
+                                                                            {(() => {
+                                                                                const mergedCells = [];
+                                                                                let colSpan = 1;
+
+                                                                                for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                                                                                    const currentCell = row[colIndex];
+                                                                                    const nextCell = row[colIndex + 1];
+
+                                                                                    if (
+                                                                                        currentCell &&
+                                                                                        nextCell &&
+                                                                                        JSON.stringify(currentCell) === JSON.stringify(nextCell)
+                                                                                    ) {
+                                                                                        colSpan++; // Increment colspan for consecutive identical cells
+                                                                                    } else {
+                                                                                        // Push merged cell (or single cell if no merge)
+                                                                                        mergedCells.push(
+                                                                                            <td
+                                                                                                key={colIndex}
+                                                                                                colSpan={colSpan}
+                                                                                                className="p-0"
+                                                                                            >
+                                                                                                {currentCell ? (
+                                                                                                    <PeriodBlock
+                                                                                                        color={currentCell.classType.color}
+                                                                                                        organizer={currentCell.organizer}
+                                                                                                        roomNumber={currentCell.room.roomNumber}
+                                                                                                        subjectName={currentCell.subject.name}
+                                                                                                    />
+                                                                                                ) : (
+                                                                                                    <span
+                                                                                                        className="text-black fw-bolder"></span> // Empty cell placeholder
+                                                                                                )}
+                                                                                            </td>
+                                                                                        );
+                                                                                        colSpan = 1; // Reset colspan for the next group
+                                                                                    }
+                                                                                }
+
+                                                                                return mergedCells;
+                                                                            })()}
                                                                         </tr>
                                                                     ))}
                                                                     </tbody>
+
 
                                                                 </table>
                                                             );
@@ -617,29 +639,51 @@ const  ReadyPlan: React.FC = () => {
                                                                 >
                                                                     <tbody>
                                                                     {Array.isArray(tableData[acronym]) &&
-                                                                        tableData[acronym].map((row, rowIndex) =>
+                                                                        tableData[acronym].map((row, rowIndex) => (
                                                                             Array.isArray(row) ? (
                                                                                 <tr key={rowIndex}>
-                                                                                    {row.map((cellData, colIndex) => (
-                                                                                        <td key={colIndex} scope="col"
-                                                                                            className="bg-transparent p-0 col-1">
-                                                                                            {cellData ? (
-                                                                                                <PeriodBlock
-                                                                                                    color={cellData.classType.color}
-                                                                                                    organizer={cellData.organizer}
-                                                                                                    roomNumber={cellData.room.roomNumber}
-                                                                                                    subjectName={cellData.subject.name}
-                                                                                                />
-                                                                                            ) : (
-                                                                                                <span
-                                                                                                    className="text-black fw-bolder"></span>
-                                                                                            )}
-                                                                                        </td>
-                                                                                    ))}
+                                                                                    {(() => {
+                                                                                        const mergedCells: JSX.Element[] = [];
+                                                                                        let colSpan = 1;
+
+                                                                                        for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                                                                                            const currentCell = row[colIndex];
+                                                                                            const nextCell = row[colIndex + 1];
+
+                                                                                            // If current cell and next cell are identical, increase colSpan
+                                                                                            if (currentCell && nextCell &&
+                                                                                                JSON.stringify(currentCell) === JSON.stringify(nextCell)) {
+                                                                                                colSpan++; // Increment colspan for consecutive identical cells
+                                                                                            } else {
+                                                                                                // Render the current cell with the correct colSpan
+                                                                                                mergedCells.push(
+                                                                                                    <td key={colIndex}
+                                                                                                        colSpan={colSpan}
+                                                                                                        className="bg-transparent p-0 col-1">
+                                                                                                        {currentCell ? (
+                                                                                                            <PeriodBlock
+                                                                                                                color={currentCell.classType.color}
+                                                                                                                organizer={currentCell.organizer}
+                                                                                                                roomNumber={currentCell.room.roomNumber}
+                                                                                                                subjectName={currentCell.subject.name}
+                                                                                                            />
+                                                                                                        ) : (
+                                                                                                            <span
+                                                                                                                className="text-black fw-bolder"></span>
+                                                                                                        )}
+                                                                                                    </td>
+                                                                                                );
+                                                                                                colSpan = 1; // Reset colSpan for the next group
+                                                                                            }
+                                                                                        }
+
+                                                                                        return mergedCells;
+                                                                                    })()}
                                                                                 </tr>
                                                                             ) : null
-                                                                        )}
+                                                                        ))}
                                                                     </tbody>
+
                                                                 </table>
                                                             );
                                                         }
