@@ -12,6 +12,7 @@ import './planrdy.css'
 import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
+import PeriodBlock from "../../Components/PeriodBlock/PeriodBlock.tsx";
 
 
 type ClassTypeHelper ={
@@ -98,10 +99,10 @@ const  ReadyPlan: React.FC = () => {
                 accumulator[acronym] = current.groupCount; // Set the acronym as key and count as value
                 return accumulator; // Return the updated accumulator
             }, {} as Record<string, number>); // Initialize as an empty object with string keys and number values
-
+            console.log(names)
             setGroupNames(names); // Update groupNames with the transformed data
         }
-    }, [groupTypes]);
+    }, [groupTypes,selectedSemesterId]);
 
 
     useEffect(() => {
@@ -171,7 +172,6 @@ const  ReadyPlan: React.FC = () => {
             if (pickedTimetable) {
                 setSelectedTimetable(pickedTimetable);
                 setZajecia(pickedTimetable.classes)
-                console.log(pickedTimetable)
                 setGroupTypes(pickedTimetable.groups)
                 for (let i:number = 0; i < 7; i++){
                     if(pickedTimetable.schedules[i].weekdays.includes(showCurrentDay)){
@@ -182,9 +182,11 @@ const  ReadyPlan: React.FC = () => {
             }else {
                 setSelectedTimetable(undefined);
             }
+            updateTableData();
         }else {
             console.warn("Tajmtejbyls nie istnieje")
         }
+
     }
 
     const normal = useMemo(() => {
@@ -201,7 +203,7 @@ const  ReadyPlan: React.FC = () => {
             .fill(null)
             .map(() => Array(groupNumber).fill(" "));
         setGrid(updatedGrid);
-    }, [normal, groupNumber]);
+    }, [normal, groupNumber, selectedSemesterId]);
 
     // Update tableData whenever input changes
     useEffect(() => {
@@ -214,7 +216,7 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(newTableData);
         }
-    }, [groupTypes, showCurrentDay, fixedRows]);
+    }, [groupTypes, showCurrentDay, fixedRows, selectedSemesterId]);
 
     useEffect(() => {
         //
@@ -246,7 +248,7 @@ const  ReadyPlan: React.FC = () => {
 
             return newTableData; // Return the updated tableData
         });
-    }, [zajecia, showCurrentDay, fixedRows, setTableData]);
+    }, [zajecia, showCurrentDay, fixedRows, setTableData, selectedSemesterId]);
 
 
         useEffect(() => {
@@ -276,9 +278,7 @@ const  ReadyPlan: React.FC = () => {
         } else {
             setTableData({});
         }
-    }, [zajecia, showCurrentDay, fixedRows, grid]);
-
-    // console.log(tableData)
+    }, [zajecia, showCurrentDay, fixedRows, grid, selectedSemesterId]);
 
     const updateTableData = () => {
         if (zajecia.length > 0) {
@@ -288,15 +288,12 @@ const  ReadyPlan: React.FC = () => {
 
             setTableData(() => {
                 const newTableData = {};
-
                 // Initialize the table data for each group
                 Object.keys(groupNames).forEach(acronym => {
                     newTableData[acronym] = Array(fixedRows).fill(null); // Create an array with nulls
                 });
-
                 filteredClasses.forEach((classItem) => {
                     const { acronym } = classItem.classType;
-
                     if (newTableData[acronym]) {
                         classItem.periodBlocks.forEach((period) => {
                             if (period <= fixedRows) {
@@ -307,7 +304,6 @@ const  ReadyPlan: React.FC = () => {
                         });
                     }
                 });
-
                 return newTableData;
             });
         } else {
@@ -332,17 +328,15 @@ const  ReadyPlan: React.FC = () => {
     useEffect(() => {
         const updatedGrid: Array<Array<ClassPopulated | null>> = Array.from({ length: fixedRows }, () => Array(groupNumber).fill(null));
         setGrid(updatedGrid);
-    }, [fixedRows, groupNumber]);
+    }, [fixedRows, groupNumber, selectedSemesterId]);
 
     // Update table data when zajecia, showCurrentDay or fixedRows change
     useEffect(() => {
         updateTableData();
-    }, [zajecia, showCurrentDay, fixedRows]);
-
+    }, [zajecia, showCurrentDay, fixedRows, selectedSemesterId, groupNames]);
 
     return (
         <>
-            <h1 className='text-center'> PLAN ZAJĘĆ</h1>
             <div className='d-flex flex-row p-3'>
                 <div className="bg-secondary text-center w-15">
                     <select
@@ -449,10 +443,10 @@ const  ReadyPlan: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
+                <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100 table-combo">
                     {/*TABELA ZAJĘCIOWA*/}
                     {selectedTimetable ? (
-                        <table className="table table-bordered border-primary me-4 table-fixed-height"
+                        <table className="table table-bordered border-primary me-4 table-fixed-height table-combo-child"
                                style={{height: '100%'}}>
                             <tbody style={{height: '100%'}}>
                             <tr className="table-dark text-center">
@@ -535,7 +529,7 @@ const  ReadyPlan: React.FC = () => {
                                         {/* Rowspan column */}
                                         {rowIndex === 0 && (
                                             <td rowSpan={grid.length} className="align-middle table-in p-0" colSpan={2}>
-                                                <div className="table-container p-0 w-100 h-100"
+                                                <div className="table-container p-0 w-100 h-100 table-combo"
                                                      style={{position: 'relative'}}>
                                                     {Object.keys(tableData || {}).map((acronym, idx) => {
                                                         // Check if the tableData for this acronym contains non-null values
@@ -554,18 +548,17 @@ const  ReadyPlan: React.FC = () => {
                                                             return (
                                                                 <table
                                                                     key={acronym}
-                                                                    className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent"
+                                                                    className="table table-bordered border-secondary table-dark table-equal-rows position-relative bg-transparent table-combo-child"
                                                                 >
                                                                     <tbody>
                                                                     {tableData[acronym].map((cellData, rowIndex) => (
                                                                         <tr key={rowIndex}>
                                                                             <td scope="row" className="p-0">
                                                                                 {cellData ? (
-                                                                                    <div
-                                                                                        className="text-black fw-bolder cell-content"
-                                                                                        style={{backgroundColor: cellData.classType.color}}>
-                                                                                        {cellData.subject.name}
-                                                                                    </div>
+                                                                                    <PeriodBlock color={cellData.classType.color}
+                                                                                                 organizer={cellData.organizer}
+                                                                                                 roomNumber={cellData.room.roomNumber}
+                                                                                                 subjectName={cellData.subject.name}/>
                                                                                 ) : (
                                                                                     <span
                                                                                         className="text-black fw-bolder"></span>
@@ -581,21 +574,19 @@ const  ReadyPlan: React.FC = () => {
                                                             return (
                                                                 <table
                                                                     key={acronym}
-                                                                    className={`table table-bordered table-dark border-black table-equal-rows position-absolute top-0 z-${zIndex} bg-transparent`}
+                                                                    className={`table table-bordered table-dark border-black table-equal-rows position-relative bg-transparent table-combo-child`}
                                                                 >
                                                                     <tbody>
                                                                     {tableData[acronym].map((cellData, rowIndex) => (
-                                                                        <tr key={rowIndex}>
+                                                                        <tr key={rowIndex} className="">
                                                                             {Array.from({length: columnCount}, (_, colIndex) => (
                                                                                 <td key={colIndex} scope="col"
                                                                                     className="bg-transparent p-0 col-1">
                                                                                     {cellData && cellData.studentGroups.includes(colIndex + 1) ? (
-                                                                                        <div
-                                                                                            className="text-black fw-bolder cell-content"
-                                                                                            style={{backgroundColor: cellData.classType.color}}
-                                                                                        >
-                                                                                            {cellData.subject.name}
-                                                                                        </div>
+                                                                                        <PeriodBlock color={cellData.classType.color}
+                                                                                                     organizer={cellData.organizer}
+                                                                                                     roomNumber={cellData.room.roomNumber}
+                                                                                                     subjectName={cellData.subject.name}/>
                                                                                     ) : (
                                                                                         <span
                                                                                             className="text-black fw-bolder"></span>
@@ -619,9 +610,6 @@ const  ReadyPlan: React.FC = () => {
                             </tbody>
                         </table>
                     ) : null}
-                </div>
-                <div className='flex-sm-grow-1 ms-5 w-15 bg-success'>
-                    Tutaj bendom szczegóły, szczególiki
                 </div>
             </div>
         </>

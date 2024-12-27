@@ -646,7 +646,6 @@ const Plans: React.FC = () => {
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
         <>
-            <h1 className='text-center'> PLAN ZAJĘĆ</h1>
             <div className='d-flex flex-row p-3 mx-3'>
                 <div className="bg-secondary text-center w-15">
                     <select
