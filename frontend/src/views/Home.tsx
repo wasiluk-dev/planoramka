@@ -7,6 +7,12 @@ import apiService from "../../services/apiService.tsx";
 import APIUtils from "../utils/APIUtils.ts";
 import EUserRole from "../../../backend/src/enums/EUserRole.ts";
 import {UserPopulated} from "../../services/databaseTypes.tsx";
+import AvailableTable from "../Components/AvailableTable/AvailableTable.tsx";
+import PrivateScheduleOptions from "../Components/PrivateSchedule/PrivateScheduleOptions.tsx";
+import ECourseMode from "../../../backend/src/enums/ECourseMode.ts";
+import ECourseCycle from "../../../backend/src/enums/ECourseCycle.ts";
+import PrivateSchedule from "../Components/PrivateSchedule/PrivateSchedule.tsx";
+import {Button} from "@mui/material";
 
 const { t } = i18n;
 await i18nPromise;
@@ -16,14 +22,52 @@ type HomeProps = {
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | boolean>>;
 }
 
+type StudentInfo = {
+    facultyId: string;
+    mode: ECourseMode;
+    cycle: ECourseCycle;
+    courseId: string;
+    semesterId: string;
+}
+
 const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
 
+    const [childMessage, setChildMessage] = useState<StudentInfo>({
+        facultyId: "",
+        mode: 0,
+        cycle: 0,
+        courseId: "",
+        semesterId: "",
+    })
+    const [childMessageToSend, setChildMessageToSend] = useState<StudentInfo>({
+        facultyId: "",
+        mode: 0,
+        cycle: 0,
+        courseId: "",
+        semesterId: "",
+    })
+
+    useEffect(() => {
+        setChildMessageToSend(childMessage)
+    }, [childMessage]);
+
+    const handleChildData = (data: StudentInfo) => {
+        setChildMessage(data);
+    };
+
+    const handleRefresh = () => {
+        // Update the key to trigger re-render
+        setRefreshKey(prevKey => prevKey + 1);
+    };
+
+    const [refreshKey, setRefreshKey] = useState<number>(0); // State for forcing re-render
     const [selectedScheduleType, setSelectedScheduleType] = useState<string>("")
     const [teacherList, setTeacherList] = useState([])
     const [allTeachers, setAllTeachers] = useState<Array<UserPopulated>>([])
     const [selectedTeacherId, setSelectedTeacherId] = useState<string>("")
     const [selectedTeacher, setSelectedTeacher] = useState<string>("")
     const [teacherSurnameList, setTeacherSurnameList] = useState<Pick<UserPopulated, '_id' | 'surnames' | 'names'>[]>([])
+    const [studentInfo, setStudentInfo] = useState<StudentInfo>()
 
     useEffect(() => {
         setDocumentTitle(t('nav_route_main'));
@@ -76,7 +120,7 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
 
     return (
         <div className="d-flex">
-            <div className="navbar flex-1 bg-danger p-4">
+            <div className="w-25 flex-1 bg-danger p-4">
                 <select
                     className="form-select mb-2 w-100"
                     aria-label="Default select example"
@@ -96,28 +140,23 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
                         selectedVal={ selectedTeacher }
                         handleChange={ (val) => handleTeacherChange(val) } // Set empty string if val is null
                     />
-                ) : null}
+                ) : selectedScheduleType === "student" ? (
+                    <>
+                        <PrivateScheduleOptions onSendData={handleChildData}/>
+                        {childMessage.semesterId ? (
+                            <button className="btn btn-success mt-2" onClick={handleRefresh}>Zatwierdź</button>
+                        ): null}
+                    </>
+                ): null}
             </div>
-            <div className="main flex-fill bg-success w-100 p-5">
-                <table>
-                    <tbody>
-                    <tr>
-                        <td className="text-center">
-                            Elo!
-                        </td>
-                    </tr>
-                    <tr>
-                        <td className="text-center">
-                            Elo!
-                        </td>
-                    </tr>
-                    <tr>
-                        <td className="text-center">
-                            Elo!
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div className="main flex-3 bg-success w-100 p-2">
+                {selectedScheduleType === "teacher" ? (
+                    <AvailableTable/>
+                ):(
+                    selectedScheduleType === "student" && childMessageToSend.courseId && refreshKey > 0 ? (
+                        <PrivateSchedule studentInfo={childMessageToSend} key={refreshKey}/>
+                    ) : ("Wybierz typ rozkładu")
+                )}
             </div>
         </div>);
 };
