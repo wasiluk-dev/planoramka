@@ -34,6 +34,8 @@
   "table_pagination_rows_per_page": "Ilość wierszy na stronę",
   "table_pagination_of": "z",
 
+  "periodBlock_semester": "Rok {{year}}, sem. {{index}}",
+
   "monday": "Poniedziałek",
   "tuesday": "Wtorek",
   "wednesday": "Środa",
