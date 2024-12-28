@@ -13,7 +13,6 @@ import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 import PeriodBlock from "../../Components/PeriodBlock/PeriodBlock.tsx";
-import {TestContext} from "node:test";
 
 
 type ClassTypeHelper ={
@@ -606,10 +605,10 @@ const  ReadyPlan: React.FC = () => {
                                                                                             >
                                                                                                 {currentCell ? (
                                                                                                     <PeriodBlock
-                                                                                                        color={currentCell.classType.color}
+                                                                                                        classType={currentCell.classType}
                                                                                                         organizer={currentCell.organizer}
-                                                                                                        roomNumber={currentCell.room.roomNumber}
-                                                                                                        subjectName={currentCell.subject.name}
+                                                                                                        room={currentCell.room}
+                                                                                                        subject={currentCell.subject}
                                                                                                     />
                                                                                                 ) : (
                                                                                                     <span
@@ -662,10 +661,10 @@ const  ReadyPlan: React.FC = () => {
                                                                                                         className="bg-transparent p-0 col-1">
                                                                                                         {currentCell ? (
                                                                                                             <PeriodBlock
-                                                                                                                color={currentCell.classType.color}
+                                                                                                                classType={currentCell.classType}
                                                                                                                 organizer={currentCell.organizer}
-                                                                                                                roomNumber={currentCell.room.roomNumber}
-                                                                                                                subjectName={currentCell.subject.name}
+                                                                                                                room={currentCell.room}
+                                                                                                                subject={currentCell.subject}
                                                                                                             />
                                                                                                         ) : (
                                                                                                             <span

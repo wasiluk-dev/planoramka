@@ -9,6 +9,7 @@ import {
     FacultyPopulated, PeriodPopulated, RoomPopulated, SemesterPopulated, SubjectPopulated,
     TimetablePopulated
 } from "../../../services/databaseTypes.tsx";
+import {name} from "depcheck";
 
 type TeacherInfo = {
     _id: string;
@@ -45,15 +46,6 @@ const AvailableTable: React.FC<TeacherInfo> = (props: TeacherInfo) => {
         return initialPlan;
     });
 
-    const test = {
-        names: "Name",
-        surnames: "Surname"
-    }
-    const test2 = {
-        color: "black",
-        weight: 2
-    }
-
     useEffect(() => {
         const reorderWeekdays = () => {
             const weekdays = Object.keys(EWeekday).filter(
@@ -69,14 +61,7 @@ const AvailableTable: React.FC<TeacherInfo> = (props: TeacherInfo) => {
 
     useEffect(() => {
         if (props._id != ""){
-            const teacherData = APIUtils.getProfessorClasses(props.classesAll, props.timetablesAll, props.facultiesAll, props._id)
-            const reorderedData: Record<EWeekday, PeriodBlockPopulated[]> = Object.keys(teacherData)
-                .map(key => Number(key) as EWeekday)
-                .sort((a, b) => (a === EWeekday.Sunday ? 1 : b === EWeekday.Sunday ? -1 : a - b))
-                .reduce((acc, key) => {
-                    acc[key] = teacherData[key];
-                    return acc;
-                }, {} as Record<EWeekday, PeriodBlockPopulated[]>);
+            const teacherData = APIUtils.getProfessorClasses(props.classesAll, props.timetablesAll, props.facultiesAll, props._id);
             setTeacherPlan(teacherData)
         }
 
@@ -105,8 +90,19 @@ const AvailableTable: React.FC<TeacherInfo> = (props: TeacherInfo) => {
                     ].map((blocks, colIndex) => (
                         <td key={colIndex} className="p-0">
                             {blocks.length > 0 ? (
-                                blocks.map((block) => (
-                                    <p className="border borde-2 border-white mt-1"><strong>{block.subject.shortName}</strong></p>
+                                blocks.map((block, index) => (
+                                    // <p key={index} className="border borde-2 border-white mt-1">
+                                    //     {block.subject.shortName}
+                                    // </p>
+                                    <PeriodBlock key={index}
+                                                 faculty={block.faculty}
+                                                 room={block.room}
+                                                 period={block.period}
+                                                 course={block.course}
+                                                 semester={block.semester}
+                                                 classType={block.classType}
+                                                 subject={block.subject}
+                                    />
                                 ))
 
                             ) : (

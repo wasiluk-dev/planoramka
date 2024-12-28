@@ -133,6 +133,10 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
 
     const handleScheduleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedScheduleType(event.target.value)
+        if (event.target.value === "student") {
+            setSelectedTeacherId("");
+            setSelectedTeacher("");
+        }
     }
 
     return (
@@ -167,7 +171,7 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
                 ): null}
             </div>
             <div className="main flex-3 bg-success w-100 p-2">
-                {selectedScheduleType === "teacher" ? (
+                {selectedScheduleType === "teacher" && selectedTeacherId ? (
                     <AvailableTable _id={selectedTeacherId} classesAll={classes} facultiesAll={faculties} timetablesAll={timetables}/>
                 ):(
                     selectedScheduleType === "student" && childMessageToSend.courseId && refreshKey > 0 ? (

@@ -72,7 +72,7 @@ export type BuildingPopulated = {
 export type FacultyPopulated = {
     _id: string;
     name: string;
-    acronym: string | null;
+    acronym: string;
     buildings: Omit<BuildingPopulated, 'address'>[];
     courses: Pick<CoursePopulated, '_id' | 'code' | 'name' | 'specialization' | 'semesters'>[];
 }
