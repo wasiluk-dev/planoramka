@@ -4,6 +4,7 @@ import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import apiService from "../../../services/apiService.tsx";
 import {TimetablePopulated, UserPopulated} from "../../../services/databaseTypes.tsx";
+import EWeekday from "../../enums/EWeekday.ts";
 
 type StudentInfo = {
     facultyId: string;
@@ -33,17 +34,19 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
     const [selectedTimetable, setSelectedTimetable] = useState<TimetablePopulated>()
     const [groupTypeCount, setGroupTypeCount] = useState<Array<GroupNumberPicker>>([])
     const [selectedGroupNumber, setSelectedGroupNumber] = useState<Test>({})
-    const [users, setUsers] = useState<Array<UserPopulated>>([])
+    const [orderedWeekdays, setOrderedWeekdays] = useState<string[]>([]);
 
 
     useEffect(() => {
-        const fetchData = async () => {
-            const data = await apiService.getUsers();
-
-            setUsers(data);
+        const reorderWeekdays = () => {
+            const weekdays = Object.keys(EWeekday).filter(
+                (key) => isNaN(Number(key)) // Exclude numeric keys
+            );
+            // Move Sunday to the end
+            return [...weekdays.filter((day) => day !== "Sunday"), "Sunday"];
         };
 
-        fetchData();
+        setOrderedWeekdays(reorderWeekdays());
     }, []);
 
     useEffect(() => {
@@ -107,7 +110,7 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
                 number: value,
             }));
             console.log(selectedGroupNumber)
-            console.log(APIUtils.getStudentClasses(timetables, users, props.studentInfo.semesterId, groupToPush))
+            console.log(APIUtils.getStudentClasses(timetables,props.studentInfo.semesterId, groupToPush))
         }else {
             console.error("Wybierz przynajmniej jedną grupę!")
         }
@@ -143,13 +146,13 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
                 }
             </div>
             <button className="btn btn-primary" onClick={sendData}>Zatwierdź</button>
-            <div className="table-container">
-                <table>
+            <div className="table-container mt-3">
+                <table className="table table-dark table-bordered table-striped">
                     <thead>
                     <tr>
-                        <td>
-
-                        </td>
+                        {orderedWeekdays.map((day) => (
+                            <th className="col-1" key={day}>{day}</th>
+                        ))}
                     </tr>
                     </thead>
                 </table>
