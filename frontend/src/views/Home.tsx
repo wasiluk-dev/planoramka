@@ -6,7 +6,7 @@ import SearchableDropdown from "../Components/SearchableDropdown/SearchableDropd
 import apiService from "../../services/apiService.tsx";
 import APIUtils from "../utils/APIUtils.ts";
 import EUserRole from "../../../backend/src/enums/EUserRole.ts";
-import {UserPopulated} from "../../services/databaseTypes.tsx";
+import {ClassPopulated, FacultyPopulated, TimetablePopulated, UserPopulated} from "../../services/databaseTypes.tsx";
 import AvailableTable from "../Components/AvailableTable/AvailableTable.tsx";
 import PrivateScheduleOptions from "../Components/PrivateSchedule/PrivateScheduleOptions.tsx";
 import ECourseMode from "../../../backend/src/enums/ECourseMode.ts";
@@ -60,6 +60,9 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
         setRefreshKey(prevKey => prevKey + 1);
     };
 
+    const [classes, setClasses] = useState<Array<ClassPopulated>>([])
+    const [faculties, setFaculties] = useState<Array<FacultyPopulated>>([])
+    const [timetables, setTimetables] = useState<Array<TimetablePopulated>>([])
     const [refreshKey, setRefreshKey] = useState<number>(0); // State for forcing re-render
     const [selectedScheduleType, setSelectedScheduleType] = useState<string>("")
     const [teacherList, setTeacherList] = useState([])
@@ -79,6 +82,20 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
             const data = await apiService.getUsers();
 
             setAllTeachers(APIUtils.getUsersWithRole(data, EUserRole.Professor));
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const dataTables = await apiService.getTimetables();
+            const dataClasses = await apiService.getClasses();
+            const dataFaculties = await apiService.getFaculties();
+
+            setTimetables(dataTables);
+            setClasses(dataClasses);
+            setFaculties(dataFaculties);
         };
 
         fetchData();
@@ -116,6 +133,10 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
 
     const handleScheduleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedScheduleType(event.target.value)
+        if (event.target.value === "student") {
+            setSelectedTeacherId("");
+            setSelectedTeacher("");
+        }
     }
 
     return (
@@ -150,8 +171,8 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
                 ): null}
             </div>
             <div className="main flex-3 bg-success w-100 p-2">
-                {selectedScheduleType === "teacher" ? (
-                    <AvailableTable/>
+                {selectedScheduleType === "teacher" && selectedTeacherId ? (
+                    <AvailableTable _id={selectedTeacherId} classesAll={classes} facultiesAll={faculties} timetablesAll={timetables}/>
                 ):(
                     selectedScheduleType === "student" && childMessageToSend.courseId && refreshKey > 0 ? (
                         <PrivateSchedule studentInfo={childMessageToSend} key={refreshKey}/>
