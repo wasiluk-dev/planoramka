@@ -243,7 +243,7 @@ export default class APIUtils {
         const periods = timetableSchedule.periods.filter(p => timetableClass?.periodBlocks.includes(p.order));
         return periods.sort((a, b) => a.startTime.localeCompare(b.startTime));
     }
-    static getStudentClasses(timetables: TimetablePopulated[], users: UserPopulated[], semesterId: string) {
+    static getStudentClasses(timetables: TimetablePopulated[], users: UserPopulated[], semesterId: string, groups: { _id: string, number: number; }[]) {
         const studentClasses: Record<EWeekday, Record<number, {}>> = {
             0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}
         };
@@ -254,7 +254,10 @@ export default class APIUtils {
         if (classes) {
             classes.map((c) => {
                 c.periodBlocks.forEach(pb => {
-                    const organizer = users.find(u => u._id === c.organizer?._id)
+                    const organizer = users.find(u => u._id === c.organizer?._id);
+                    const groupNumber = groups.find(g => g._id === c.classType._id)?.number;
+                    if (!organizer || (groupNumber && !c.studentGroups?.includes(groupNumber))) return;
+
                     studentClasses[c.weekday as EWeekday][pb] = {
                         classType: c.classType,
                         subject: {
@@ -266,7 +269,11 @@ export default class APIUtils {
                             _id: c.room._id,
                             roomNumber: c.room.roomNumber,
                         },
-                        organizer: organizer,
+                        organizer: {
+                            _id: organizer._id,
+                            names: organizer.names,
+                            surnames: organizer.surnames,
+                        },
                     };
                 })
             });
