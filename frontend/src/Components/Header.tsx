@@ -102,7 +102,9 @@ const Header: React.FC<HeaderProps> = ({
             </Typography>
         </>) : (<>
             <Box>
-                <Tabs textColor="secondary"
+                <Tabs variant="scrollable"
+                      scrollButtons="auto"
+                      textColor="secondary"
                       indicatorColor="secondary"
                       value={ currentTabValue }
                       onChange={ handleTabChange }
