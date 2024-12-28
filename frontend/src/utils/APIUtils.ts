@@ -256,7 +256,7 @@ export default class APIUtils {
                 c.periodBlocks.forEach(pb => {
                     const groupNumber = groups.find(g => g._id === c.classType._id)?.number;
 
-                    if (!c.organizer || (groupNumber && c.studentGroups && !c.studentGroups.includes(groupNumber))) return;
+                    if (!c.organizer || !groupNumber || (groupNumber && c.studentGroups && !c.studentGroups.includes(groupNumber))) return;
                     if (!studentClasses[c.weekday as EWeekday][pb]) studentClasses[c.weekday as EWeekday][pb] = [];
 
                     studentClasses[c.weekday as EWeekday][pb].push({

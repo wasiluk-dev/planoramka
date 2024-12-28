@@ -3,8 +3,9 @@ import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import apiService from "../../../services/apiService.tsx";
-import {TimetablePopulated, UserPopulated} from "../../../services/databaseTypes.tsx";
+import {TimetablePopulated} from "../../../services/databaseTypes.tsx";
 import EWeekday from "../../enums/EWeekday.ts";
+import PeriodBlock from "../PeriodBlock/PeriodBlock.tsx";
 
 type StudentInfo = {
     facultyId: string;
@@ -35,6 +36,7 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
     const [groupTypeCount, setGroupTypeCount] = useState<Array<GroupNumberPicker>>([])
     const [selectedGroupNumber, setSelectedGroupNumber] = useState<Test>({})
     const [orderedWeekdays, setOrderedWeekdays] = useState<string[]>([]);
+    const [subjectList, setSubjectList] = useState<Record<EWeekday, Record<number, {}[]>>>()
 
 
     useEffect(() => {
@@ -111,6 +113,7 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
             }));
             console.log(selectedGroupNumber)
             console.log(APIUtils.getStudentClasses(timetables,props.studentInfo.semesterId, groupToPush))
+            setSubjectList(APIUtils.getStudentClasses(timetables,props.studentInfo.semesterId, groupToPush))
         }else {
             console.error("Wybierz przynajmniej jedną grupę!")
         }
@@ -151,8 +154,42 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
                     <thead>
                     <tr>
                         {orderedWeekdays.map((day) => (
-                            <th className="col-1" key={day}>{day}</th>
+                            <th className="" key={day}>{day}</th>
                         ))}
+                    </tr>
+                    <tr>
+                        {subjectList
+                            ? (() => {
+                                // Convert the object into entries
+                                const entries = Object.entries(subjectList);
+
+                                // Separate the entry for weekday 0
+                                const weekday0 = entries.find(([key]) => key === "0");
+                                const otherEntries = entries.filter(([key]) => key !== "0");
+
+                                // Append weekday 0 to the end
+                                const orderedEntries = [...otherEntries, ...(weekday0 ? [weekday0] : [])];
+
+                                // Render the ordered entries
+                                return orderedEntries.map(([weekday, lessons]) => (
+                                    <td key={weekday} className="col-1">
+                                        {Object.entries(lessons).map(([lesson, entries]) => (
+                                            <div key={lesson} className="mt-1">
+                                                {entries.map((entry, index) => (
+                                                    <PeriodBlock
+                                                        key={index}
+                                                        organizer={entry.organizer}
+                                                        classType={entry.classType}
+                                                        subject={entry.subject}
+                                                        room={entry.room}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </td>
+                                ));
+                            })()
+                            : "No data available"}
                     </tr>
                     </thead>
                 </table>
