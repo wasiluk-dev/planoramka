@@ -244,7 +244,7 @@ export default class APIUtils {
         return periods.sort((a, b) => a.startTime.localeCompare(b.startTime));
     }
     static getStudentClasses(timetables: TimetablePopulated[], semesterId: string, groups: { _id: string, number: number; }[]) {
-        const studentClasses: Record<EWeekday, Record<number, {}>> = {
+        const studentClasses: Record<EWeekday, Record<number, {}[]>> = {
             0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}
         };
 
@@ -255,9 +255,11 @@ export default class APIUtils {
             classes.map((c) => {
                 c.periodBlocks.forEach(pb => {
                     const groupNumber = groups.find(g => g._id === c.classType._id)?.number;
-                    if (!c.organizer || (groupNumber && !c.studentGroups?.includes(groupNumber))) return;
 
-                    studentClasses[c.weekday as EWeekday][pb] = {
+                    if (!c.organizer || (groupNumber && c.studentGroups && !c.studentGroups.includes(groupNumber))) return;
+                    if (!studentClasses[c.weekday as EWeekday][pb]) studentClasses[c.weekday as EWeekday][pb] = [];
+
+                    studentClasses[c.weekday as EWeekday][pb].push({
                         classType: c.classType,
                         subject: {
                             _id: c.subject!._id,
@@ -273,8 +275,8 @@ export default class APIUtils {
                             names: c.organizer.names,
                             surnames: c.organizer.surnames,
                         },
-                    };
-                })
+                    });
+                });
             });
         }
 
