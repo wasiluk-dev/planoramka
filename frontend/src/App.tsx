@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Box, createTheme, ThemeProvider, useMediaQuery } from '@mui/material';
+import { Box, createTheme, Theme, ThemeProvider, useMediaQuery } from '@mui/material';
 
 import Footer from './Components/Footer.tsx';
 import Header from './Components/Header.tsx';
@@ -23,51 +23,69 @@ import i18n, { i18nPromise } from './i18n';
 const { t } = i18n;
 await i18nPromise;
 
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#f2e399',
-        },
-        secondary: {
-            main: '#121212',
-        },
+const themePalette = {
+    primary: {
+        main: '#f2e399',
     },
-    components: {
-        MuiTab: {
-            styleOverrides: {
-                root: {
-                    textTransform: 'none', // removes forced all caps
-                },
-            },
-        },
-        MuiTableCell: {
-            styleOverrides: {
-                root: {
-                    textAlign: 'center',
-                }
+    secondary: {
+        main: '#121212',
+    },
+};
+const themeComponents: Theme['components'] = {
+    MuiBottomNavigation: {
+        styleOverrides: {
+            root: {
+                backgroundColor: themePalette.primary.main,
             }
         },
-        MuiTextField: {
-            styleOverrides: {
-                root: {
-                    marginTop: '16px',
-                },
+    },
+    MuiTab: {
+        styleOverrides: {
+            root: {
+                textTransform: 'none', // removes forced all caps
             },
         },
-        MuiToolbar: {
-            styleOverrides: {
-                dense: {
-                    '@media (min-width: 0px)': { // [theme.breakpoints.up("xs")]
-                        paddingLeft: 0,
-                    },
+    },
+    MuiTabs: {
+        styleOverrides: {
+            scrollButtons: {
+                '&.Mui-disabled': {
+                    opacity: 0.3,
+                },
+            }
+        },
+    },
+    MuiTableCell: {
+        styleOverrides: {
+            root: {
+                textAlign: 'center',
+            }
+        }
+    },
+    MuiTextField: {
+        styleOverrides: {
+            root: {
+                marginTop: '16px',
+            },
+        },
+    },
+    MuiToolbar: {
+        styleOverrides: {
+            dense: {
+                '@media (min-width: 0px)': { // [theme.breakpoints.up("xs")]
+                    paddingLeft: 0,
                 },
             },
         },
     },
+};
+const theme: Theme = createTheme({
+    palette: themePalette,
+    components: themeComponents,
 });
 
 const App = () => {
-    const isUserOnMobile: boolean = useMediaQuery(theme.breakpoints.down('sm'));
+    const isUserOnMobile: boolean = useMediaQuery(theme.breakpoints.down('md'));
     const [currentTabValue, setCurrentTabValue] = useState<number | boolean>(0);
     const [documentTitle, setDocumentTitle] = useState<string>(t('app_name'));
     const [navDrawerOpen, setNavDrawerOpen] = useState<boolean>(false);
@@ -81,6 +99,9 @@ const App = () => {
     const [username, setUsername] = useState<string>();
     const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
 
+    useEffect(() => {
+        setNavDrawerOpen(false);
+    }, [isUserOnMobile]);
     useEffect(() => {
         document.title = `${ documentTitle } – ${ t('app_name') }`;
     }, [documentTitle]);
