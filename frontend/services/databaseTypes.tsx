@@ -64,7 +64,7 @@ export type BuildingPopulated = {
     _id: string;
     name: string;
     acronym: string | null;
-    address: string;
+    address: string | null;
     // hasDeanOffice: boolean;
     // hasRectorOffice: boolean;
     rooms: RoomPopulated[];

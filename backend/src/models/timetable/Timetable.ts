@@ -7,22 +7,23 @@ import ClassType from './ClassType';
 import Schedule from './Schedule';
 import EDayOfTheWeek from '../../enums/EDayOfTheWeek';
 
-export const TimetableDefinition = {
+function groupCountValidator(groupCount: number) {
+    return Number.isInteger(groupCount) && groupCount >= 1;
+}
+
+export const TimetableSchema = new Schema({
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
-        required: true,
     },
     weekdays: [{
         type: Number,
         enum: EDayOfTheWeek,
-        required: true,
     }],
     schedules: [{
         type: Schema.Types.ObjectId,
         ref: new Schedule().name,
         autopopulate: true,
-        required: true,
     }],
     groups: {
         _id: false,
@@ -33,25 +34,30 @@ export const TimetableDefinition = {
                 autopopulate: {
                     select: '-color',
                 },
-                required: true,
             },
             groupCount: {
                 type: Number,
-                min: 1,
                 validate: {
-                    validator: Number.isInteger,
+                    validator: groupCountValidator,
+                    message: 'db_timetable_groups_groupCount_invalid',
                 },
-            }
+            },
         }],
-        default: null,
     },
-    classes: {
-        type: [Schema.Types.ObjectId],
+    classes: [{
+        type: Schema.Types.ObjectId,
         ref: new Class().name,
         autopopulate: true,
-    },
-} as const;
-export const TimetableSchema = new Schema(TimetableDefinition);
+    }],
+});
+
+TimetableSchema.path('semester').required(true, 'db_timetable_semester_required');
+TimetableSchema.path('weekdays').required(true, 'db_timetable_weekdays_required');
+TimetableSchema.path('schedules').required(true, 'db_timetable_schedules_required');
+TimetableSchema.path('groups').default(null);
+TimetableSchema.path('groups.classType').required(true, 'db_timetable_groups_classType_required');
+TimetableSchema.path('groups.groupCount').required(true, 'db_timetable_groups_groupCount_required');
+TimetableSchema.path('classes').default([]);
 
 export default class Timetable extends Base<HydratedDocumentFromSchema<typeof TimetableSchema>> {
     constructor() {

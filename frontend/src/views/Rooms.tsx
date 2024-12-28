@@ -103,7 +103,11 @@ const Rooms: React.FC<RoomsProps> = ({ setDocumentTitle, setCurrentTabValue }) =
             <div>{ t('rooms_error_faculties_missing_title') }</div>
             <p>{ t('rooms_error_faculties_missing_message') }</p>
         </>) : (<>
-            <Tabs value={ weekday } onChange={ handleWeekdayChange }>
+            <Tabs variant="scrollable"
+                  scrollButtons="auto"
+                  value={ weekday }
+                  onChange={ handleWeekdayChange }
+            >
                 { Object.entries(StringUtils.day).map(([k, v]) => {
                     if (k !== "0") {
                         return (

@@ -3,45 +3,47 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 import Base from '../Base';
 import ClassType from '../timetable/ClassType';
 
-// INF1PPR | BSK | Bezpieczeństwo sieci komputerowych | [Wykład, Ćwiczenia]
-// INZ1PEI | PEiE | Podstawy elektroniki i elektrotechniki | [Wykład, Laboratorium]
-export const SubjectDefinition = {
+function targetedSemestersValidator(targetedSemester: number) {
+    return Number.isInteger(targetedSemester) && targetedSemester >= 1;
+}
+
+export const SubjectSchema = new Schema({
     code: {
         type: String,
-        required: true,
     },
     name: {
         type: String,
-        required: true,
     },
     shortName: {
         type: String,
-        default: null,
     },
     isElective: {
         type: Boolean,
-        default: false,
     },
     targetedSemesters: {
         type: [{
             type: Number,
-            min: 1,
             validate: {
-                validator: Number.isInteger,
+                validator: targetedSemestersValidator,
+                message: 'db_subject_targetedSemesters_invalid',
             },
         }],
-        default: [],
     },
-    classTypes: {
-        type: [Schema.Types.ObjectId],
+    classTypes: [{
+        type: Schema.Types.ObjectId,
         ref: new ClassType().name,
         autopopulate: {
             select: '-color',
         },
-        default: [],
-    },
-} as const;
-export const SubjectSchema = new Schema(SubjectDefinition);
+    }],
+});
+
+SubjectSchema.path('code').required(true, 'db_subject_code_required');
+SubjectSchema.path('name').required(true, 'db_subject_name_required');
+SubjectSchema.path('shortName').default(null);
+SubjectSchema.path('isElective').default(false);
+SubjectSchema.path('targetedSemesters').default([]);
+SubjectSchema.path('classTypes').default([]);
 
 export default class Subject extends Base<HydratedDocumentFromSchema<typeof SubjectSchema>> {
     constructor() {

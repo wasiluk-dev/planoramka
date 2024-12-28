@@ -21,11 +21,11 @@ const Footer: React.FC<FooterProps> = ({ isUserOnMobile }) => {
 
     return (<>
         { !isUserOnMobile ? (
-            <footer style={{ textAlign: 'center' }}>
+            <footer style={{ textAlign: 'center', zIndex: 1100 }}>
                 { `${ t('app_name') } v${ appVersion } ©️ Wasiluk Gabriel, Żamojda Marcin` }
             </footer>
         ) : (
-            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={ 3 }>
+            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100 }} elevation={ 3 }>
                 <BottomNavigation showLabels
                                   value={ value }
                                   onChange={ (_, newValue) => {

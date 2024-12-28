@@ -4,35 +4,34 @@ import Base from '../Base';
 import Course from '../courses/Course';
 import Building from './Building';
 
-// WI | Wydział Informatyki | [Informatyka, Informatyka i ekonometria] | [Budynek A, Budynek B, Budynek C]
-export const FacultyDefinition = {
+export const FacultySchema = new Schema({
     name: {
         type: String,
-        required: true,
     },
     acronym: {
         type: String,
-        default: null,
     },
-    buildings: {
-        type: [Schema.Types.ObjectId],
+    buildings: [{
+        type: Schema.Types.ObjectId,
         ref: new Building().name,
         autopopulate: {
             select: '-address',
         },
-        default: [],
-    },
-    courses: {
-        type: [Schema.Types.ObjectId],
+    }],
+    courses: [{
+        type: Schema.Types.ObjectId,
         ref: new Course().name,
         autopopulate: {
             select: '_id code name specialization semesters',
             maxDepth: 4, // TODO: decide if needed
         },
-        default: [],
-    },
-} as const;
-export const FacultySchema = new Schema(FacultyDefinition);
+    }],
+});
+
+FacultySchema.path('name').required(true, 'db_faculty_name_required');
+FacultySchema.path('acronym').required(true, 'db_faculty_acronym_required');
+FacultySchema.path('buildings').default([]);
+FacultySchema.path('courses').default([]);
 
 export default class Faculty extends Base<HydratedDocumentFromSchema<typeof FacultySchema>> {
     constructor() {

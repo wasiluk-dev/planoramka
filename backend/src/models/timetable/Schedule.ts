@@ -4,27 +4,26 @@ import Base from '../Base';
 import Period from './Period';
 import EDayOfTheWeek from '../../enums/EDayOfTheWeek';
 
-// [0, 1, 2, 3, 4] | [08:30, 09:15]
-// [0, 1, 2, 3, 4] | 09:15 | 09:30
-// [0, 1, 2, 3, 4] | 09:30 | 10:15
-// [5, 6] | 08:00 | 08:45
-export const ScheduleDefinition = {
-    // Date.getDay() compatible
+export const ScheduleSchema = new Schema({
     weekdays: [{
         type: Number,
         enum: EDayOfTheWeek,
-        required: true,
     }],
-    periods: {
-        type: [Schema.Types.ObjectId],
+    periods: [{
+        type: Schema.Types.ObjectId,
         ref: new Period().name,
         autopopulate: {
             select: '-_id -weekdays',
         },
-        default: [],
+    }],
+    active: {
+        type: Boolean,
     },
-} as const;
-export const ScheduleSchema = new Schema(ScheduleDefinition);
+});
+
+ScheduleSchema.path('weekdays').required(true, 'db_schedule_weekdays_required');
+ScheduleSchema.path('periods').default([]);
+ScheduleSchema.path('active').default(false);
 
 export default class Schedule extends Base<HydratedDocumentFromSchema<typeof ScheduleSchema>> {
     constructor() {

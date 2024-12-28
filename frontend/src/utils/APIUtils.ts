@@ -126,9 +126,11 @@ export default class APIUtils {
                     },
                 });
             });
+
         for (let i: EWeekday = 0; i < 7; i++) {
             professorClasses[i].sort(c => c.period.startTime.localeCompare(c.period.startTime));
         }
+
         return professorClasses;
     }
     static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
@@ -157,7 +159,6 @@ export default class APIUtils {
 
         return degrees.sort((a, b) => a - b);
     }
-
     static getCoursesOfCycle(courses: CoursePopulated[], cycle: ECourseCycle) {
         const coursesOfCycle: CoursePopulated[] = [];
         for (const c of courses) {
@@ -169,6 +170,7 @@ export default class APIUtils {
         return coursesOfCycle;
     }
 
+    // Faculties
     static getFacultyCourses(faculties: FacultyPopulated[], facultyId: string) {
         for (const f of faculties) {
             if (f._id === facultyId) {
@@ -240,6 +242,44 @@ export default class APIUtils {
 
         const periods = timetableSchedule.periods.filter(p => timetableClass?.periodBlocks.includes(p.order));
         return periods.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
+    static getStudentClasses(timetables: TimetablePopulated[], users: UserPopulated[], semesterId: string, groups: { _id: string, number: number; }[]) {
+        const studentClasses: Record<EWeekday, Record<number, {}>> = {
+            0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}
+        };
+
+        const timetable = timetables.find(t => t.semester === semesterId);
+        const classes = timetable?.classes;
+
+        if (classes) {
+            classes.map((c) => {
+                c.periodBlocks.forEach(pb => {
+                    const organizer = users.find(u => u._id === c.organizer?._id);
+                    const groupNumber = groups.find(g => g._id === c.classType._id)?.number;
+                    if (!organizer || (groupNumber && !c.studentGroups?.includes(groupNumber))) return;
+
+                    studentClasses[c.weekday as EWeekday][pb] = {
+                        classType: c.classType,
+                        subject: {
+                            _id: c.subject!._id,
+                            name: c.subject!.name,
+                            shortName: c.subject!.shortName,
+                        },
+                        room: {
+                            _id: c.room._id,
+                            roomNumber: c.room.roomNumber,
+                        },
+                        organizer: {
+                            _id: organizer._id,
+                            names: organizer.names,
+                            surnames: organizer.surnames,
+                        },
+                    };
+                })
+            });
+        }
+
+        return studentClasses;
     }
     static getTimetableGroupCounts(timetables: TimetablePopulated[], timetableId: string) {
         const groups: TimetablePopulated['groups'] = [];

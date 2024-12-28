@@ -16,6 +16,11 @@ import {
     SemesterPopulated, FacultyPopulated, ClassPopulated, UserPopulated, RoomPopulated,
 } from "../../services/databaseTypes.tsx";
 import RoomPopup from "../Components/Popups/RoomPopup.tsx";
+import ENavTabs from '../enums/ENavTabs.ts';
+import i18n, { i18nPromise } from '../i18n';
+
+const { t } = i18n;
+await i18nPromise;
 
 type ObiektNew = {
     color: string;
@@ -66,9 +71,17 @@ type SubjcetPopup = {
     y: number;
 }
 
+type PlansProps = {
+    setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
+    setCurrentTabValue: React.Dispatch<React.SetStateAction<number | boolean>>;
+}
 
+const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
+    useEffect(() => {
+        setDocumentTitle(t('nav_route_timetable_maker'));
+        setCurrentTabValue(ENavTabs.TimetableMaker);
+    }, []);
 
-const Plans: React.FC = () => {
     const [subjectTypeId, setSubjectTypeId]  = useState<string>("");
     const [subjects, setSubjects] = useState<Array>([]);
     const [test, setTest] = useState<Array<SubjectDetailsPopulated>>([]);

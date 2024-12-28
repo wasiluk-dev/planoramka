@@ -2,27 +2,25 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
 
-// A030 | <Sala wykładowa> | 60
-export const RoomDefinition = {
+export const RoomSchema = new Schema({
     number: {
         type: String,
-        required: true,
     },
     numberSecondary: {
         type: String,
-        default: null,
     },
     capacity: {
         type: Number,
-        default: null,
     },
-} as const;
-export const RoomSchema = new Schema(RoomDefinition);
+});
 
+RoomSchema.path('number').required(true, 'db_room_number_required');
+RoomSchema.path('numberSecondary').default(null);
+RoomSchema.path('capacity').default(null);
 RoomSchema.virtual('roomNumber')
-    .get(function() {
+    .get(function(): string {
         if (!this.numberSecondary) {
-            return this.number;
+            return this.number!;
         } else if (!this.number) {
             return this.numberSecondary;
         } else {
