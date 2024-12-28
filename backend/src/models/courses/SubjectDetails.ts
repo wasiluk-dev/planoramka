@@ -5,11 +5,14 @@ import ClassType from '../timetable/ClassType';
 import Course from './Course';
 import Subject from './Subject';
 
-export const SubjectDetailsDefinition = {
+function weeklyBlockCountValidator(weeklyBlockCount: number) {
+    return Number.isInteger(weeklyBlockCount) && weeklyBlockCount >= 0;
+}
+
+export const SubjectDetailsSchema = new Schema({
     course: {
         type: Schema.Types.ObjectId,
         ref: new Course().name,
-        required: true,
     },
     subject: {
         type: Schema.Types.ObjectId,
@@ -17,7 +20,6 @@ export const SubjectDetailsDefinition = {
         autopopulate: {
             select: '-classTypes',
         },
-        required: true,
     },
     details: {
         _id: false,
@@ -26,21 +28,23 @@ export const SubjectDetailsDefinition = {
                 type: Schema.Types.ObjectId,
                 ref: new ClassType().name,
                 autopopulate: true,
-                required: true,
             },
             weeklyBlockCount: {
                 type: Number,
-                min: 0,
                 validate: {
-                    validator: Number.isInteger,
+                    validator: weeklyBlockCountValidator,
+                    message: 'db_subjectDetails_details_weeklyBlockCount_invalid'
                 },
-                required: true,
             },
         }],
-        default: [],
     },
-} as const;
-export const SubjectDetailsSchema = new Schema(SubjectDetailsDefinition);
+});
+
+SubjectDetailsSchema.path('course').required(true, 'db_subjectDetails_course_required');
+SubjectDetailsSchema.path('subject').required(true, 'db_subjectDetails_subject_required');
+SubjectDetailsSchema.path('details').default([]);
+SubjectDetailsSchema.path('details.classType').required(true, 'db_subjectDetails_details_classType_required');
+SubjectDetailsSchema.path('details.weeklyBlockCount').required(true, 'db_subjectDetails_details_weeklyBlockCount_required');
 
 export default class SubjectDetails extends Base<HydratedDocumentFromSchema<typeof SubjectDetailsSchema>> {
     constructor() {

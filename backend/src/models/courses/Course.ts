@@ -7,15 +7,12 @@ import Base from '../Base';
 import Semester from './Semester';
 import ElectiveSubject from './ElectiveSubject';
 
-// INF1 | Informatyka | I stopnia | inżynierskie | stacjonarne | 2021 | (9)
-export const CourseDefinition = {
+export const CourseSchema = new Schema({
     code: {
         type: String,
-        required: true,
     },
     name: {
         type: String,
-        required: true,
     },
     specialization: {
         type: String,
@@ -23,32 +20,35 @@ export const CourseDefinition = {
     degree: {
         type: Number,
         enum: ECourseDegree,
-        // required: true, TODO: decide if required is needed
-        default: null,
     },
     cycle: {
         type: Number,
         enum: ECourseCycle,
-        required: true,
     },
     mode: {
         type: Number,
         enum: ECourseMode,
-        required: true,
     },
-    semesters: {
-        type: [Schema.Types.ObjectId],
+    semesters: [{
+        type: Schema.Types.ObjectId,
         ref: new Semester().name,
         autopopulate: true,
-        default: [],
-    },
-    electiveSubjects: {
-        type: [Schema.Types.ObjectId],
+    }],
+    electiveSubjects: [{
+        type: Schema.Types.ObjectId,
         ref: new ElectiveSubject().name,
-        default: [],
-    },
-} as const;
-export const CourseSchema = new Schema(CourseDefinition);
+    }],
+});
+
+CourseSchema.path('code').required(true, 'db_course_code_required');
+CourseSchema.path('name').required(true, 'db_course_name_required');
+CourseSchema.path('specialization').default(null);
+// TODO: decide if the field should be required
+CourseSchema.path('degree').default(null); // .required(true, 'db_course_degree_required');
+CourseSchema.path('cycle').required(true, 'db_course_cycle_required');
+CourseSchema.path('mode').required(true, 'db_course_mode_required');
+CourseSchema.path('semesters').default([]);
+CourseSchema.path('electiveSubjects').default([]);
 
 export default class Course extends Base<HydratedDocumentFromSchema<typeof CourseSchema>> {
     constructor() {

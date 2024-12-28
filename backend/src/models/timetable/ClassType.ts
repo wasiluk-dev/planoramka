@@ -2,25 +2,23 @@ import { HydratedDocumentFromSchema, Schema } from 'mongoose';
 
 import Base from '../Base';
 
-// W | Wykład | (#00FF00)
-// Lab | Laboratorium | (#FF0000)
-// Sem | Seminarium | (#0000FF)
-export const ClassTypeDefinition = {
+export const ClassTypeSchema = new Schema({
     name: {
         type: String,
-        required: true,
     },
     acronym: {
         type: String,
-        required: true,
     },
+    // TODO: add a validation error message
     color: {
         type: String,
         validation: /#[0-9A-Fa-f]{6}/,
-        default: null,
     },
-} as const;
-export const ClassTypeSchema = new Schema(ClassTypeDefinition);
+});
+
+ClassTypeSchema.path('name').required(true, 'db_classType_name_required');
+ClassTypeSchema.path('acronym').required(true, 'db_classType_acronym_required');
+ClassTypeSchema.path('color').default(null);
 
 export default class ClassType extends Base<HydratedDocumentFromSchema<typeof ClassTypeSchema>> {
     constructor() {

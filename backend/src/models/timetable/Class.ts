@@ -7,14 +7,22 @@ import Room from '../faculty/Room';
 import User from '../User';
 import ClassType from './ClassType';
 
-export const ClassDefinition = {
+function weekdayValidator(weekday: number) {
+    return Number.isInteger(weekday) && weekday >= 0 && weekday <= 6;
+}
+
+function biggerThanZeroValidator(periodBlock: number) {
+    return Number.isInteger(periodBlock) && periodBlock >= 1;
+}
+
+export const ClassSchema = new Schema({
+    // TODO: add error message to required fields
     organizer: {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
             select: '_id names surnames', // TODO: add title later
         },
-        default: null,
     },
     subject: {
         type: Schema.Types.ObjectId,
@@ -22,56 +30,56 @@ export const ClassDefinition = {
         autopopulate: {
             select: '_id name shortName',
         },
-        default: null,
     },
     classType: {
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
         autopopulate: true,
-        required: true,
     },
     weekday: {
         type: Number,
-        min: 0,
-        max: 6,
         validate: {
-            validator: Number.isInteger,
+            validator: weekdayValidator,
+            message: 'db_class_weekday_invalid',
         },
-        required: true,
     },
     periodBlocks: {
         type: [{
             type: Number,
-            min: 1,
             validate: {
-                validator: Number.isInteger,
+                validator: biggerThanZeroValidator,
+                message: 'db_class_periodBlocks_invalid',
             },
         }],
-        default: [],
     },
     room: {
         type: Schema.Types.ObjectId,
         ref: new Room().name,
         autopopulate: true,
-        required: true,
     },
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
-        default: null,
     },
     studentGroups: {
         type: [{
             type: Number,
-            min: 1,
             validate: {
-                validator: Number.isInteger,
+                validator: biggerThanZeroValidator,
+                message: 'db_class_studentGroups_invalid',
             },
         }],
-        default: null,
     },
-} as const;
-export const ClassSchema = new Schema(ClassDefinition);
+});
+
+ClassSchema.path('organizer').default(null);
+ClassSchema.path('subject').default(null);
+ClassSchema.path('classType').required(true, 'db_class_type_required')
+ClassSchema.path('weekday').required(true, 'db_class_weekday_required')
+ClassSchema.path('periodBlocks').default([]);
+ClassSchema.path('room').required(true, 'db_class_room_required');
+ClassSchema.path('semester').default(null);
+ClassSchema.path('studentGroups').default([]);
 
 export default class Class extends Base<HydratedDocumentFromSchema<typeof ClassSchema>> {
     constructor() {
