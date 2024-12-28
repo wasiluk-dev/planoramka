@@ -3,7 +3,7 @@ import ECourseMode from "../../../../backend/src/enums/ECourseMode.ts";
 import ECourseCycle from "../../../../backend/src/enums/ECourseCycle.ts";
 import APIUtils from "../../utils/APIUtils.ts";
 import apiService from "../../../services/apiService.tsx";
-import {TimetablePopulated} from "../../../services/databaseTypes.tsx";
+import {TimetablePopulated, UserPopulated} from "../../../services/databaseTypes.tsx";
 
 type StudentInfo = {
     facultyId: string;
@@ -27,18 +27,24 @@ type Test = {
     [key: string]: number;
 }
 
-type DataToSend = {
-    studentInfo: StudentInfo;
-    groupInfo: Test;
-}
-
-
 const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateScheduleProps) => {
 
     const [timetables, setTimetables] = useState<Array<TimetablePopulated>>([])
     const [selectedTimetable, setSelectedTimetable] = useState<TimetablePopulated>()
     const [groupTypeCount, setGroupTypeCount] = useState<Array<GroupNumberPicker>>([])
     const [selectedGroupNumber, setSelectedGroupNumber] = useState<Test>({})
+    const [users, setUsers] = useState<Array<UserPopulated>>([])
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await apiService.getUsers();
+
+            setUsers(data);
+        };
+
+        fetchData();
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,12 +102,12 @@ const PrivateSchedule:React.FC<PrivateScheduleProps> = (props: PrivateSchedulePr
     const sendData = () => {
         const isZeroed = Object.values(selectedGroupNumber).some(value => value > 0);
         if (isZeroed){
-            const dataToPush: DataToSend = {
-                studentInfo: props.studentInfo,
-                groupInfo: selectedGroupNumber,
-            }
-            console.log("Pushuje takei dane:")
-            console.log(dataToPush)
+            const groupToPush = Object.entries(selectedGroupNumber).map(([key, value]) => ({
+                _id: key,
+                number: value,
+            }));
+            console.log(selectedGroupNumber)
+            console.log(APIUtils.getStudentClasses(timetables, users, props.studentInfo.semesterId, groupToPush))
         }else {
             console.error("Wybierz przynajmniej jedną grupę!")
         }
