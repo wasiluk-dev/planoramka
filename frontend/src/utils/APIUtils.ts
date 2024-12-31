@@ -214,19 +214,21 @@ export default class APIUtils {
     }
 
     // SubjectDetails
-    static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetailsPopulated[], targetedSemesters: number[]) {
+    static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetailsPopulated[], semesters: SemesterPopulated[], semesterId: string) {
         const newSubjectDetails: SubjectDetailsPopulated[] = [];
         try {
-            for (const subjectDetail of subjectDetails) {
-                if (targetedSemesters.every(v => subjectDetail.subject.targetedSemesters.includes(v))) {
-                    newSubjectDetails.push(subjectDetail);
-                }
-            }
+            semesters.forEach(semester => {
+                if (semester._id !== semesterId) return;
+                semester.subjects.forEach(subject => {
+                    const details = subjectDetails.find(sd => sd.subject._id === subject._id);
+                    if (details) newSubjectDetails.push(details);
+                });
+            });
         } catch (err) {
             console.error(err);
         }
 
-        return newSubjectDetails;
+        return newSubjectDetails.sort((a, b) => a.subject._id.localeCompare(b.subject._id));
     }
 
     // Timetable
