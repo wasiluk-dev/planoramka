@@ -128,7 +128,11 @@ export default class APIUtils {
             });
 
         for (let i: EWeekday = 0; i < 7; i++) {
-            professorClasses[i].sort(c => c.period.startTime.localeCompare(c.period.startTime));
+            professorClasses[i].sort((a, b) => {
+                const timeA = a.period.startTime.split(':');
+                const timeB = b.period.startTime.split(':');
+                return ((+timeA[0]) * 60 + (+timeA[1])) - ((+timeB[0]) * 60 + (+timeB[1]));
+            });
         }
 
         return professorClasses;
@@ -258,7 +262,7 @@ export default class APIUtils {
                 c.periodBlocks.forEach(pb => {
                     const groupNumber = groups.find(g => g._id === c.classType._id)?.number;
 
-                    if (!c.organizer || (groupNumber && c.studentGroups && !c.studentGroups.includes(groupNumber))) return;
+                    if (!c.organizer || !groupNumber || (groupNumber && c.studentGroups && !c.studentGroups.includes(groupNumber))) return;
                     if (!studentClasses[c.weekday as EWeekday][pb]) studentClasses[c.weekday as EWeekday][pb] = [];
 
                     studentClasses[c.weekday as EWeekday][pb].push({
