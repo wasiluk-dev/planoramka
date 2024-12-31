@@ -1,29 +1,17 @@
-import {
-    ClassPopulated,
-    ClassTypePopulated,
-    CoursePopulated,
-    FacultyPopulated,
-    PeriodPopulated,
-    RoomPopulated,
-    SemesterPopulated,
-    SubjectDetailsPopulated,
-    SubjectPopulated,
-    TimetablePopulated,
-    UserPopulated,
-} from '../../services/databaseTypes.tsx';
 import ECourseCycle from '../../../backend/src/enums/ECourseCycle.ts';
 import EUserRole from '../../../backend/src/enums/EUserRole.ts';
 import EWeekday from '../enums/EWeekday.ts';
-
-type PeriodBlock = {
-    classType: ClassTypePopulated;
-    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'>;
-    room: Pick<RoomPopulated, '_id' | 'roomNumber'>;
-    period: Pick<PeriodPopulated, 'startTime' | 'endTime'>;
-    faculty: Pick<FacultyPopulated, '_id' | 'name' | 'acronym'>;
-    course: Pick<CoursePopulated, '_id' | 'code'>;
-    semester: Pick<SemesterPopulated, '_id' | 'index'> & { year: number };
-}
+import {
+    ClassPopulated,
+    CoursePopulated,
+    FacultyPopulated,
+    RoomPopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    TimetablePopulated,
+    UserPopulated,
+} from '../../services/databaseTypes.tsx';
+import { PeriodBlockPopulated } from '../Components/PeriodBlock/PeriodBlock.tsx';
 
 export default class APIUtils {
     // Class
@@ -73,7 +61,7 @@ export default class APIUtils {
         return false;
     }
     static getProfessorClasses(classes: ClassPopulated[], timetables: TimetablePopulated[], faculties: FacultyPopulated[], userId: string) {
-        const professorClasses: Record<EWeekday, PeriodBlock[]> = {
+        const professorClasses: Record<EWeekday, PeriodBlockPopulated[]> = {
             0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
         };
 
