@@ -137,6 +137,20 @@ export default class APIUtils {
 
         return professorClasses;
     }
+    static getRoomsClass(classes: ClassPopulated[], roomId: string, weekday: EWeekday, periodBlock: number) {
+        let roomsClass: ClassPopulated | undefined;
+        try {
+            roomsClass = classes.find(c => (
+                c.room._id === roomId
+                && c.weekday === weekday
+                && c.periodBlocks.includes(periodBlock)
+            ));
+        } catch (err) {
+            console.error(err);
+        }
+
+        return roomsClass;
+    }
     static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
         const unoccupiedRooms: RoomPopulated[] = [];
         try {
@@ -162,6 +176,9 @@ export default class APIUtils {
         }
 
         return degrees.sort((a, b) => a - b);
+    }
+    static getCourseFromSemesterId(courses: CoursePopulated[], semesterId: string) {
+        return courses.find(c => c.semesters.find(s => s._id === semesterId));
     }
     static getCoursesOfCycle(courses: CoursePopulated[], cycle: ECourseCycle) {
         const coursesOfCycle: CoursePopulated[] = [];
