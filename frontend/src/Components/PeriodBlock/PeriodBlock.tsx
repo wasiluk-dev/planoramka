@@ -4,9 +4,59 @@ import { Card, Typography } from '@mui/material';
 import './PeriodBlock.css';
 import EPeriodBlockType from '../../enums/EPeriodBlockType';
 import i18n, { i18nPromise } from '../../i18n';
+import {
+    ClassPopulated,
+    ClassTypePopulated,
+    CoursePopulated,
+    FacultyPopulated,
+    PeriodPopulated,
+    RoomPopulated,
+    SemesterPopulated,
+    SubjectPopulated,
+} from '../../../services/databaseTypes.tsx';
 
 const { t } = i18n;
 await i18nPromise;
+
+function decimalToRoman(num: number): string {
+    if (num <= 0 || num >= 4000) return '';
+
+    const romanMap: { [key: number]: string } = {
+        1000: "M",
+        900: "CM",
+        500: "D",
+        400: "CD",
+        100: "C",
+        90: "XC",
+        50: "L",
+        40: "XL",
+        10: "X",
+        9: "IX",
+        5: "V",
+        4: "IV",
+        1: "I"
+    };
+
+    let roman: string = '';
+    for (const value of Object.keys(romanMap).map(Number).sort((a, b) => b - a)) {
+        while (num >= value) {
+            roman += romanMap[value];
+            num -= value;
+        }
+    }
+
+    return roman;
+}
+
+export type PeriodBlockPopulated = {
+    classType: ClassTypePopulated;
+    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'>;
+    room: Pick<RoomPopulated, '_id' | 'roomNumber'>;
+    period: Pick<PeriodPopulated, 'startTime' | 'endTime'>;
+    faculty: Pick<FacultyPopulated, '_id' | 'name' | 'acronym'>;
+    course: Pick<CoursePopulated, '_id' | 'code'>;
+    semester: Pick<SemesterPopulated, '_id' | 'index'> & { year: number };
+}
 
 type PeriodBlockProps = {
     classType: {
