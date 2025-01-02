@@ -36,6 +36,7 @@ type ObiektNew = {
     weeklyCount: number;
     x: number;
     y: number;
+    note?: string;
 };
 
 const day ={
@@ -69,6 +70,7 @@ type SubjcetPopup = {
     weeklyCount: number;
     x: number;
     y: number;
+    note?: string;
 }
 
 type PlansProps = {
@@ -205,7 +207,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, [Number(selectedSemester)]);
+            const data = APIUtils.getSubjectDetailsForSpecificSemesters(test, semesterList, selectedSemesterId);
             setSubjects(data)
         };
 
@@ -225,7 +227,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                                 type: detail.classType._id,
                                 color: detail.classType.color,
                                 weeklyCount: detail.weeklyBlockCount,
-                                isweekly: detail.weeklyBlockCount > 0,
+                                isweekly: detail.isweekly,
                                 x: -1,
                                 y: -1,
                                 isset: false,
@@ -261,6 +263,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
         };
         fetchData();
     }, []);
+    console.log(subjects)
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedFacultyId(event.target.value);
@@ -655,6 +658,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
         }
         console.log(rdyToSend)
     }
+    console.log(dayGrid)
 
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (

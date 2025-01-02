@@ -295,90 +295,99 @@ const RoomPopup: React.FC<Props> = (props: Props) => {
 
     return (props.trigger) ? (
         <div className="popup">
-            <div className="popup-inner position-relative p-5, w-100 d-flex pt-4">
-                <div className="buttons position-absolute">
-                    <button className="btn btn-secondary close-btn me-2 mb-2"
-                            onClick={ () => {
-                                props.setTrigger(false)
-                                setShowOnlyFreeRooms(false)
-                                setShowOnlyFreeTeachers(false)
-                                setShowAllRooms(false)
-                                setFacultyId("")
-                                props.onSubjectChange?.(localSubject)
-                            }}
-                    >
-                        Zamknij
-                    </button>
-                </div>
-                <div className="room p-2 ms-2 me-2">
-                    <h3>Sala</h3>
-                    <input className="form-check-input me-2 mb-2" type="checkbox"
-                           onChange={ () => setShowAllRooms(!showAllRooms) }
-                           id="flexCheckDefault"/>
-                    <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
-                        Pokaż z danego wydziału
-                    </label><br/>
-                    { showAllRooms ? (<>
-                        <select
-                            className="form-select mb-2"
-                            aria-label="Default select example"
-                            value={ facultyId }
-                            onChange={ handleFacultyChange }
+            <div className="popup-inner position-relative w-100">
+                <div className="d-flex pt-4">
+                    <div className="buttons position-absolute">
+                        <button className="btn btn-secondary close-btn me-2 mb-2"
+                                onClick={() => {
+                                    props.setTrigger(false)
+                                    setShowOnlyFreeRooms(false)
+                                    setShowOnlyFreeTeachers(false)
+                                    setShowAllRooms(false)
+                                    setFacultyId("")
+                                    props.onSubjectChange?.(localSubject)
+                                }}
                         >
-                            <option value="" disabled hidden>[Wydział]</option>
-                            { allFaculties.map(faculty => (
-                                <option key={ faculty._id } value={ faculty._id } onClick={ () => { setFacultyId(faculty._id) } }>
-                                    { faculty.name }
-                                </option>
-                            )) }
-                        </select>
-                        { facultyId ? (
-                            selectedFacultyBuildings?.buildings ? (
-                                <select
-                                    className="form-select mb-2"
-                                    aria-label="Default select example"
-                                    value={buildingName}
-                                    onChange={handleBuildingChange}
-                                >
-                                    <option value="" disabled hidden>[Budynek]</option>
-                                    { selectedFacultyBuildings.buildings.map((building, index) => (
-                                        <option key={ building.acronym } value={ index }>
-                                            { building.name }
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (<><span className="fw-bold fs-3">ERROR</span><br/></>)
-                        ) : ('') }
-                    </>) : ('') }
-                    <input className="form-check-input me-2 mb-2" type="checkbox"
-                           onChange={() => setShowOnlyFreeRooms(!showOnlyFreeRooms)} id="flexCheckDefault"
-                    />
-                    <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
-                        Pokaż tylko wolne sale
-                    </label><br/>
-                    <SearchableDropdown
-                        placeholder = "Wybierz salę..."
-                        options={ roomsList }
-                        label="name"
-                        id="id"
-                        selectedVal={ roomValue }
-                        handleChange={ (val) => handleRoomChange(val) } // Set empty string if val is null
-                    />
+                            Zamknij
+                        </button>
+                    </div>
+                    <div className="room p-2 ms-2 me-2">
+                        <h3>Sala</h3>
+                        <input className="form-check-input me-2 mb-2" type="checkbox"
+                               onChange={() => setShowAllRooms(!showAllRooms)}
+                               id="flexCheckDefault"/>
+                        <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
+                            Pokaż z danego wydziału
+                        </label><br/>
+                        {showAllRooms ? (<>
+                            <select
+                                className="form-select mb-2"
+                                aria-label="Default select example"
+                                value={facultyId}
+                                onChange={handleFacultyChange}
+                            >
+                                <option value="" disabled hidden>[Wydział]</option>
+                                {allFaculties.map(faculty => (
+                                    <option key={faculty._id} value={faculty._id} onClick={() => {
+                                        setFacultyId(faculty._id)
+                                    }}>
+                                        {faculty.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {facultyId ? (
+                                selectedFacultyBuildings?.buildings ? (
+                                    <select
+                                        className="form-select mb-2"
+                                        aria-label="Default select example"
+                                        value={buildingName}
+                                        onChange={handleBuildingChange}
+                                    >
+                                        <option value="" disabled hidden>[Budynek]</option>
+                                        {selectedFacultyBuildings.buildings.map((building, index) => (
+                                            <option key={building.acronym} value={index}>
+                                                {building.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (<><span className="fw-bold fs-3">ERROR</span><br/></>)
+                            ) : ('')}
+                        </>) : ('')}
+                        <input className="form-check-input me-2 mb-2" type="checkbox"
+                               onChange={() => setShowOnlyFreeRooms(!showOnlyFreeRooms)} id="flexCheckDefault"
+                        />
+                        <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
+                            Pokaż tylko wolne sale
+                        </label><br/>
+                        <SearchableDropdown
+                            placeholder="Wybierz salę..."
+                            options={roomsList}
+                            label="name"
+                            id="id"
+                            selectedVal={roomValue}
+                            handleChange={(val) => handleRoomChange(val)} // Set empty string if val is null
+                        />
+                    </div>
+                    <div className="teacher p-2">
+                        <h3>Prowadzący</h3>
+                        <input className="form-check-input me-2 mb-2" type="checkbox"
+                               onChange={() => setShowOnlyFreeTeachers(!showOnlyFreeTeachers)} id="flexCheckDefault"/>
+                        <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
+                            Pokaż tylko dostępnych prowadzących
+                        </label><br/>
+                        <SearchableDropdown
+                            placeholder="Wybierz nauczyciela..."
+                            options={teacherList}
+                            label="name"
+                            id="id"
+                            selectedVal={teacherValue}
+                            handleChange={(val) => handleTeacherChange(val)} // Set empty string if val is null
+                        />
+                    </div>
                 </div>
-                <div className="teacher p-2">
-                    <h3>Prowadzący</h3>
-                    <input className="form-check-input me-2 mb-2" type="checkbox"  onChange={() => setShowOnlyFreeTeachers(!showOnlyFreeTeachers)} id="flexCheckDefault"/>
-                    <label className="form-check-label mb-2" htmlFor="flexCheckDefault">
-                        Pokaż tylko dostępnych prowadzących
-                    </label><br/>
-                    <SearchableDropdown
-                        placeholder = "Wybierz nauczyciela..."
-                        options={ teacherList }
-                        label="name"
-                        id="id"
-                        selectedVal={ teacherValue }
-                        handleChange={ (val) => handleTeacherChange(val) } // Set empty string if val is null
-                    />
+                <div className="infobox mt-2 text-center align-content-center">
+                    <h4>Notatki:</h4>
+                    <input className=" w-75" type="text"/>
                 </div>
             </div>
         </div>
