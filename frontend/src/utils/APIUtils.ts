@@ -1,29 +1,17 @@
-import {
-    ClassPopulated,
-    ClassTypePopulated,
-    CoursePopulated,
-    FacultyPopulated,
-    PeriodPopulated,
-    RoomPopulated,
-    SemesterPopulated,
-    SubjectDetailsPopulated,
-    SubjectPopulated,
-    TimetablePopulated,
-    UserPopulated,
-} from '../../services/databaseTypes.tsx';
 import ECourseCycle from '../../../backend/src/enums/ECourseCycle.ts';
 import EUserRole from '../../../backend/src/enums/EUserRole.ts';
 import EWeekday from '../enums/EWeekday.ts';
-
-type PeriodBlock = {
-    classType: ClassTypePopulated;
-    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'>;
-    room: Pick<RoomPopulated, '_id' | 'roomNumber'>;
-    period: Pick<PeriodPopulated, 'startTime' | 'endTime'>;
-    faculty: Pick<FacultyPopulated, '_id' | 'name' | 'acronym'>;
-    course: Pick<CoursePopulated, '_id' | 'code'>;
-    semester: Pick<SemesterPopulated, '_id' | 'index'> & { year: number };
-}
+import {
+    ClassPopulated,
+    CoursePopulated,
+    FacultyPopulated,
+    RoomPopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    TimetablePopulated,
+    UserPopulated,
+} from '../../services/databaseTypes.tsx';
+import { PeriodBlockPopulated } from '../Components/PeriodBlock/PeriodBlock.tsx';
 
 export default class APIUtils {
     // Class
@@ -73,7 +61,7 @@ export default class APIUtils {
         return false;
     }
     static getProfessorClasses(classes: ClassPopulated[], timetables: TimetablePopulated[], faculties: FacultyPopulated[], userId: string) {
-        const professorClasses: Record<EWeekday, PeriodBlock[]> = {
+        const professorClasses: Record<EWeekday, PeriodBlockPopulated[]> = {
             0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
         };
 
@@ -128,10 +116,28 @@ export default class APIUtils {
             });
 
         for (let i: EWeekday = 0; i < 7; i++) {
-            professorClasses[i].sort(c => c.period.startTime.localeCompare(c.period.startTime));
+            professorClasses[i].sort((a, b) => {
+                const timeA = a.period.startTime.split(':');
+                const timeB = b.period.startTime.split(':');
+                return ((+timeA[0]) * 60 + (+timeA[1])) - ((+timeB[0]) * 60 + (+timeB[1]));
+            });
         }
 
         return professorClasses;
+    }
+    static getRoomsClass(classes: ClassPopulated[], roomId: string, weekday: EWeekday, periodBlock: number) {
+        let roomsClass: ClassPopulated | undefined;
+        try {
+            roomsClass = classes.find(c => (
+                c.room._id === roomId
+                && c.weekday === weekday
+                && c.periodBlocks.includes(periodBlock)
+            ));
+        } catch (err) {
+            console.error(err);
+        }
+
+        return roomsClass;
     }
     static getUnoccupiedRooms(classes: ClassPopulated[], rooms: RoomPopulated[], weekday: EWeekday, periodBlock: number) {
         const unoccupiedRooms: RoomPopulated[] = [];
@@ -158,6 +164,9 @@ export default class APIUtils {
         }
 
         return degrees.sort((a, b) => a - b);
+    }
+    static getCourseFromSemesterId(courses: CoursePopulated[], semesterId: string) {
+        return courses.find(c => c.semesters.find(s => s._id === semesterId));
     }
     static getCoursesOfCycle(courses: CoursePopulated[], cycle: ECourseCycle) {
         const coursesOfCycle: CoursePopulated[] = [];
@@ -214,19 +223,21 @@ export default class APIUtils {
     }
 
     // SubjectDetails
-    static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetailsPopulated[], targetedSemesters: number[]) {
+    static getSubjectDetailsForSpecificSemesters(subjectDetails: SubjectDetailsPopulated[], semesters: SemesterPopulated[], semesterId: string) {
         const newSubjectDetails: SubjectDetailsPopulated[] = [];
         try {
-            for (const subjectDetail of subjectDetails) {
-                if (targetedSemesters.every(v => subjectDetail.subject.targetedSemesters.includes(v))) {
-                    newSubjectDetails.push(subjectDetail);
-                }
-            }
+            semesters.forEach(semester => {
+                if (semester._id !== semesterId) return;
+                semester.subjects.forEach(subject => {
+                    const details = subjectDetails.find(sd => sd.subject._id === subject._id);
+                    if (details) newSubjectDetails.push(details);
+                });
+            });
         } catch (err) {
             console.error(err);
         }
 
-        return newSubjectDetails;
+        return newSubjectDetails.sort((a, b) => a.subject._id.localeCompare(b.subject._id));
     }
 
     // Timetable
