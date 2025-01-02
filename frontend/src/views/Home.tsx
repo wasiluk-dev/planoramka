@@ -136,6 +136,8 @@ const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => 
         if (event.target.value === "student") {
             setSelectedTeacherId("");
             setSelectedTeacher("");
+        }else if (event.target.value === "teacher") {
+            setRefreshKey(0)
         }
     }
 
