@@ -14,7 +14,7 @@ export const SubjectSchema = new Schema({
     name: {
         type: String,
     },
-    shortName: {
+    acronym: {
         type: String,
     },
     isElective: {
@@ -40,7 +40,7 @@ export const SubjectSchema = new Schema({
 
 SubjectSchema.path('code').required(true, 'db_subject_code_required');
 SubjectSchema.path('name').required(true, 'db_subject_name_required');
-SubjectSchema.path('shortName').default(null);
+SubjectSchema.path('acronym').default(null);
 SubjectSchema.path('isElective').default(false);
 SubjectSchema.path('targetedSemesters').default([]);
 SubjectSchema.path('classTypes').default([]);

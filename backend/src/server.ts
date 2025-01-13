@@ -30,11 +30,12 @@ app.use(session({
     },
     store: MongoStore.create({
         clientPromise: dbClient,
+        ttl: 60 * 60, // 1 hour
     }),
 }));
 
 // routes
-Object.keys(routes).forEach((key) => {
+Object.keys(routes).forEach(key => {
     const RouteClass = routes[key as keyof typeof routes];
     const routeInstance = new RouteClass();
     routeInstance.route(app);

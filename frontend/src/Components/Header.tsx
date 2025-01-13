@@ -3,13 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
     AppBar,
     Box,
-    Button,
-    ButtonOwnProps,
-    IconButton,
-    Tab,
-    Tabs,
-    Toolbar,
-    Tooltip,
+    Button, ButtonOwnProps,
+    IconButton, Stack,
+    Tab, Tabs,
+    Toolbar, Tooltip,
     Typography,
 } from '@mui/material';
 import {
@@ -22,7 +19,7 @@ import {
 
 import './Header.css';
 import Navigation from '../Navigation.tsx';
-import APIService from '../../services/apiService.tsx';
+import APIService from '../../services/APIService.ts';
 import { NotificationProps } from './Notification.tsx';
 import i18n, { i18nPromise } from '../i18n.ts';
 
@@ -38,7 +35,7 @@ type HeaderProps = {
     setIsUserLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
     setNotificationData: React.Dispatch<React.SetStateAction<NotificationProps['data']>>;
     currentTabValue: number | boolean;
-    setCurrentTabValue: React.Dispatch<React.SetStateAction<number | boolean>>;
+    setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
     setNavDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -53,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({
     currentTabValue,
     setCurrentTabValue,
     setNavDrawerOpen
-}: HeaderProps) => {
+}) => {
     const navigate = useNavigate();
 
     const [loginButtonVariant, setLoginButtonVariant] = useState<ButtonOwnProps['variant']>('outlined');
@@ -77,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({
                 setUsername(undefined);
                 setIsUserLoggedIn(false);
                 setNotificationData({
-                    message: 'Wylogowanie przebiegło pomyślnie.',
+                    message: t('notification_logout_success'),
                     severity: 'success',
                 });
 
@@ -85,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
             });
     };
 
-    return (<AppBar position="sticky"><Toolbar variant={ isUserOnMobile ? 'regular' : 'dense' }>
+    return (<AppBar position="sticky"><Toolbar>
         { isUserOnMobile ? (<>
             <IconButton
                 component={ Button }
@@ -101,69 +98,82 @@ const Header: React.FC<HeaderProps> = ({
                 { documentTitle }
             </Typography>
         </>) : (<>
-            <Box>
-                <Tabs variant="scrollable"
-                      scrollButtons="auto"
-                      textColor="secondary"
-                      indicatorColor="secondary"
-                      value={ currentTabValue }
-                      onChange={ handleTabChange }
+            <Box sx={{ flexGrow: 1 }}>
+                <Tabs
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    textColor="secondary"
+                    indicatorColor="secondary"
+                    value={ currentTabValue }
+                    onChange={ handleTabChange }
                 >
                     { Object.keys(Navigation).map((key, index) => {
                         const nav = Navigation[key];
+
                         if (nav.primary === false || !nav.icon) return;
 
                         return (
-                            <Tab key={ index }
-                                 component={ Link }
-                                 to={ Navigation[key].route }
-                                 label={ Navigation[key].name }
-                                 icon={ Navigation[key].icon }/>
+                            <Tab
+                                key={ index }
+                                component={ Link }
+                                to={ Navigation[key].route }
+                                label={ Navigation[key].name }
+                                icon={ Navigation[key].icon }
+                            />
                         );
                     }) }
                 </Tabs>
             </Box>
-            <Box sx={{ flexGrow: 1 }}/>
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+
+            <Stack
+                spacing={ 1 }
+                direction="row"
+                sx={{ alignItems: 'center', display: { xs: 'none', md: 'flex' } }}
+            >
                 { !isUserLoggedIn ? (<>
-                    <Link to="/register" onClick={ () => deselectTab('login') }>
-                        <Button color="secondary"
-                                variant="text"
-                                startIcon={ <PersonAddRounded/> }
-                        >
-                            { t('nav_route_register') }
-                        </Button>
-                    </Link>
-                    <Link to="/login" onClick={ () => deselectTab('login') }>
-                        <Button color="secondary"
-                                variant={ loginButtonVariant }
-                                startIcon={ <LoginRounded/> }
-                        >
-                            { t('nav_route_login') }
-                        </Button>
-                    </Link>
+                    <Button
+                        color="secondary"
+                        variant="text"
+                        startIcon={ <PersonAddRounded/> }
+                        component={ Link }
+                        to="/register"
+                        onClick={ () => deselectTab('login') }
+                    >
+                        { t('nav_route_register') }
+                    </Button>
+                    <Button
+                        color="secondary"
+                        variant={ loginButtonVariant }
+                        startIcon={ <LoginRounded/> }
+                        component={ Link }
+                        to="/login"
+                        onClick={ () => deselectTab('login') }
+                    >
+                        { t('nav_route_login') }
+                    </Button>
                 </>) : (<>
                     <Tooltip title={ t('nav_route_profile_tooltip') }>
-                        <Link to="/profile">
-                            <Button color="secondary" variant="text" startIcon={ <AccountCircleRounded/> }>
-                                { username ? (
-                                    username
-                                ) : (
-                                    t('nav_route_profile_short')
-                                ) }
-                            </Button>
-                        </Link>
+                        <Button
+                            color="secondary"
+                            variant="text"
+                            startIcon={ <AccountCircleRounded/> }
+                            component={ Link }
+                            to="/profile"
+                        >
+                            { username ? username : t('nav_route_profile_short') }
+                        </Button>
                     </Tooltip>
                     <Tooltip title={ t('nav_route_logout_tooltip') }>
-                        <IconButton color="secondary"
-                                    aria-label={ t('nav_route_logout_tooltip') }
-                                    onClick={ logout }
+                        <IconButton
+                            color="secondary"
+                            aria-label={ t('nav_route_logout_tooltip') }
+                            onClick={ logout }
                         >
                             <LogoutRounded/>
                         </IconButton>
                     </Tooltip>
                 </>) }
-            </Box>
+            </Stack>
         </>) }
     </Toolbar></AppBar>);
 }

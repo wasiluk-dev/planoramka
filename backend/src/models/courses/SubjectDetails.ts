@@ -10,16 +10,16 @@ function weeklyBlockCountValidator(weeklyBlockCount: number) {
 }
 
 export const SubjectDetailsSchema = new Schema({
-    course: {
-        type: Schema.Types.ObjectId,
-        ref: new Course().name,
-    },
     subject: {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
         autopopulate: {
             select: '-classTypes',
         },
+    },
+    course: {
+        type: Schema.Types.ObjectId,
+        ref: new Course().name,
     },
     details: {
         _id: false,
@@ -33,15 +33,15 @@ export const SubjectDetailsSchema = new Schema({
                 type: Number,
                 validate: {
                     validator: weeklyBlockCountValidator,
-                    message: 'db_subjectDetails_details_weeklyBlockCount_invalid'
+                    message: 'db_subjectDetails_details_weeklyBlockCount_invalid',
                 },
             },
         }],
     },
 });
 
-SubjectDetailsSchema.path('course').required(true, 'db_subjectDetails_course_required');
 SubjectDetailsSchema.path('subject').required(true, 'db_subjectDetails_subject_required');
+SubjectDetailsSchema.path('course').required(true, 'db_subjectDetails_course_required');
 SubjectDetailsSchema.path('details').default([]);
 SubjectDetailsSchema.path('details.classType').required(true, 'db_subjectDetails_details_classType_required');
 SubjectDetailsSchema.path('details.weeklyBlockCount').required(true, 'db_subjectDetails_details_weeklyBlockCount_required');

@@ -5,11 +5,8 @@ import {
     Box,
     Divider,
     Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
+    List, ListItem, ListItemButton, ListItemIcon, ListItemText,
+    Toolbar,
     Typography,
 } from '@mui/material';
 
@@ -29,7 +26,9 @@ const NavDrawer: React.FC<NavDrawerProps> = ({ navRoutes, navDrawerOpen, setNavD
     const DrawerList = (
         <Box onClick={ () => setNavDrawerOpen(false) }>
             <AppBar position="static">
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>{ t('app_name') }</Typography>
+                <Toolbar>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>{ t('app_name') }</Typography>
+                </Toolbar>
             </AppBar>
             <List>
                 { Object.keys(navRoutes).map((key, index) => {

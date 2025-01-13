@@ -1,26 +1,35 @@
-import React, {useEffect, useState} from 'react';
+import React, { JSX, useEffect, useState } from 'react';
+import { useCookies } from 'react-cookie';
+import {
+    Accordion, AccordionDetails, AccordionSummary,
+    Autocomplete,
+    FormControl, FormControlLabel, FormLabel,
+    Radio, RadioGroup,
+    Stack,
+    Tab, Tabs,
+    Table, TableBody, TableCell, TableHead, TableRow,
+    TextField,
+    Typography,
+} from '@mui/material';
+import { ArrowDropDownRounded } from '@mui/icons-material';
 
+import PersonalTimetableOptions from '../Components/PersonalTimetableOptions.tsx';
+import ProfessorClasses from '../Components/ProfessorClasses.tsx';
+import StudentClasses from '../Components/StudentClasses.tsx';
+
+import APIService from '../../services/APIService.ts';
+import APIUtils from '../utils/APIUtils.ts';
+import StringUtils from '../utils/StringUtils.ts';
+import ECourseCycle from '../../../backend/src/enums/ECourseCycle.ts';
+import ECourseMode from '../../../backend/src/enums/ECourseMode.ts';
 import ENavTabs from '../enums/ENavTabs';
+import EUserRole from '../../../backend/src/enums/EUserRole.ts';
+import EWeekday from '../enums/EWeekday.ts';
+import { ClassPopulated, FacultyPopulated, TimetablePopulated, UserPopulated } from '../../services/DBTypes.ts';
 import i18n, { i18nPromise } from '../i18n';
-import SearchableDropdown from "../Components/SearchableDropdown/SearchableDropdown.tsx";
-import apiService from "../../services/apiService.tsx";
-import APIUtils from "../utils/APIUtils.ts";
-import EUserRole from "../../../backend/src/enums/EUserRole.ts";
-import {ClassPopulated, FacultyPopulated, TimetablePopulated, UserPopulated} from "../../services/databaseTypes.tsx";
-import AvailableTable from "../Components/AvailableTable/AvailableTable.tsx";
-import PrivateScheduleOptions from "../Components/PrivateSchedule/PrivateScheduleOptions.tsx";
-import ECourseMode from "../../../backend/src/enums/ECourseMode.ts";
-import ECourseCycle from "../../../backend/src/enums/ECourseCycle.ts";
-import PrivateSchedule from "../Components/PrivateSchedule/PrivateSchedule.tsx";
-import {Button} from "@mui/material";
 
 const { t } = i18n;
 await i18nPromise;
-
-type HomeProps = {
-    setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
-    setCurrentTabValue: React.Dispatch<React.SetStateAction<number | boolean>>;
-}
 
 type StudentInfo = {
     facultyId: string;
@@ -28,160 +37,325 @@ type StudentInfo = {
     cycle: ECourseCycle;
     courseId: string;
     semesterId: string;
+    groups: { [p: string]: number };
 }
 
-const Home: React.FC<HomeProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
+type HomeProps = {
+    isUserOnMobile: boolean;
+    setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
+    setDialogData: React.Dispatch<React.SetStateAction<{ title: string; content: JSX.Element }>>;
+    setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Home: React.FC<HomeProps> = ({ isUserOnMobile, setCurrentTabValue, setDialogData, setDialogOpen, setDocumentTitle }) => {
+    const [cookies, setCookie, removeCookie] = useCookies();
+
+    const [weekday, setWeekday] = useState<EWeekday>(new Date().getDay());
+    const [refreshKey, setRefreshKey] = useState<number>(0);
+    const [accordionExpanded, setAccordionExpanded] = useState<boolean>(false);
+    const [accordionTitle, setAccordionTitle] = useState<string>('Personalny plan zajęć');
+    const [groupCount, setGroupCount] = useState<number>(-1);
 
     const [childMessage, setChildMessage] = useState<StudentInfo>({
-        facultyId: "",
+        facultyId: '',
         mode: 0,
         cycle: 0,
-        courseId: "",
-        semesterId: "",
-    })
+        courseId: '',
+        semesterId: '',
+        groups: {},
+    });
     const [childMessageToSend, setChildMessageToSend] = useState<StudentInfo>({
-        facultyId: "",
+        facultyId: '',
         mode: 0,
         cycle: 0,
-        courseId: "",
-        semesterId: "",
-    })
+        courseId: '',
+        semesterId: '',
+        groups: {},
+    });
 
-    useEffect(() => {
-        setChildMessageToSend(childMessage)
-    }, [childMessage]);
+    const [classes, setClasses] = useState<ClassPopulated[]>([]);
+    const [faculties, setFaculties] = useState<FacultyPopulated[]>([]);
+    const [professors, setProfessors] = useState<UserPopulated[]>([]);
+    const [timetables, setTimetables] = useState<TimetablePopulated[]>([]);
 
-    const handleChildData = (data: StudentInfo) => {
-        setChildMessage(data);
-    };
-
-    const handleRefresh = () => {
-        // Update the key to trigger re-render
-        setRefreshKey(prevKey => prevKey + 1);
-    };
-
-    const [classes, setClasses] = useState<Array<ClassPopulated>>([])
-    const [faculties, setFaculties] = useState<Array<FacultyPopulated>>([])
-    const [timetables, setTimetables] = useState<Array<TimetablePopulated>>([])
-    const [refreshKey, setRefreshKey] = useState<number>(0); // State for forcing re-render
-    const [selectedScheduleType, setSelectedScheduleType] = useState<string>("")
-    const [teacherList, setTeacherList] = useState([])
-    const [allTeachers, setAllTeachers] = useState<Array<UserPopulated>>([])
-    const [selectedTeacherId, setSelectedTeacherId] = useState<string>("")
-    const [selectedTeacher, setSelectedTeacher] = useState<string>("")
-    const [teacherSurnameList, setTeacherSurnameList] = useState<Pick<UserPopulated, '_id' | 'surnames' | 'names'>[]>([])
-    const [studentInfo, setStudentInfo] = useState<StudentInfo>()
+    const [selectedProfessor, setSelectedProfessor] = useState<UserPopulated | null>(null);
+    const [selectedProfessorId, setSelectedProfessorId] = useState<string>('');
+    const [selectedTimetableType, setSelectedTimetableType] = useState<EUserRole>(EUserRole.Guest);
 
     useEffect(() => {
         setDocumentTitle(t('nav_route_main'));
         setCurrentTabValue(ENavTabs.Home);
-    }, []);
 
-    useEffect(() => {
         const fetchData = async () => {
-            const data = await apiService.getUsers();
-
-            setAllTeachers(APIUtils.getUsersWithRole(data, EUserRole.Professor));
+            setClasses(await APIService.getClasses());
+            setFaculties(await APIService.getFaculties());
+            setTimetables(await APIService.getTimetables());
+            setProfessors(APIUtils.getUsersWithRole(await APIService.getUsers(), EUserRole.Professor));
+            setAccordionTitle(t('personal_timetable'));
         };
 
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const dataTables = await apiService.getTimetables();
-            const dataClasses = await apiService.getClasses();
-            const dataFaculties = await apiService.getFaculties();
-
-            setTimetables(dataTables);
-            setClasses(dataClasses);
-            setFaculties(dataFaculties);
-        };
-
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        const modifiedNames = allTeachers.map(teacher => {
-            const surnames = teacher.surnames
-            const names = teacher.names
-            return {
-                _id: teacher._id,
-                names: teacher.names,
-                surnames: teacher.surnames,
-                fullName: `${surnames} ${names}`
-            };
+        fetchData().then(() => {
+            const timetableType = cookies['personal-type'] as EUserRole;
+            if (timetableType === EUserRole.Student) {
+                setSelectedTimetableType(EUserRole.Student);
+                setChildMessage({
+                    facultyId: cookies['personal-facultyId'] ?? '',
+                    mode: cookies['personal-mode'] ?? 0,
+                    cycle: cookies['personal-cycle'] ?? 0,
+                    courseId: cookies['personal-courseId'] ?? '',
+                    semesterId: cookies['personal-semesterId'] ?? '',
+                    groups: cookies['personal-groups'] ?? {},
+                });
+            } else if (timetableType === EUserRole.Professor) {
+                setSelectedTimetableType(EUserRole.Professor);
+                const professor = cookies['personal-professor'] as UserPopulated;
+                setSelectedProfessor(professor ?? null);
+                setSelectedProfessorId(cookies['personal-professorId'] ?? '');
+                setAccordionTitle(t('personal_timetable') + (professor ? ` – ${ professor.surnames } ${ professor.names }` : ''));
+            } else {
+                setAccordionExpanded(true);
+            }
         });
-
-        setTeacherSurnameList(modifiedNames);
-    }, [allTeachers]);
-
+    }, []);
     useEffect(() => {
-        setTeacherList(teacherSurnameList.map(teacher => ({
-            _id: teacher._id,
-            name: teacher.names + " " + teacher.surnames,
-        })))
-    }, [teacherSurnameList]);
+        setChildMessageToSend(childMessage)
+    }, [childMessage]);
+    useEffect(() => {
+        if (Object.keys(childMessage.groups).length === groupCount) {
+            setAccordionExpanded(false);
+            setRefreshKey(prev => prev + 1);
+        }
+    }, [childMessage.groups]);
 
-    const handleTeacherChange = (val: { name: string; _id: string } | null) => {
-            const teacherValue = val ? val._id : '';
-            const teacherValueName = val ? val.name : '';
-            console.log(teacherValue)
-            setSelectedTeacherId(teacherValue);
-            setSelectedTeacher(teacherValueName)
+    const handleChildData = (data: StudentInfo) => {
+        setCookie('personal-type', EUserRole.Student);
+        setCookie('personal-facultyId', data.facultyId);
+        setCookie('personal-mode', data.mode);
+        setCookie('personal-cycle', data.cycle);
+        setCookie('personal-courseId', data.courseId);
+        setCookie('personal-semesterId', data.semesterId);
+        setCookie('personal-groups', data.groups);
+        setChildMessage(data);
     };
+    const handleWeekdayChange = (_e: React.SyntheticEvent, v: EWeekday) => {
+        setWeekday(v);
+    }
+    const handleAccordionChange = () => {
+        if (!accordionExpanded) {
+            setAccordionTitle(t('personal_timetable'))
+        } else {
+            const professor = professors.find(p => p._id === selectedProfessorId);
+            setAccordionTitle(t('personal_timetable') + (professor ? ` – ${ professor.surnames } ${ professor.names }` : ''));
+        }
 
-    const handleScheduleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedScheduleType(event.target.value)
-        if (event.target.value === "student") {
-            setSelectedTeacherId("");
-            setSelectedTeacher("");
-        }else if (event.target.value === "teacher") {
-            setRefreshKey(0)
+        setAccordionExpanded(!accordionExpanded);
+    };
+    const handleTimetableTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const type = parseInt(event.target.value) as EUserRole;
+        setSelectedTimetableType(type);
+
+        if (type === EUserRole.Student) {
+            setCookie('personal-type', EUserRole.Student);
+            setSelectedProfessorId('');
+        } else if (type === EUserRole.Professor) {
+            setCookie('personal-type', EUserRole.Professor);
+            setRefreshKey(0);
         }
     }
+    const handleProfessorChange = (_e: React.SyntheticEvent, professor: UserPopulated | null) => {
+        let title: string = '';
 
-    return (
-        <div className="d-flex">
-            <div className="w-25 flex-1 bg-danger p-4">
-                <select
-                    className="form-select mb-2 w-100"
-                    aria-label="Default select example"
-                    value={selectedScheduleType}
-                    onChange={handleScheduleTypeChange}
+        if (professor) {
+            title = ` – ${ professor.surnames } ${ professor.names }`;
+            setSelectedProfessor(professor);
+            setSelectedProfessorId(professor._id);
+            setCookie('personal-professor', professor);
+            setCookie('personal-professorId', professor._id);
+            setAccordionExpanded(false);
+        } else {
+            setSelectedProfessor(null);
+            setSelectedProfessorId('');
+            removeCookie('personal-professor');
+            removeCookie('personal-professorId');
+        }
+
+        setAccordionTitle(t('personal_timetable') + title);
+    };
+
+    return (<>
+        <Accordion expanded={ accordionExpanded } onChange={ handleAccordionChange }>
+            <AccordionSummary expandIcon={ <ArrowDropDownRounded/> }>
+                <Typography>{ accordionTitle }</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <FormControl>
+                    <FormLabel>{ t('personal_timetable_type') }</FormLabel>
+                    <RadioGroup row
+                        value={ selectedTimetableType }
+                        onChange={ handleTimetableTypeChange }
+                    >
+                        <FormControlLabel
+                            value={ EUserRole.Student }
+                            control={ <Radio/> }
+                            label={ t('personal_timetable_student\'s') }
+                        />
+                        <FormControlLabel
+                            value={ EUserRole.Professor }
+                            control={ <Radio/> }
+                            label={ t('personal_timetable_professor\'s') }
+                        />
+                    </RadioGroup>
+                </FormControl>
+                { selectedTimetableType === EUserRole.Student && (<>
+                    <Stack
+                        spacing={ 2 }
+                        direction="column"
+                        component={ FormControl }
+                        sx={{
+                            height: '100%',
+                            // minHeight: '100vh',
+                        }}
+                    >
+                        <FormLabel>{ t('personal_timetable_details') }</FormLabel>
+                        <PersonalTimetableOptions
+                            setGroupCount={ setGroupCount }
+                            onSendData={ handleChildData }
+                        />
+                    </Stack>
+                </>) }
+                { selectedTimetableType === EUserRole.Professor && (
+                    <Stack
+                        spacing={ 2 }
+                        direction="column"
+                        component={ FormControl }
+                        sx={{
+                            height: '100%',
+                            // minHeight: '100vh',
+                        }}
+                    >
+                        <FormLabel>{ t('personal_timetable_details') }</FormLabel>
+                        <Autocomplete clearOnEscape
+                            value={ selectedProfessor }
+                            options={ professors.sort((a, b) => a.surnames.localeCompare(b.surnames)) }
+                            groupBy={ professor => professor.surnames[0] }
+                            getOptionLabel={ professor => professor.surnames + ' ' + professor.names }
+                            onChange={ handleProfessorChange }
+                            renderInput={ params => <TextField { ...params } label={ t('personal_timetable_professor') }/> }
+                        />
+                    </Stack>
+                ) }
+            </AccordionDetails>
+        </Accordion>
+
+        { (selectedProfessorId || refreshKey > 0) && (<>
+            { isUserOnMobile ? (<>
+                <Tabs
+                    variant="fullWidth"
+                    value={ weekday }
+                    onChange={ handleWeekdayChange }
                 >
-                    <option value="" disabled hidden>Wybierz Rozkład</option>
-                    <option value="teacher">Rozkład Nauczyciela</option>
-                    <option value="student">Rozkład Ucznia</option>
-                </select>
-                {selectedScheduleType === "teacher" ? (
-                    <SearchableDropdown
-                        placeholder = "Wybierz nauczyciela..."
-                        options={ teacherList }
-                        label="name"
-                        id="id"
-                        selectedVal={ selectedTeacher }
-                        handleChange={ (val) => handleTeacherChange(val) } // Set empty string if val is null
+                    { Object.entries(StringUtils.day)
+                        .filter(([k]) => k !== '0')
+                        .map(([k, v]) =>
+                            <Tab label={ v } key={ parseInt(k) } value={ parseInt(k) }/>
+                        )
+                    }
+                    <Tab value={ 0 } label={ StringUtils.day['0'] }/>
+                </Tabs>
+
+                { selectedTimetableType === EUserRole.Student ? (
+                    <StudentClasses
+                        weekday={ weekday }
+                        groups={ childMessageToSend.groups }
+                        semesterId={ childMessageToSend.semesterId }
+                        facultiesAll={ faculties }
+                        timetablesAll={ timetables }
+                        setDialogData={ setDialogData }
+                        setDialogOpen={ setDialogOpen }
                     />
-                ) : selectedScheduleType === "student" ? (
-                    <>
-                        <PrivateScheduleOptions onSendData={handleChildData}/>
-                        {childMessage.semesterId ? (
-                            <button className="btn btn-success mt-2" onClick={handleRefresh}>Zatwierdź</button>
-                        ): null}
-                    </>
-                ): null}
-            </div>
-            <div className="main flex-3 bg-success w-100 p-2">
-                {selectedScheduleType === "teacher" && selectedTeacherId ? (
-                    <AvailableTable _id={selectedTeacherId} classesAll={classes} facultiesAll={faculties} timetablesAll={timetables}/>
-                ):(
-                    selectedScheduleType === "student" && childMessageToSend.courseId && refreshKey > 0 ? (
-                        <PrivateSchedule studentInfo={childMessageToSend} key={refreshKey}/>
-                    ) : ("Wybierz typ rozkładu")
-                )}
-            </div>
-        </div>);
+                ) : selectedTimetableType === EUserRole.Professor && (
+                    <ProfessorClasses
+                        weekday={ weekday }
+                        userId={ selectedProfessorId }
+                        classesAll={ classes }
+                        facultiesAll={ faculties }
+                        timetablesAll={ timetables }
+                        setDialogData={ setDialogData }
+                        setDialogOpen={ setDialogOpen }
+                    />
+                ) }
+            </>) : (<Table>
+                <TableHead>
+                    <TableRow>
+                        { Object.entries(StringUtils.day)
+                            .filter(([k]) => k !== '0')
+                            .map(([k, v]) =>
+                                <TableCell key={ k } sx={{ fontWeight: 'bold' }}>{ v }</TableCell>
+                            )
+                        }
+                        <TableCell key={ 0 } sx={{ fontWeight: 'bold' }}>{ StringUtils.day[0] }</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    <TableRow sx={{ verticalAlign: 'top' }}>
+                        { Object.entries(StringUtils.day)
+                            .filter(([k]) => k !== '0')
+                            .map(([k]) =>
+                                <TableCell key={ k }>
+                                    { selectedTimetableType === EUserRole.Student ? (
+                                        <StudentClasses
+                                            weekday={ parseInt(k) }
+                                            groups={ childMessageToSend.groups }
+                                            semesterId={ childMessageToSend.semesterId }
+                                            facultiesAll={ faculties }
+                                            timetablesAll={ timetables }
+                                            setDialogData={ setDialogData }
+                                            setDialogOpen={ setDialogOpen }
+                                        />
+                                    ) : selectedTimetableType === EUserRole.Professor && (
+                                        <ProfessorClasses
+                                            weekday={ parseInt(k) }
+                                            userId={ selectedProfessorId }
+                                            classesAll={ classes }
+                                            facultiesAll={ faculties }
+                                            timetablesAll={ timetables }
+                                            setDialogData={ setDialogData }
+                                            setDialogOpen={ setDialogOpen }
+                                        />
+                                    ) }
+                                </TableCell>
+                            )
+                        }
+
+                        <TableCell key={ 0 }>
+                            { selectedTimetableType === EUserRole.Student ? (
+                                <StudentClasses
+                                    weekday={ 0 }
+                                    groups={ childMessageToSend.groups }
+                                    semesterId={ childMessageToSend.semesterId }
+                                    facultiesAll={ faculties }
+                                    timetablesAll={ timetables }
+                                    setDialogData={ setDialogData }
+                                    setDialogOpen={ setDialogOpen }
+                                />
+                            ) : selectedTimetableType === EUserRole.Professor && (
+                                <ProfessorClasses
+                                    weekday={ 0 }
+                                    userId={ selectedProfessorId }
+                                    classesAll={ classes }
+                                    facultiesAll={ faculties }
+                                    timetablesAll={ timetables }
+                                    setDialogData={ setDialogData }
+                                    setDialogOpen={ setDialogOpen }
+                                />
+                            ) }
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>) }
+        </>) }
+    </>);
 };
 
 export default Home;

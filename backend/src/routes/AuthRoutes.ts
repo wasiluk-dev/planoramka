@@ -12,10 +12,10 @@ export default class AuthRoutes {
 
     route = (app: Express): void => {
         app.get(this.prefix + '/session', (req: Request, res: Response) => {
-            if (req.session.user) {
-                res.status(EHttpStatusCode.Ok).json(req.session.user);
+            if (req.session) {
+                res.status(EHttpStatusCode.Ok).json(req.session);
             } else {
-                res.status(EHttpStatusCode.Unauthorized).json('The user is not logged in');
+                res.status(EHttpStatusCode.Unauthorized).json('api_session_unauthorized');
             }
         });
 
@@ -27,15 +27,15 @@ export default class AuthRoutes {
             // TODO: fix the model type
             // @ts-ignore
             DBUtils.find(model, filter)
-                .then((users) => {
+                .then(users => {
                     if (users.length === 0) {
-                        res.sendStatus(EHttpStatusCode.NotFound);
+                        res.status(EHttpStatusCode.Unauthorized).json('api_login_credentials_invalid');
                     } else if (users.length === 1) {
                         // TODO: fix the variable type
                         // @ts-ignore
                         const user: HydratedDocumentFromSchema<typeof UserSchema> = users[0];
                         AuthController.validateCredentials(username, password)
-                            .then((areCredentialsValid) => {
+                            .then(areCredentialsValid => {
                                 if (areCredentialsValid) {
                                     // TODO: decide which user properties to return
                                     req.session.user = {
@@ -46,8 +46,9 @@ export default class AuthRoutes {
                                         role: user.role,
                                     };
 
-                                    // res.sendStatus(EHttpStatusCode.Ok);
                                     res.status(EHttpStatusCode.Ok).json(req.session.user);
+                                } else {
+                                    res.status(EHttpStatusCode.Unauthorized).json('api_login_credentials_invalid');
                                 }
                             })
                             .catch(err => {
@@ -63,12 +64,12 @@ export default class AuthRoutes {
         });
         app.post(this.prefix + '/logout', (req: Request, res: Response) => {
             const sessionUser = req.session.user;
-            req.session.destroy((err) => {
+            req.session.destroy(err => {
                 if (err) {
                     res.status(EHttpStatusCode.InternalServerError).json(err.toString());
+                } else {
+                    res.status(EHttpStatusCode.Ok).json(sessionUser);
                 }
-
-                res.status(EHttpStatusCode.Ok).json(sessionUser);
             });
         });
         app.post(this.prefix + '/register', (req: Request, res: Response) => {

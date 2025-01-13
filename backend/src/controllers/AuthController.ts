@@ -20,10 +20,10 @@ export default class AuthController {
     ): Promise<boolean> => {
         return new User().find({ username: username })
             .then(async (users) => {
-                if (users.length !== 1) throw new Error('Could not find a user with the specified username.');
+                if (!users[0].password) throw new Error('Could not access the user password.');
                 return await argon2.verify(users[0].password, password);
             })
-            .catch((err) => {
+            .catch(err => {
                 throw err;
             });
     }

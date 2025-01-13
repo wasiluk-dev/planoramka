@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Grid2, TextField } from '@mui/material';
+import { Button, Grid2, TextField, Typography } from '@mui/material';
 import { PersonAddRounded } from '@mui/icons-material';
 
-import APIService from '../../services/apiService.tsx';
+import APIService from '../../services/APIService.ts';
 import i18n, { i18nPromise } from '../i18n.ts';
 
 const { t } = i18n;
 await i18nPromise;
 
 type RegisterProps = {
+    isUserOnMobile: boolean;
     setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Register: React.FC<RegisterProps> = ({ setDocumentTitle }) => {
+const Register: React.FC<RegisterProps> = ({ isUserOnMobile, setDocumentTitle }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -100,7 +101,7 @@ const Register: React.FC<RegisterProps> = ({ setDocumentTitle }) => {
     return (<>
         <Grid2
             container
-            spacing={ 0 }
+            spacing={ 2 }
             direction="column"
             alignItems="center"
             justifyContent="center"
@@ -109,8 +110,11 @@ const Register: React.FC<RegisterProps> = ({ setDocumentTitle }) => {
                 e.preventDefault();
                 register();
             } }
-            // sx={{ minHeight: '100vh' }}
+            sx={{ flexGrow: 1 }}
         >
+            { !isUserOnMobile && (
+                <Typography variant="h4">{ t('nav_route_register') }</Typography>
+            ) }
             <TextField required label={ t('form_username') } type="text" id="username" name="username"
                        onBlur={ handleUsernameBlur } error={ usernameError } helperText={ usernameError }/>
             <TextField required label={ t('form_password') } type="password" id="password" name="password"

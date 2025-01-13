@@ -1,6 +1,8 @@
 {
   "app_name": "Planoramka",
 
+  "api_login_credentials_invalid": "Wprowadzone dane są nieprawidłowe.",
+
   "db_course_code_required": "Kierunek musi mieć nadany kod.",
   "db_course_name_required": "Kierunek musi mieć nadaną nazwę.",
   "db_course_degree_required": "",
@@ -50,6 +52,9 @@
   "db_user_names_required": "Użytkownik musi mieć nadane imię (imiona).",
   "db_user_surnames_required": "Użytkownik musi mieć nadane nazwisko.",
 
+  "dialog_title_classDetails": "Szczegóły zajęć",
+  "dialog_actions_close": "Zamknij",
+
   "nav_route_main": "Strona główna",
   "nav_route_main_short": "Start",
   "nav_route_timetables": "Plany zajęć",
@@ -58,6 +63,7 @@
   "nav_route_rooms": "Zajętość sal",
   "nav_route_rooms_short": "Sale",
   "nav_route_admin_panel": "Panel administratora",
+  "nav_route_onboarding": "Start",
   "nav_route_login": "Logowanie",
   "nav_route_logout_tooltip": "Wyloguj się",
   "nav_route_register": "Rejestracja",
@@ -77,13 +83,75 @@
   "form_button_register": "Zarejestruj się",
   "form_button_login": "Zaloguj się",
 
-  "rooms_error_faculties_missing_title": "Nie znaleziono żadnych wydziałów.",
-  "rooms_error_faculties_missing_message": "Albo żadnych nie utworzono, albo strona po prostu się jeszcze ładuje ;)",
+  "notification_login_success": "Pomyślnie zalogowano.",
+  "notification_logout_success": "Pomyślnie wylogowano.",
+  "notification_form_unfinished": "Wypełnij wszystkie pola formularza.",
 
   "table_pagination_rows_per_page": "Ilość wierszy na stronę",
   "table_pagination_of": "z",
 
   "periodBlock_semester": "Rok {{year}}, sem. {{index}}",
+  "periodBlock_content_subject": "Przedmiot",
+  "periodBlock_content_subjectShort": "Skrót",
+  "periodBlock_content_room": "Sala",
+  "periodBlock_content_organizer": "Organizator",
+  "periodBlock_content_faculty": "Wydział",
+  "periodBlock_content_period": "Czas trwania",
+  "periodBlock_content_course": "Kierunek",
+  "periodBlock_content_semesterIndex": "Semestr",
+  "periodBlock_content_semesterYear": "Rok studiów",
+
+  "personal_timetable": "Personalny plan zajęć",
+  "personal_timetable_details": "Szczegóły",
+  "personal_timetable_professor": "Wykładowca",
+  "personal_timetable_professor's": "Wykładowcy",
+  "personal_timetable_student's": "Studenta",
+  "personal_timetable_type": "Typ rozkładu",
+
+  "timetables_chooser": "Wybór planu do zajęć",
+  "timetables_details_faculty": "Wydział",
+  "timetables_details_mode": "Tryb",
+  "timetables_details_mode_FullTime": "Stacjonarny",
+  "timetables_details_mode_PartTime": "Niestacjonarny",
+  "timetables_details_mode_Online": "Online",
+  "timetables_details_cycle": "Cykl",
+  "timetables_details_cycle_Long": "Jednolite magisterskie",
+  "timetables_details_cycle_First": "I stopnia",
+  "timetables_details_cycle_Second": "II stopnia",
+  "timetables_details_cycle_Third": "Doktoranckie",
+  "timetables_details_cycle_Postgraduate": "Podyplomowe",
+  "timetables_details_course": "Kierunek",
+  "timetables_details_semester": "Semestr",
+  "timetables_details_semester_none": "Brak semestrów do wyświetlenia",
+  "timetables_details_classType_none": "Brak typów zajęć do wyświetlenia",
+  "timetables_details_studentGroup": "Grupa",
+  "timetables_details_studentGroup_short": "Gr.",
+
+  "rooms_faculty": "Wydział",
+  "rooms_schedule": "Rozkład",
+  "rooms_error_faculties_missing_title": "Nie znaleziono żadnych wydziałów.",
+  "rooms_error_faculties_missing_message": "Albo żadnych nie utworzono, albo strona po prostu się jeszcze ładuje ;)",
+
+  "admin_buildings": "Budynki",
+  "admin_courses": "Kierunki",
+  "admin_column_acronym": "Skrót",
+  "admin_column_address": "Adres",
+  "admin_column_code": "Kod",
+  "admin_column_cycle": "Cykl",
+  "admin_column_degree": "Cykl",
+  "admin_column_name": "Nazwa",
+  "admin_column_order": "Kolejność",
+  "admin_column_rooms": "Sale",
+  "admin_column_specialization": "Specjalizacja",
+  "admin_column_weekdays": "Dni tygodnia",
+
+  "onboarding_button_finish": "Zakończ",
+  "onboarding_button_next": "Dalej",
+  "onboarding_button_previous": "Cofnij",
+  "onboarding_button_skip": "Pomiń",
+  "onboarding_step_last": "Ostatni krok",
+
+  "404_message": "Nie ma czego plądrować",
 
   "monday": "Poniedziałek",
   "tuesday": "Wtorek",
@@ -91,5 +159,12 @@
   "thursday": "Czwartek",
   "friday": "Piątek",
   "saturday": "Sobota",
-  "sunday": "Niedziela"
+  "sunday": "Niedziela",
+  "monday_short": "Pon.",
+  "tuesday_short": "Wt.",
+  "wednesday_short": "Śr.",
+  "thursday_short": "Czw.",
+  "friday_short": "Pt.",
+  "saturday_short": "Sob.",
+  "sunday_short": "Niedz."
 }
