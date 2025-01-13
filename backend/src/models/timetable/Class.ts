@@ -21,14 +21,14 @@ export const ClassSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            select: '_id names surnames', // TODO: add title later
+            select: '_id title names surnames', // TODO: add title later
         },
     },
     subject: {
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
         autopopulate: {
-            select: '_id name shortName',
+            select: '_id code name acronym',
         },
     },
     classType: {

@@ -32,7 +32,7 @@ export const SemesterSchema = new Schema({
 });
 
 SemesterSchema.path('academicYear').required(true, 'db_semester_academicYear_required')
-SemesterSchema.path('academicYearIndex').required(true, 'db_semester_academicYearIndex_required')
+// SemesterSchema.path('academicYearIndex').required(true, 'db_semester_academicYearIndex_required')
 SemesterSchema.path('index').required(true, 'db_semester_index_required')
 SemesterSchema.path('subjects').default([]);
 

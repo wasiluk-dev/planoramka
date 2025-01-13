@@ -17,7 +17,7 @@ await i18nPromise;
 export type NavigationProps = Record<string, {
     route: string;
     name: string;
-    shortName?: string;
+    shortName?: string; // if defined, the route will appear in the mobile UI bottom navigation
     icon?: JSX.Element;
     primary?: boolean; // if it's a navigation route, is it a main one?
 }>;
@@ -31,7 +31,7 @@ const Navigation: NavigationProps = {
         primary: true,
     },
     Timetables: {
-        route: '/rdy',
+        route: '/timetables',
         name: t('nav_route_timetables'),
         shortName: t('nav_route_timetables_short'),
         icon: <CalendarMonthRounded/>,
@@ -45,13 +45,13 @@ const Navigation: NavigationProps = {
         icon: <MeetingRoomRounded/>
     },
     TimetableMaker: {
-        route: '/plans',
+        route: '/maker',
         name: t('nav_route_timetable_maker'),
         icon: <EditCalendarRounded/>,
         primary: true,
     },
     AdminPanel: {
-        route: '/create',
+        route: '/admin',
         name: t('nav_route_admin_panel'),
         icon: <AdminPanelSettingsRounded/>,
         primary: true,
@@ -71,6 +71,10 @@ const Navigation: NavigationProps = {
     UserPanel: {
         route: '/profile',
         name: t('nav_route_profile'),
+    },
+    Onboarding: {
+        route: '/onboarding',
+        name: t('nav_route_onboarding'),
     },
     NotFound: {
         route: '/*',

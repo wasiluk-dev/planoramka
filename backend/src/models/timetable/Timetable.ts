@@ -25,9 +25,9 @@ export const TimetableSchema = new Schema({
         ref: new Schedule().name,
         autopopulate: true,
     }],
-    groups: {
+    groups: [{
         _id: false,
-        type: [{
+        type: {
             classType: {
                 type: Schema.Types.ObjectId,
                 ref: new ClassType().name,
@@ -42,8 +42,8 @@ export const TimetableSchema = new Schema({
                     message: 'db_timetable_groups_groupCount_invalid',
                 },
             },
-        }],
-    },
+        },
+    }],
     classes: [{
         type: Schema.Types.ObjectId,
         ref: new Class().name,
@@ -54,7 +54,7 @@ export const TimetableSchema = new Schema({
 TimetableSchema.path('semester').required(true, 'db_timetable_semester_required');
 TimetableSchema.path('weekdays').required(true, 'db_timetable_weekdays_required');
 TimetableSchema.path('schedules').required(true, 'db_timetable_schedules_required');
-TimetableSchema.path('groups').default(null);
+TimetableSchema.path('groups').default([]);
 TimetableSchema.path('groups.classType').required(true, 'db_timetable_groups_classType_required');
 TimetableSchema.path('groups.groupCount').required(true, 'db_timetable_groups_groupCount_required');
 TimetableSchema.path('classes').default([]);

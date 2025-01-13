@@ -10,8 +10,8 @@ export type UserPopulated = {
     password: string | null;
     names: string;
     surnames: string;
-    // TODO: uncomment fields after implementing
-    // title: EUserTitle | null;
+    title: string | null;
+    // TODO: uncomment after implementing
     // email: string;
     courses: string[];
     role: EUserRole;
@@ -44,7 +44,7 @@ export type SubjectPopulated = {
     _id: string;
     code: string;
     name: string;
-    shortName: string | null;
+    acronym: string | null;
     isElective: boolean;
     targetedSemesters: number[];
     classTypes: Omit<ClassTypePopulated, 'color'>[];
@@ -53,10 +53,10 @@ export type SubjectDetailsPopulated = {
     _id: string;
     course: string;
     subject: Omit<SubjectPopulated, 'classTypes'>;
-    details: [{
+    details: {
         classType: ClassTypePopulated;
         weeklyBlockCount: number;
-    }];
+    }[];
 }
 
 // faculty
@@ -87,14 +87,25 @@ export type RoomPopulated = {
 // timetable
 export type ClassPopulated = {
     _id: string;
-    organizer: Pick<UserPopulated, '_id' | 'names' | 'surnames'> | null;
-    subject: Pick<SubjectPopulated, '_id' | 'name' | 'shortName'> | null;
+    organizer: Pick<UserPopulated, '_id' | 'title' | 'names' | 'surnames'> | null;
+    subject: Pick<SubjectPopulated, '_id' | 'code' | 'name' | 'acronym'> | null;
     classType: ClassTypePopulated;
     weekday: number;
     periodBlocks: number[];
     room: RoomPopulated;
     semester: string | null;
-    studentGroups: number[] | null;
+    studentGroups: number[];
+}
+export type ClassUnpopulated = {
+    _id: string;
+    organizer: string | null;
+    subject: string | null;
+    classType: string;
+    weekday: number;
+    periodBlocks: number[];
+    room: string;
+    semester: string | null;
+    studentGroups: number[];
 }
 export type ClassTypePopulated = {
     _id: string;
@@ -113,6 +124,7 @@ export type SchedulePopulated = {
     _id: string;
     weekdays: EDayOfTheWeek[];
     periods: Omit<PeriodPopulated, '_id' | 'weekdays'>[];
+    active: boolean;
 }
 export type TimetablePopulated = {
     _id: string;
@@ -122,6 +134,6 @@ export type TimetablePopulated = {
     groups: {
         classType: Omit<ClassTypePopulated, 'color'>;
         groupCount: number;
-    }[] | null;
+    }[];
     classes: ClassPopulated[];
 }

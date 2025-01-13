@@ -7,7 +7,7 @@ export default class DBUtils {
             .then((docs: Array<HydratedDocument<T>>) => {
                 return docs;
             })
-            .catch((err) => {
+            .catch(err => {
                 throw err;
             });
     }
@@ -20,7 +20,7 @@ export default class DBUtils {
                     .then((hydratedDoc: HydratedDocument<T>) => {
                         savedDocuments.push(hydratedDoc);
                     })
-                    .catch((err) => {
+                    .catch(err => {
                         throw err;
                     });
             }
@@ -31,7 +31,7 @@ export default class DBUtils {
                 .then((doc: HydratedDocument<T>) => {
                     return doc;
                 })
-                .catch((err) => {
+                .catch(err => {
                     throw err;
                 });
         }
@@ -43,7 +43,7 @@ export default class DBUtils {
             .then((result: UpdateWriteOpResult) => {
                 return result;
             })
-            .catch((err) => {
+            .catch(err => {
                 throw err;
             });
     }
@@ -53,7 +53,7 @@ export default class DBUtils {
             .then((result: DeleteResult) => {
                 return result;
             })
-            .catch((err) => {
+            .catch(err => {
                 throw err;
             });
     }

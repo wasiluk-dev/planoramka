@@ -34,10 +34,9 @@ export const UserDefinition = {
     surnames: {
         type: String,
     },
-    // title: {
-    //     type: Number,
-    //     enum: EUserTitle,
-    // },
+    title: {
+        type: String,
+    },
     // email: {
     //     type: String,
     //     required: true,
@@ -62,6 +61,7 @@ UserSchema.path('username').required(true, 'db_user_username_required');
 UserSchema.path('password').required(true, 'db_user_password_required');
 UserSchema.path('names').required(true, 'db_user_names_required');
 UserSchema.path('surnames').required(true, 'db_user_surnames_required');
+UserSchema.path('title').default(null);
 UserSchema.path('courses').default([]);
 UserSchema.path('role').default(EUserRole.Student);
 
