@@ -101,7 +101,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
     const [rooms, setRooms] = useState<Array<RoomPopulated>>()
     const [lessons, setLessons] = useState([]);
     const [lessonsAvailable, setLessonsAvailable] = useState([])
-    const [lessonsBackup, setLessonsBackup] = useState([])
+    const [lessonsBackup,setLessonsBackup] = useState([])
     const [grid, setGrid] = useState<Array<Array<ObiektNew>>>([]);
     const [dayGrid, setDayGrid] = useState<Array<Array<Array<ObiektNew>>>>([])
     const [dayGridNew, setDayGridNew] = useState<Array<Array<Array<ObiektNew>>>>([])
@@ -245,6 +245,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                 const result = getObiektyById(subjects, selectedGroupType, i);
                 allResults = [...allResults, ...result];
             }
+            console.log(allResults)
             setLessons(allResults);
             setLessonsBackup(allResults)
         }
@@ -263,7 +264,6 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
         };
         fetchData();
     }, []);
-    console.log(subjects)
 
     const handleFacultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedFacultyId(event.target.value);
@@ -451,6 +451,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
 
     useEffect(() => {
         const lessonsAvailableHelper = []
+        console.log(lessonsBackup)
         lessonsBackup.forEach((lesson) => {
             if (lesson.isset === false){
                 lessonsAvailableHelper.push(lesson)
@@ -488,15 +489,20 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
             console.log("same place noobie");
             return;
         }
-
         const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
         let draggedItem :ObiektNew
-        if (lessons.length == 0){
+        if (lessons.length === 0){
+            console.log("Tu")
             draggedItem = lessonsBackup.find(item => item.id === active.id);
         }else {
+            console.log("Tam")
+            console.log(lessons)
             draggedItem = lessons.find(item => item.id === active.id);
+            if (!draggedItem) {
+                draggedItem = lessonsBackup.find(item => item.id === active.id);
+            }
         }
-
+        console.log(draggedItem)
         if(!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('ugabuga')){
             return
         }
@@ -507,6 +513,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
             const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
             //Wkładanie w pasek boczny
             if (toId.includes('ugabuga')) {
+                console.log("setuje bakap 1")
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id
@@ -516,7 +523,6 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 newDayGrid[showCurrentDay] = newGrid;
-                console.log("odpalam")
                 setDayGridNew(newDayGrid)
                 setDayGrid(newDayGrid)
                 //Wyjmowanie z paska bocznego
@@ -525,6 +531,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                 const updatedItem = { ...draggedItem, isset: true, x: toRow, y: toCol, setday: showCurrentDay };
                 setSubjectPopup(updatedItem)
                 setPopup(true);
+                console.log("setuje bakap 2")
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
@@ -535,12 +542,15 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                 setDayGridNew(newDayGrid)
                 setDayGrid(newDayGrid)
             }
+            console.log(lessonsBackup)
+            console.log(lessons)
         } else {
             const newDayGrid: Array<Array<Array<ObiektNew | null>>> = dayGrid.map(row => [...row]);
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
                 setSubjectPopup(updatedItem)
                 setPopup(true);
+                console.log("setuje bakap 3")
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
                         item.id === draggedItem.id ? updatedItem : item
@@ -583,8 +593,9 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
                 : lesson
         );
         if (updatedSubject.setday == showCurrentDay){
+            console.log(updatedLessons)
             setLessons(updatedLessons)
-            setLessonsBackup(updatedLessons)
+            // setLessonsBackup(updatedLessons)
         }
         setSubjectPopup(updatedSubject); // Update the parent's state or perform other actions
         const newGrid: Array<Array<ObiektNew | null>> = grid.map(row => [...row]);
@@ -658,7 +669,6 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
         }
         console.log(rdyToSend)
     }
-    console.log(dayGrid)
 
     //TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (
