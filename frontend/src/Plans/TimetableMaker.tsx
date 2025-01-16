@@ -78,7 +78,7 @@ type PlansProps = {
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | boolean>>;
 }
 
-const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
+const TimetableMaker: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
     useEffect(() => {
         setDocumentTitle(t('nav_route_timetable_maker'));
         setCurrentTabValue(ENavTabs.TimetableMaker);
@@ -863,7 +863,7 @@ const Plans: React.FC<PlansProps> = ({ setDocumentTitle, setCurrentTabValue }) =
     );
 };
 
-export default Plans;
+export default TimetableMaker;
 
 
 

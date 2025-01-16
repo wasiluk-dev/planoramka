@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-// import Plans from "./Plans.tsx";
+// import TimetableMaker from "./TimetableMaker.tsx";
 
 interface DroppableProps {
     id: string;

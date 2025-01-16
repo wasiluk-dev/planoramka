@@ -11,7 +11,7 @@ import Home from './views/Home.tsx';
 import Login from './views/Login.tsx';
 import NavDrawer from './Components/NavDrawer.tsx';
 import NotFound from './views/NotFound.tsx';
-import Plans from './Plans/Plans.tsx';
+import TimetableMaker from './Plans/TimetableMaker.tsx';
 import ReadyPlan from './Plans/PlansRDY/ReadyPlan.tsx';
 import Register from './views/Register.tsx';
 import Rooms from './views/Rooms.tsx';
@@ -137,8 +137,8 @@ const App = () => {
                                    element={ <ReadyPlan setDocumentTitle={ setDocumentTitle }
                                                         setCurrentTabValue={ setCurrentTabValue }/> }/>
                             <Route path={ Navigation.TimetableMaker.route }
-                                   element={ <Plans setDocumentTitle={ setDocumentTitle }
-                                                    setCurrentTabValue={ setCurrentTabValue }/> }/>
+                                   element={ <TimetableMaker setDocumentTitle={ setDocumentTitle }
+                                                             setCurrentTabValue={ setCurrentTabValue }/> }/>
                             <Route path={ Navigation.Rooms.route }
                                    element={ <Rooms setDocumentTitle={ setDocumentTitle }
                                                     setCurrentTabValue={ setCurrentTabValue }/> }/>
