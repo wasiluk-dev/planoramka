@@ -26,7 +26,7 @@ export const SemesterSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
         autopopulate: {
-            select: '_id classTypes',
+            select: '_id code name classTypes',
         },
     }],
 });

@@ -20,6 +20,9 @@ export const SubjectDetailsSchema = new Schema({
     course: {
         type: Schema.Types.ObjectId,
         ref: new Course().name,
+        autopopulate: {
+            select: '_id code name specialization',
+        }
     },
     details: {
         _id: false,
