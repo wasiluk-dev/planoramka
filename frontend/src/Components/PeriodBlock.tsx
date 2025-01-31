@@ -79,31 +79,31 @@ export type PeriodBlockPopulated = {
 type PeriodBlockProps = {
     setDialogData: React.Dispatch<React.SetStateAction<{ title: string; content: JSX.Element }>>;
     setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    variant?: 'small' | 'big' | 'titleOnly';
+    variant?: 'infoLess' | 'titleOnly';
     classType: ClassPopulated['classType'];
     subject: ClassPopulated['subject'];
-    period?: PeriodPopulated;
+    period?: Partial<PeriodPopulated>;
     faculty?: FacultyPopulated;
-    room?: ClassPopulated['room'];
+    room?: Partial<ClassPopulated['room']>;
     organizer?: ClassPopulated['organizer'];
-    course?: CoursePopulated;
-    semester?: SemesterPopulated;
+    course?: Partial<CoursePopulated>;
+    semester?: Partial<SemesterPopulated>;
 };
 
 const PeriodBlock: React.FC<PeriodBlockProps> = ({ setDialogData, setDialogOpen, variant, classType, subject, room, organizer, faculty, period, course, semester }) => {
-    const fontSize = (variant === 'small' || variant === 'titleOnly') ? '0.85rem' : '1rem';
+    const fontSize = '0.85rem';
     const content: Content = {
         subject: subject ? subject.name : '',
         subjectShort: subject ? (subject.acronym ? subject.acronym : subject.code) : '',
         period: period ? `${ period.startTime } – ${ period.endTime }` : '',
         faculty: faculty ? faculty.name : '',
         facultyAcronym: faculty ? faculty.acronym : '',
-        room: room ? room.roomNumber : '',
+        room: (room && room.roomNumber) ? room.roomNumber : '',
         organizer: organizer ? (organizer.title ? `${ organizer.title } ` : '') + `${ organizer.names } ${ organizer.surnames }` : '',
         course: course ? (course.name + (course.specialization ? ` (${ course.specialization })` : '')) : '',
-        courseCode: course ? course.code : '',
-        semesterYear: semester ? decimalToRoman(Math.round(semester.index / 2)) : '',
-        semesterIndex: semester ? semester.index.toString() : '',
+        courseCode: (course && course.code) ? course.code : '',
+        semesterYear: (semester && semester.index) ? decimalToRoman(Math.round(semester.index / 2)) : '',
+        semesterIndex: (semester && semester.index) ? semester.index.toString() : '',
     };
 
     let type: EPeriodBlockType = EPeriodBlockType.Generic;
@@ -179,18 +179,18 @@ const PeriodBlock: React.FC<PeriodBlockProps> = ({ setDialogData, setDialogOpen,
                 ) }
             </>) }
 
-            { variant !== 'big' && (<>
+            { variant !== 'infoLess' && (<>
                 <CardActions
                     disableSpacing
                     sx={{
-                        alignSelf: "stretch",
-                        display: "flex",
-                        justifyContent: "space-evenly",
-                        alignItems: "flex-start",
                         p: 0,
+                        display: "flex",
+                        alignSelf: "stretch",
+                        alignItems: "flex-start",
+                        justifyContent: "space-evenly",
                     }}
                 >
-                    <InfoOutlined onClick={ handleDialog }/>
+                    <InfoOutlined onClick={ handleDialog } sx={{ cursor: 'pointer' }}/>
                 </CardActions>
             </>) }
         </Card>

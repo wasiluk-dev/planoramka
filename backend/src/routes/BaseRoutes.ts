@@ -40,7 +40,7 @@ abstract class BaseRoutes<T extends Document> {
                     // );
                 }
             })
-            .patch((req: Request, res: Response) => this._controller.patchByFilter(res, req.body.filter, req.body.update))
+            .patch((req: Request, res: Response) => this._controller.patchByFilter(res, JSON.parse(req.body.filter), JSON.parse(req.body.update)))
             .delete((req: Request, res: Response) => this._controller.deleteByFilter(res, req.body));
 
         app.route(this.prefix + this.suffix)

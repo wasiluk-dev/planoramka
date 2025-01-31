@@ -10,9 +10,9 @@ import {
     Tab, Tabs,
     Typography,
 } from '@mui/material';
-import { ArrowDropDownRounded } from '@mui/icons-material';
+import { AccountBalanceRounded, ArrowDropDownRounded } from '@mui/icons-material';
 
-import RoomsTable from '../Components/RoomsTable.tsx';
+import RoomsTable from '../components/RoomsTable.tsx';
 
 import APIService from '../../services/APIService.ts';
 import APIUtils from '../utils/APIUtils.ts';
@@ -107,11 +107,11 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
 
         for (const ra of roomsAvailabilityToSet) {
             for (let i = 0; i < 7; i++) {
-                let roomAvailability = roomsAvailabilityToSet.find((a) =>
+                let roomAvailability = roomsAvailabilityToSet.find(a =>
                     a.room._id === ra.room._id
                 );
 
-                if (roomAvailability) {
+                if (roomAvailability && weekdayPeriods[i]) {
                     for (let j = 0; j < weekdayPeriods[i].length; j++) {
                         if (APIUtils.isRoomOccupied(classes, ra.room._id, i, j)) {
                             const roomsClass = APIUtils.getRoomsClass(classes, ra.room._id, i, j);
@@ -133,9 +133,9 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
     }
     const handleAccordionChange = () => {
         if (!accordionExpanded) {
-            setAccordionTitle(t('rooms_schedule'));
+            setAccordionTitle(t('rooms_accordion_title'));
         } else {
-            setAccordionTitle(t('rooms_schedule') + (selectedFaculty ? ` – ${ selectedFaculty.name }` : ''));
+            setAccordionTitle(t('rooms_accordion_title') + (selectedFaculty ? ` – ${ selectedFaculty.name }` : ''));
         }
 
         setAccordionExpanded(!accordionExpanded);
@@ -148,7 +148,7 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
         setCookie('rooms.facultyId', facultyId);
         setSelectedFacultyId(facultyId);
         setSelectedFaculty(faculty);
-        setAccordionTitle(t('rooms_schedule') + (faculty ? ` – ${ faculty.name }` : ''));
+        setAccordionTitle(t('rooms_accordion_title') + (faculty ? ` – ${ faculty.name }` : ''));
         setAccordionExpanded(!accordionExpanded);
     }
     const doesFacultyHaveRooms = (faculty: FacultyPopulated) => {
@@ -156,11 +156,11 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
         if (faculty.buildings.length === 0) return false;
 
         let roomCount = 0;
-        faculty.buildings.map((building) => {
+        faculty.buildings.map(building => {
             building.rooms.map(() => {
                 roomCount++;
             })
-        })
+        });
 
         return roomCount !== 0;
     }
@@ -178,16 +178,18 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
             {/*        <CircularProgress/>*/}
             {/*    </Box>*/}
             {/*) }*/}
+
             <Accordion expanded={ accordionExpanded } onChange={ handleAccordionChange }>
                 <AccordionSummary expandIcon={ <ArrowDropDownRounded/> }>
-                    <Typography>{ accordionTitle ? accordionTitle : t('rooms_schedule') }</Typography>
+                    <Typography><AccountBalanceRounded sx={{ mr: 1 }}/>{ accordionTitle ? accordionTitle : t('rooms_accordion_title') }</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                     <Stack>
                         <FormControl>
-                            <InputLabel>{ t('rooms_faculty') }</InputLabel>
+                            <InputLabel id="rooms-faculty-label">{ t('rooms_faculty') }</InputLabel>
                             <Select
                                 label={ t('rooms_faculty') }
+                                labelId="rooms-faculty-label"
                                 value={ selectedFacultyId }
                                 onChange={ handleSelectedFacultyChange }
                             >
@@ -205,6 +207,7 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
                     </Stack>
                 </AccordionDetails>
             </Accordion>
+
             { selectedFaculty && (<>
                 <Tabs
                     sx={{  }}
@@ -223,6 +226,7 @@ const Rooms: React.FC<RoomsProps> = ({ isUserOnMobile, setCurrentTabValue, setDi
                     }) }
                     <Tab value={ 0 } label={ StringUtils.day["0"] }></Tab>
                 </Tabs>
+
                 <RoomsTable
                     setDialogData={ setDialogData }
                     setDialogOpen={ setDialogOpen }

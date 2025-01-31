@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
-import APIService from '../../../../services/APIService.ts';
 import BaseForm, { BaseFormProps } from '../BaseForm.tsx';
+
+import APIService from '../../../../services/APIService.ts';
+import ECourseMode from '../../../../../backend/src/enums/ECourseMode.ts';
+import ECourseCycle from '../../../../../backend/src/enums/ECourseCycle.ts';
 import { SemesterPopulated } from '../../../../services/DBTypes.ts';
+import StringUtils from '../../../utils/StringUtils.ts';
 
 type CourseFormProps = {
     activeStep: number;
@@ -16,10 +20,18 @@ const CourseForm: React.FC<CourseFormProps> = ({ activeStep, refresh, setRefresh
     const [code, setCode] = useState<string>('');
     const [name, setName] = useState<string>('');
     const [specialization, setSpecialization] = useState<string>('');
+    const [mode, setMode] = useState<ECourseMode | false>(false);
+    const [cycle, setCycle] = useState<ECourseCycle | false>(false);
 
     const [semesters, setSemesters] = useState<SemesterPopulated[]>([]);
     const [selectedSemesterIds, setSelectedSemesterIds] = useState<string[]>([]);
 
+    useEffect(() => {
+        console.log(mode);
+        console.log(cycle);
+    }, [mode, cycle]);
+
+    // TODO: fix value and setter types for enums
     const fields: BaseFormProps['fields'] = [
         {
             label: 'Kod',
@@ -40,6 +52,34 @@ const CourseForm: React.FC<CourseFormProps> = ({ activeStep, refresh, setRefresh
             helperText: 'Nazwa specjalizacji kierunku, np. Inżynieria oprogramowania',
             value: specialization,
             setter: setSpecialization,
+        },
+        {
+            label: 'Tryb',
+            select: {
+                value: mode,
+                setter: setMode,
+                enumData: {
+                    keys: Object.values(ECourseMode)
+                        .filter(mode => isNaN(Number(mode)))
+                        .map(mode => mode as string),
+                    values: StringUtils.modes,
+                }
+            },
+            required: true,
+        },
+        {
+            label: 'Cykl',
+            select: {
+                value: cycle,
+                setter: setCycle,
+                enumData: {
+                    keys: Object.values(ECourseCycle)
+                        .filter(cycle => isNaN(Number(cycle)))
+                        .map(cycle => cycle as string),
+                    values: StringUtils.cycles,
+                }
+            },
+            required: true,
         },
         {
             label: 'Semestry',
@@ -68,6 +108,8 @@ const CourseForm: React.FC<CourseFormProps> = ({ activeStep, refresh, setRefresh
             created
             || code === ''
             || name === ''
+            || mode === false
+            || cycle === false
         ) return;
 
         const postData = async() => {
@@ -75,6 +117,8 @@ const CourseForm: React.FC<CourseFormProps> = ({ activeStep, refresh, setRefresh
             formData.append('code', code);
             formData.append('name', name);
             if (specialization !== '') formData.append('specialization', specialization);
+            formData.append('mode', mode.toString());
+            formData.append('cycle', cycle.toString());
             if (selectedSemesterIds.length > 0) {
                 selectedSemesterIds.forEach(id => {
                     formData.append('semesters[]', id);

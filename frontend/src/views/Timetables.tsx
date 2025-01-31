@@ -4,33 +4,33 @@ import {
     Table, TableBody, TableCell, TableRow, Tabs,
     Typography,
 } from '@mui/material';
-import { ArrowDropDownRounded } from '@mui/icons-material';
+import { ArrowDropDownRounded, PreviewRounded } from '@mui/icons-material';
 
-import PeriodBlock from '../../Components/PeriodBlock.tsx';
-import TimetableClasses from '../../Components/TimetableClasses.tsx';
+import Loading from '../components/Loading.tsx';
+import PeriodBlock from '../components/PeriodBlock.tsx';
+import TimetableClasses from '../components/TimetableClasses.tsx';
 
-import './planrdy.css';
-import APIService from '../../../services/APIService.ts';
-import ENavTabs from '../../enums/ENavTabs.ts';
-import StringUtils from '../../utils/StringUtils.ts';
+import APIService from '../../services/APIService.ts';
+import ENavTabs from '../enums/ENavTabs.ts';
+import StringUtils from '../utils/StringUtils.ts';
 import {
     ClassPopulated,
     PeriodPopulated,
     TimetablePopulated
-} from '../../../services/DBTypes.ts';
-import i18n, { i18nPromise } from '../../i18n';
+} from '../../services/DBTypes.ts';
+import i18n, { i18nPromise } from '../i18n.ts';
 
 const { t } = i18n;
 await i18nPromise;
 
-type ReadyPlanProps = {
+type TimetablesProps = {
+    isUserOnMobile: boolean;
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
     setDialogData: React.Dispatch<React.SetStateAction<{ title: string; content: JSX.Element }>>;
     setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
 }
-
-const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogData, setDialogOpen, setDocumentTitle }) => {
+const Timetables: React.FC<TimetablesProps> = ({ isUserOnMobile, setCurrentTabValue, setDialogData, setDialogOpen, setDocumentTitle }) => {
     const [periods, setPeriods] = useState<PeriodPopulated[]>([]);
     const [accordionExpanded, setAccordionExpanded] = useState<boolean>(true);
     const [accordionTitle, setAccordionTitle] = useState<string>(t('timetables_chooser'));
@@ -160,6 +160,7 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
 
                 // Ensure all acronyms are initialized correctly
                 Object.keys(groupNames).forEach((acronym) => {
+                    // @ts-ignore
                     const groupCount = groupNames[acronym] || 1; // Default to 1 group if undefined
                     newTableData[acronym] = Array.from({ length: fixedRows }, () =>
                         Array(groupCount).fill(null)
@@ -226,7 +227,9 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
 
                 // Initialize the table data for each group
                 Object.keys(groupNames).forEach((acronym) => {
+                    // @ts-ignore
                     const groupCount = groupNames[acronym] || 1; // Number of groups for this acronym
+                    // @ts-ignore
                     newTableData[acronym] = Array.from({ length: fixedRows }, () =>
                         Array(groupCount).fill(null) // Create a 2D array: rows × groupCount
                     );
@@ -237,11 +240,13 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
                     const { acronym } = classItem.classType;
                     const groups = classItem.studentGroups || []; // Groups the class is associated with
 
+                    // @ts-ignore
                     if (newTableData[acronym]) {
                         classItem.periodBlocks.forEach((period) => {
                             if (period <= fixedRows) {
                                 groups.forEach((groupIdx) => {
                                     // Place data into the corresponding row and group column
+                                    // @ts-ignore
                                     newTableData[acronym][period - 1][groupIdx - 1] = {
                                         ...classItem,
                                     };
@@ -261,7 +266,7 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
     return (<>
         <Accordion expanded={ accordionExpanded } onChange={ handleAccordionChange }>
             <AccordionSummary expandIcon={ <ArrowDropDownRounded/> }>
-                <Typography>{ accordionTitle }</Typography>
+                <Typography><PreviewRounded sx={{ mr: 1 }}/>{ accordionTitle }</Typography>
             </AccordionSummary>
             <AccordionDetails>
                 <TimetableClasses
@@ -315,7 +320,7 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
                         //     <TableRow key={ group.classType._id } className="table-dark d-flex flex-row">
                         //         { Array.from({ length: group.groupCount }).map((_, i) => (
                         //             <TableCell key={ i }
-                        //                 className="text-center w-100 border-secondary border border-1 grupy">
+                        //                 className="text-center w-100 border-secondary border border-1">
                         //                 {group.classType.name} {i + 1}
                         //             </TableCell>
                         //
@@ -340,7 +345,6 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
 
                 { grid.map((_row, rowIndex) => {
                     return (
-                        // TODO: check why minHeight is not working
                         <TableRow
                             key={ rowIndex }
                             sx={{ minHeight: 60 }}
@@ -352,9 +356,9 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
                                         selectedTimetable.schedules[1].periods[rowIndex].startTime + ' – ' + selectedTimetable.schedules[1].periods[rowIndex].endTime
                                     ) : (weekday > 0 && weekday < 6 && selectedTimetable.schedules[0]?.periods[rowIndex] ? (
                                         selectedTimetable.schedules[0].periods[rowIndex].startTime + ' – ' + selectedTimetable.schedules[0].periods[rowIndex].endTime
-                                    ) : ("Error in showing period per day!"))
+                                    ) : ('Error in showing period per day!'))
                                 ) : (
-                                    <p>Loading...</p>
+                                    <Loading/>
                                 ) }
                             </TableCell>
 
@@ -416,7 +420,7 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
                                                                                     >
                                                                                         { currentCell ? (
                                                                                             <PeriodBlock
-                                                                                                variant="big"
+                                                                                                variant={ isUserOnMobile ? 'titleOnly' : 'infoLess' }
                                                                                                 setDialogData={ setDialogData }
                                                                                                 setDialogOpen={ setDialogOpen }
                                                                                                 classType={currentCell.classType}
@@ -459,5 +463,3 @@ const Timetables: React.FC<ReadyPlanProps> = ({ setCurrentTabValue, setDialogDat
 };
 
 export default Timetables;
-
-// TODO: ogarnąć divy żeby były na całość i nie było ich 213769; Godziny zależne do dnia;

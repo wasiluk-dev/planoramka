@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 enum EDayOfTheWeek {
     Sunday,
     Monday,

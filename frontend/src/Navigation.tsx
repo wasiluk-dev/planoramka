@@ -6,9 +6,10 @@ import {
     HomeRounded,
     LoginRounded,
     MeetingRoomRounded,
-    PersonAddRounded
+    PersonAddRounded,
 } from '@mui/icons-material';
 
+import EUserRole from '../../backend/src/enums/EUserRole.ts';
 import i18n, { i18nPromise } from './i18n.ts';
 
 const { t } = i18n;
@@ -20,6 +21,7 @@ export type NavigationProps = Record<string, {
     shortName?: string; // if defined, the route will appear in the mobile UI bottom navigation
     icon?: JSX.Element;
     primary?: boolean; // if it's a navigation route, is it a main one?
+    permissions?: EUserRole; // role needed to see the site's content
 }>;
 
 const Navigation: NavigationProps = {
@@ -41,20 +43,22 @@ const Navigation: NavigationProps = {
         route: '/rooms',
         name: t('nav_route_rooms'),
         shortName: t('nav_route_rooms_short'),
+        icon: <MeetingRoomRounded/>,
         primary: true,
-        icon: <MeetingRoomRounded/>
     },
     TimetableMaker: {
         route: '/maker',
         name: t('nav_route_timetable_maker'),
         icon: <EditCalendarRounded/>,
         primary: true,
+        permissions: EUserRole.Staff,
     },
     AdminPanel: {
         route: '/admin',
         name: t('nav_route_admin_panel'),
         icon: <AdminPanelSettingsRounded/>,
         primary: true,
+        permissions: EUserRole.Admin,
     },
     Register: {
         route: '/register',
@@ -71,10 +75,12 @@ const Navigation: NavigationProps = {
     UserPanel: {
         route: '/profile',
         name: t('nav_route_profile'),
+        permissions: EUserRole.Student,
     },
     Onboarding: {
         route: '/onboarding',
         name: t('nav_route_onboarding'),
+        permissions: EUserRole.Staff,
     },
     NotFound: {
         route: '/*',
@@ -85,6 +91,7 @@ const Navigation: NavigationProps = {
     //     name: t('nav_route_'),
     //     icon: <Rounded/>,
     //     primary: false,
+    //     permissions: EUserRole.,
     // },
 };
 

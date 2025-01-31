@@ -1,4 +1,3 @@
-import { fixupConfigRules } from '@eslint/compat';
 import eslintJs from '@eslint/js';
 import stylisticJs from '@stylistic/eslint-plugin-js'
 import eslintImport from 'eslint-plugin-import';

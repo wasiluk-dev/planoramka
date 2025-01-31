@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-// import Plans from "./Plans.tsx";
+import { Stack } from '@mui/material';
 
 interface DroppableProps {
     id: string;
@@ -11,26 +11,31 @@ export const Droppable: React.FC<DroppableProps> = (props) => {
     const { isOver, setNodeRef } = useDroppable({
         id: props.id,
     });
-    let style
-    if(props.id == 'ugabuga'){
+
+    let style;
+    if (props.id === 'subjectsDroppable') {
         style = {
             opacity: isOver ? 0.6 : 1,
-            width: '100px',
-            minHeight: '100px',
-            display: 'inline',
+            display: 'flex',
+            padding: '16px',
             backgroundColor: 'transparent',
-            }
-
-    }else {
+        };
+    } else {
         style = {
             opacity: isOver ? 0.6 : 1,
         };
-
     }
+
     return (
-        <div ref={setNodeRef} style={style} id={props.id}>
-            {props.children}
-        </div>
+        <Stack
+            spacing={ 2 }
+            id={ props.id }
+            style={ style }
+            ref={ setNodeRef }
+        >
+            { props.children }
+        </Stack>
     );
 }
-export default  Droppable;
+
+export default Droppable;

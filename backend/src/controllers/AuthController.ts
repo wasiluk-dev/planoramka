@@ -1,14 +1,14 @@
+// noinspection JSUnusedGlobalSymbols
+
 import argon2 from 'argon2';
-import { NextFunction, Request, Response } from 'express';
+import { ObjectId } from 'mongodb';
 import { InferRawDocType } from 'mongoose';
 
-import EHttpStatusCode from '../enums/EHttpStatusCode';
-import EUserRole from '../enums/EUserRole';
 import User, { UserDefinition } from '../models/User';
 
 declare module 'express-session' {
     interface SessionData {
-        user?: Partial<InferRawDocType<typeof UserDefinition>>;
+        user?: Partial<InferRawDocType<typeof UserDefinition>> & { _id: ObjectId };
         isAuthenticated?: boolean;
     }
 }
@@ -28,28 +28,28 @@ export default class AuthController {
             });
     }
 
-    static confirmPermissions = (
-        role: EUserRole,
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ) => {
-        if ((role === EUserRole.Guest) || (req.session.user && req.session.user.role === role)) {
-            return next();
-        }
-
-        res.sendStatus(EHttpStatusCode.Forbidden);
-    }
-
-    static isAuthenticated = (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ) => {
-        if (req.session.isAuthenticated) {
-            return next();
-        }
-
-        res.sendStatus(EHttpStatusCode.Unauthorized);
-    }
+    // static confirmPermissions = (
+    //     role: EUserRole,
+    //     req: Request,
+    //     res: Response,
+    //     next: NextFunction,
+    // ) => {
+    //     if ((role === EUserRole.Guest) || (req.session.user && req.session.user.role === role)) {
+    //         return next();
+    //     }
+    //
+    //     res.sendStatus(EHttpStatusCode.Forbidden);
+    // }
+    //
+    // static isAuthenticated = (
+    //     req: Request,
+    //     res: Response,
+    //     next: NextFunction,
+    // ) => {
+    //     if (req.session.isAuthenticated) {
+    //         return next();
+    //     }
+    //
+    //     res.sendStatus(EHttpStatusCode.Unauthorized);
+    // }
 }

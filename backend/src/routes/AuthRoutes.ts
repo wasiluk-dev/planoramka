@@ -12,8 +12,8 @@ export default class AuthRoutes {
 
     route = (app: Express): void => {
         app.get(this.prefix + '/session', (req: Request, res: Response) => {
-            if (req.session) {
-                res.status(EHttpStatusCode.Ok).json(req.session);
+            if (req.session.user) {
+                res.status(EHttpStatusCode.Ok).json(req.session.user);
             } else {
                 res.status(EHttpStatusCode.Unauthorized).json('api_session_unauthorized');
             }
@@ -24,25 +24,25 @@ export default class AuthRoutes {
             const model: Model<HydratedDocumentFromSchema<typeof UserSchema>> = new UserController().base.model;
             const filter: FilterQuery<HydratedDocumentFromSchema<typeof UserSchema>> = { username: username };
 
-            // TODO: fix the model type
+            // TODO: try to fix the model type
             // @ts-ignore
             DBUtils.find(model, filter)
                 .then(users => {
                     if (users.length === 0) {
                         res.status(EHttpStatusCode.Unauthorized).json('api_login_credentials_invalid');
                     } else if (users.length === 1) {
-                        // TODO: fix the variable type
+                        // TODO: try to fix the variable type
                         // @ts-ignore
                         const user: HydratedDocumentFromSchema<typeof UserSchema> = users[0];
                         AuthController.validateCredentials(username, password)
                             .then(areCredentialsValid => {
                                 if (areCredentialsValid) {
-                                    // TODO: decide which user properties to return
                                     req.session.user = {
+                                        _id: user._id,
                                         username: user.username,
+                                        title: user.title,
                                         names: user.names,
                                         surnames: user.surnames,
-                                        courses: user.courses,
                                         role: user.role,
                                     };
 
@@ -81,7 +81,6 @@ export default class AuthRoutes {
                 surnames: surnames,
             } as HydratedDocumentFromSchema<typeof UserSchema>)
                 .then((docs) => {
-                    // TODO: decide what fields should be saved in req.session
                     if (docs instanceof Array) {
                         const body = [];
                         for (const doc of docs) {
@@ -90,7 +89,6 @@ export default class AuthRoutes {
                                 names: doc.names,
                                 surnames: doc.surnames,
                                 role: doc.role,
-                                courses: doc.courses,
                             });
                         }
 
@@ -101,7 +99,6 @@ export default class AuthRoutes {
                             names: docs.names,
                             surnames: docs.surnames,
                             role: docs.role,
-                            courses: docs.courses,
                         });
                     }
                 })

@@ -9,15 +9,19 @@ import {
     Table, TableBody, TableCell, TableRow,
     Typography,
 } from '@mui/material';
+import {
+    ArrowDropDownRounded,
+    DesignServicesRounded,
+} from '@mui/icons-material';
 
-import Draggable from '../Components/DND/Draggable.tsx';
-import Droppable from '../Components/DND/Droppable.tsx';
-import RoomPopup from '../Components/Popups/RoomPopup.tsx';
+import Draggable from '../components/DND/Draggable.tsx';
+import Droppable from '../components/DND/Droppable.tsx';
+import RoomPopup from '../components/Popups/RoomPopup.tsx';
 
-import './plans.css';
 import APIService from '../../services/APIService.ts';
 import APIUtils from '../utils/APIUtils.ts';
 import ENavTabs from '../enums/ENavTabs.ts';
+import StringUtils from '../utils/StringUtils.ts';
 import {
     ClassPopulated,
     ClassTypePopulated,
@@ -29,24 +33,25 @@ import {
     TimetablePopulated,
     UserPopulated,
 } from '../../services/DBTypes.ts';
-import i18n, { i18nPromise } from '../i18n';
-import { ArrowDropDownRounded } from '@mui/icons-material';
-import StringUtils from '../utils/StringUtils.ts';
+import { NotificationProps } from '../components/Notification.tsx';
+import i18n, { i18nPromise } from '../i18n.ts';
+import { Navigate, useLocation } from 'react-router-dom';
 
 const { t } = i18n;
 await i18nPromise;
 
-type SubjectPopup = {
+export type SubjectPopup = {
+    classId?: string;
+    id: string;
+    name: string;
+    type: string;
     color: string;
     groups: number;
-    id: string;
+    organizerId: string;
+    roomId: string;
     isset: boolean;
     // isweekly: boolean;
-    name: string;
-    room: string;
     setday: number;
-    teacher: string;
-    type: string;
     weeklyCount: number;
     x: number;
     y: number;
@@ -54,13 +59,14 @@ type SubjectPopup = {
 };
 
 type TimetableMakerProps = {
-    setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
+    isUserOnMobile: boolean;
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
+    setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
+    setNotificationData: React.Dispatch<React.SetStateAction<NotificationProps['data']>>;
 }
-
-const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
+const TimetableMaker: React.FC<TimetableMakerProps> = ({ isUserOnMobile, setCurrentTabValue, setDocumentTitle, setNotificationData }) => {
     const [accordionExpanded, setAccordionExpanded] = useState<boolean>(true);
-    const [accordionTitle, setAccordionTitle] = useState<string>('Wybór planu');
+    const [accordionTitle] = useState<string>(t('maker_accordion_title'));
 
     const [faculties, setFaculties] = useState<FacultyPopulated[]>([]);
     const [rooms, setRooms] = useState<RoomPopulated[]>([]);
@@ -89,7 +95,7 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
 
     const [selectedFaculty, setSelectedFaculty] = useState<FacultyPopulated | undefined>(undefined);
     const [selectedFacultyId, setSelectedFacultyId] = useState<string>('');
-    const [selectedCourse, setSelectedCourse] = useState<FacultyPopulated['courses'][number] | undefined>(undefined);
+    // const [selectedCourse, setSelectedCourse] = useState<FacultyPopulated['courses'][number] | undefined>(undefined);
     const [selectedCourseId, setSelectedCourseId] = useState<string>('');
     const [selectedSemesterId, setSelectedSemesterId] = useState<string>('');
     const [selectedSemesterIndex, setSelectedSemesterIndex] = useState<number>(0);
@@ -120,32 +126,28 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
     }, []);
     useEffect(() => {
         if (selectedSemesterId && selectedTimetable){
-        // Create a temporary array to store periods for each weekday
             const tempPeriods = [...fixedRowsPerDay];
 
-            // Process each schedule to populate the periods count
             selectedTimetable.schedules.forEach((schedule) => {
                 schedule.weekdays.forEach((day) => {
                     tempPeriods[day] = schedule.periods.length;
                 });
             });
 
-            // Update the state with the computed periods per day
             setFixedRowsPerDay(tempPeriods);
         }
     }, [selectedTimetable]);
     useEffect(() => {
-        if(selectedSemesterId && timetables){
-            setSelectedTimetable(timetables.find((item) => item.semester === selectedSemesterId))
+        if (selectedSemesterId && timetables) {
+            setSelectedTimetable(timetables.find(timetable => timetable.semester === selectedSemesterId));
         }
-
     }, [selectedSemesterId]);
     useEffect(() => {
-        if (selectedTimetable && typeof selectedTimetable === "object") {
+        if (selectedTimetable && typeof selectedTimetable === 'object') {
             const classesArray = selectedTimetable?.classes;
 
             if (!Array.isArray(classesArray)) {
-                console.error("Classes is not an array or is undefined.");
+                console.error('Classes is not an array or is undefined.');
             }
         }
     }, [selectedTimetable, selectedClassTypeId]);
@@ -159,34 +161,9 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
     }, [selectedSemesterIndex]);
     useEffect(() => {
         if (classTypeId && dayGridNew.length <= 0) {
-            function getObiektyById(subjects: SubjectDetailsPopulated[], id: string, groupNumber: number): SubjectPopup[] {
-                return subjects.flatMap(item => {
-                    return item.details
-                        .filter(detail => detail.classType._id === id)
-                        .flatMap(detail =>
-                            Array.from({ length: detail.weeklyBlockCount })
-                                .map((_, index) => ({
-                                    id: `${item.subject._id}_${groupNumber}_${index}`, // Unique ID for each repetition
-                                    name: `${item.subject.name} (gr. ${groupNumber})`,
-                                    type: detail.classType._id,
-                                    color: detail.classType.color ?? '#ffffff',
-                                    weeklyCount: detail.weeklyBlockCount,
-                                    // isweekly: detail.isweekly,
-                                    x: -1,
-                                    y: -1,
-                                    isset: false,
-                                    groups: groupNumber,
-                                    setday: -1,
-                                    teacher: "none",
-                                    room: "none"
-                                }))
-                        );
-                });
-            }
-
             let allResults: SubjectPopup[] = [];
             for (let i = 1; i <= selectedClassTypeCount; i++) {
-                const result = getObiektyById(subjectDetails, selectedClassTypeId, i);
+                const result = getObjectsById(subjectDetails, selectedClassTypeId, i);
                 allResults = [...allResults, ...result];
             }
 
@@ -194,15 +171,243 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
             setLessonsBackup(allResults)
         }
     }, [classTypeId, weekday]);
+    useEffect(() => {
+        if (dayGrid.length > 0) {
+            if (dayGridNew.length > 0) {
+                setGrid(dayGridNew[weekday]);
+            } else {
+                setGrid(dayGrid[weekday]);
+            }
+        }
+    }, [dayGrid, selectedClassTypeId, dayGridNew, weekday]);
+    useEffect(() => {
+        // this makes the drag-and-drop work after changing the weekday
+        setLessons(lessonsBackup.filter(lesson => lesson.setday === weekday));
+    }, [grid]);
+    useEffect(() => {
+        const lessonsAvailableHelper: SubjectPopup[] = [];
+        lessonsBackup.forEach(lesson => {
+            if (!lesson.isset) {
+                lessonsAvailableHelper.push(lesson);
+            }
+        });
+
+        setLessonsAvailable(lessonsAvailableHelper);
+    }, [lessonsBackup, lessons]);
+    useEffect(() => {
+        // Initialize dayGrid when lessonPerDay or selectedClassTypeId changes
+
+        if (!lessonPerDay.length || !selectedClassTypeId || dayGridNew.length > 0) return;
+
+        const initializeDayGrid = () => {
+            const filteredsmth: SubjectPopup[][][] = []; // Initialize day grid array
+
+            lessonPerDay.forEach((value, index) => {
+
+                // Create a fresh grid for the current day
+                const currentGrid: SubjectPopup[][] = Array(fixedRows)
+                    .fill(null)
+                    .map(() => Array(selectedClassTypeCount).fill(null));
+
+                if (value.length > 0) {
+                    value.forEach((item) => {
+                        const filteredLessons: Array<SubjectPopup> = [];
+                        const lessonIndices = new Map<string, number>(); // Track indices for each identifier
+
+                        item.studentGroups.forEach(group => {
+                            const identifier = `${ item.subject?._id }_${ group }`;
+                            lessonIndices.set(identifier, 0); // Initialize index for this identifier
+
+                            lessons.forEach(lesson => {
+                                const isMatch = lesson.id.includes(identifier);
+                                if (isMatch) {
+                                    // Get the index for this identifier and increment it
+                                    const currentIndex = lessonIndices.get(identifier) ?? 0;
+
+                                    // Extract tempLessonId correctly (second number between underscores)
+                                    const lessonId = lesson.id.match(/_(\d+)_/);
+                                    const tempLessonId = lessonId ? Number(lessonId[1]) : -1; // Default to -1 if extraction fails
+                                    if (tempLessonId === -1) {
+                                        return; // Skip invalid IDs
+                                    }
+
+                                    lesson.classId = item._id ?? null;
+                                    lesson.groups = tempLessonId;
+                                    if (item.organizer) lesson.organizerId = item.organizer._id;
+                                    lesson.isset = true;
+                                    lesson.roomId = item.room._id;
+                                    lesson.setday = item.weekday;
+                                    lesson.x = item.periodBlocks[currentIndex] - 1; // Calculate x
+                                    lesson.y = tempLessonId - 1; // Calculate y based on tempLessonId
+
+                                    // Ensure lessons matching the current weekday are added
+                                    if (item.weekday === index) {
+                                        filteredLessons.push(lesson);
+                                    }
+
+                                    // Increment the index for this identifier
+                                    lessonIndices.set(identifier, currentIndex + 1);
+                                }
+                            });
+
+                            // Place filtered lessons into the grid
+                            filteredLessons.forEach(lesson => {
+                                if (!currentGrid[lesson.x]) return;
+                                currentGrid[lesson.x][lesson.y] = lesson;
+                            });
+                        });
+                    });
+                }
+
+                // assign the grid for this weekday
+                filteredsmth[index] = currentGrid;
+            });
+
+            return filteredsmth;
+        };
+
+        const newDayGrid = initializeDayGrid();
+
+        if (dayGridNew.length > 0) {
+            setDayGrid(dayGridNew);
+        } else {
+            setDayGrid(newDayGrid);
+        }
+    }, [lessonPerDay, selectedClassTypeId, fixedRows, selectedClassTypeCount]);
+    useEffect(() => {
+        if (selectedTimetable && selectedClassTypeId) {
+            // Assuming the data is in a variable called `data`
+            const filterClasses = (weekday: number, classTypeId: string) => {
+                return selectedTimetable.classes.filter(
+                    (cls) => cls.weekday === weekday && cls.classType._id === classTypeId
+                );
+            };
+
+            let filteredClassesWeek: ClassPopulated[][] = []
+            for (let i: number = 0; i < 7; i++) {
+                filteredClassesWeek[i] = filterClasses(i, selectedClassTypeId);
+            }
+
+            setLessonPerDay(filteredClassesWeek);
+        }
+    }, [selectedTimetable, weekday, selectedClassTypeId]);
+
+    function getObjectsById(subjects: SubjectDetailsPopulated[], id: string, groupNumber: number): SubjectPopup[] {
+        return subjects.flatMap(item => {
+            return item.details
+                .filter(detail => detail.classType._id === id)
+                .flatMap(detail =>
+                    Array.from({ length: detail.weeklyBlockCount })
+                        .map((_, index) => ({
+                            id: `${ item.subject._id }_${ groupNumber }_${ index }`, // unique ID for each repetition
+                            name: `${ item.subject.name } (gr. ${ groupNumber })`,
+                            type: detail.classType._id,
+                            color: detail.classType.color ?? '#ffffff',
+                            weeklyCount: detail.weeklyBlockCount,
+                            // isweekly: detail.isweekly,
+                            x: -1,
+                            y: -1,
+                            isset: false,
+                            groups: groupNumber,
+                            setday: -1,
+                            organizerId: 'none',
+                            roomId: 'none',
+                        }))
+                );
+        });
+    }
+    const changeDay = (newDay: number) => {
+        setWeekday(newDay); // Set the new current day
+        let i: number = 0;
+        if (newDay == 0 || newDay == 6) {
+            i = 1;
+        } else if (newDay >= 1 && newDay <= 5) {
+            i = 0;
+        } else {
+            console.error("Invalid day selected!");
+            return;
+        }
+
+        const epic = selectedTimetable?.schedules[i]?.periods;
+
+        if (!epic) {
+            console.error(`No schedule data available for day ${newDay}`);
+            setFixedRows(0); // Or handle the error in a user-friendly way
+            return;
+        }
+
+        setFixedRows(epic.length);
+    };
+    const confirmSchedule = () => {
+        const subjectsData: SubjectPopup[] = [];
+        const classesData: ClassUnpopulated[] = [];
+
+        if (dayGridNew.length > 0) {
+            for (let i = 0; i < dayGridNew.length; i++) {
+                for (let j = 0; j < dayGridNew[i].length; j++) {
+                    for (let k = 0; k < dayGridNew[i][j].length; k++) {
+                        const element = dayGridNew[i][j][k];
+                        if (element !== null) {
+                            subjectsData.push(element)
+                        }
+                    }
+                }
+            }
+        } else if (dayGrid.length > 0) {
+            for (let i = 0; i < dayGrid.length; i++) {
+                for (let j = 0; j < dayGrid[i].length; j++) {
+                    for (let k = 0; k < dayGrid[i][j].length; k++) {
+                        const element = dayGrid[i][j][k];
+                        if (element !== null) {
+                            subjectsData.push(element)
+                        }
+                    }
+                }
+            }
+        }
+
+        // console.log(subjectsData);
+        if (subjectsData.length > 0) {
+            subjectsData.forEach(subject => {
+                const subjectId: string = subject.id.split('_')[0];
+                const subjectHelper: ClassUnpopulated = {
+                    _id: subject.classId ?? '',
+                    organizer: subject.organizerId,
+                    subject: subjectId,
+                    classType: subject.type,
+                    weekday: subject.setday,
+                    periodBlocks: [subject.x + 1],
+                    room: subject.roomId,
+                    semester: selectedSemesterId,
+                    studentGroups: [subject.groups],
+                };
+
+                classesData.push(subjectHelper);
+            })
+        }
+
+        const groupedData: ClassUnpopulated[] = Object.values(
+            classesData.reduce<Record<string, ClassUnpopulated>>((acc, item) => {
+                if (!acc[item._id]) {
+                    acc[item._id] = { ...item, periodBlocks: [...item.periodBlocks] };
+                } else {
+                    acc[item._id].periodBlocks.push(...item.periodBlocks);
+                }
+                return acc;
+            }, {})
+        );
+
+        APIService.updateClassesById(groupedData).then(success => {
+            if (success) {
+                setNotificationData({
+                    message: 'Zajęcia zostały poprawnie zapisane.',
+                    severity: 'success',
+                })
+            }
+        });
+    }
 
     const handleAccordionChange = () => {
-        // if (!accordionExpanded) {
-        //     setAccordionTitle('Wybór planu')
-        // } else {
-        //     // const professor = professors.find(p => p._id === selectedProfessorId);
-        //     setAccordionTitle('Wybór planu');
-        // }
-
         setAccordionExpanded(!accordionExpanded);
     };
     const handleFacultyChange = (event: SelectChangeEvent) => {
@@ -223,7 +428,7 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
         const course = facultyCourses.find(course => course._id === courseId);
 
         setSelectedCourseId(courseId);
-        setSelectedCourse(course)
+        // setSelectedCourse(course)
         if (course) setSemesterList(course.semesters ?? []);
 
         setSelectedSemesterId('');
@@ -272,138 +477,6 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
 
         setAccordionExpanded(false);
     };
-
-    useEffect(() => {
-        if (dayGrid.length > 0){
-            if (dayGridNew.length > 0){
-                setGrid(dayGridNew[weekday])
-            }else {
-                setGrid(dayGrid[weekday])
-            }
-
-        }
-    }, [dayGrid, selectedClassTypeId, dayGridNew, weekday]);
-    useEffect(() => {
-        // this makes the drag-and-drop work after changing the weekday
-        const filteredLessons = lessonsBackup.filter(
-            lesson => lesson.setday === weekday
-        );
-
-        setLessons(filteredLessons);
-    }, [grid]);
-    useEffect(() => {
-        const lessonsAvailableHelper: SubjectPopup[] = [];
-        lessonsBackup.forEach(lesson => {
-            if (!lesson.isset) {
-                lessonsAvailableHelper.push(lesson);
-            }
-        });
-
-        setLessonsAvailable(lessonsAvailableHelper);
-    }, [lessonsBackup, lessons]);
-    useEffect(() => {
-        // Initialize dayGrid when lessonPerDay or selectedClassTypeId changes
-
-        if (!lessonPerDay.length || !selectedClassTypeId || dayGridNew.length > 0) return;
-
-        const initializeDayGrid = () => {
-            const filteredsmth: SubjectPopup[][][] = []; // Initialize day grid array
-
-            lessonPerDay.forEach((value, index) => {
-
-                // Create a fresh grid for the current day
-                const currentGrid: SubjectPopup[][] = Array(fixedRows)
-                    .fill(null)
-                    .map(() => Array(selectedClassTypeCount).fill(null));
-
-                if (value.length > 0) {
-                    value.forEach((item) => {
-                        const filteredLessons: Array<SubjectPopup> = [];
-                        const lessonIndices = new Map<string, number>(); // Track indices for each identifier
-
-                        item.studentGroups.forEach(group => {
-                            const identifier = `${item.subject._id}_${group}`;
-                            lessonIndices.set(identifier, 0); // Initialize index for this identifier
-
-                            lessons.forEach(lesson => {
-                                const isMatch = lesson.id.includes(identifier);
-                                if (isMatch) {
-                                    // Get the index for this identifier and increment it
-                                    const currentIndex = lessonIndices.get(identifier) ?? 0;
-
-                                    // Extract tempLessonId correctly (second number between underscores)
-                                    const lessonId = lesson.id.match(/_(\d+)_/);
-                                    const tempLessonId = lessonId ? Number(lessonId[1]) : -1; // Default to -1 if extraction fails
-                                    if (tempLessonId === -1) {
-                                        return; // Skip invalid IDs
-                                    }
-
-                                    lesson.groups = tempLessonId;
-                                    if (item.organizer) lesson.teacher = item.organizer._id;
-                                    lesson.isset = true;
-                                    lesson.room = item.room._id;
-                                    lesson.setday = item.weekday;
-                                    lesson.x = item.periodBlocks[currentIndex] - 1; // Calculate x
-                                    lesson.y = tempLessonId - 1; // Calculate y based on tempLessonId
-
-                                    // Ensure lessons matching the current weekday are added
-                                    if (item.weekday === index) {
-                                        filteredLessons.push(lesson);
-                                    }
-
-                                    // Increment the index for this identifier
-                                    lessonIndices.set(identifier, currentIndex + 1);
-                                }
-                            });
-
-                            // Place filtered lessons into the grid
-                            filteredLessons.forEach(lesson => {
-                                if (!currentGrid[lesson.x]) return;
-                                currentGrid[lesson.x][lesson.y] = lesson;
-                            });
-                        });
-                    });
-                }
-
-                // assign the grid for this weekday
-                filteredsmth[index] = currentGrid;
-            });
-
-            return filteredsmth;
-        };
-
-        const newDayGrid = initializeDayGrid();
-
-        if (dayGridNew.length > 0) {
-            setDayGrid(dayGridNew);
-        } else {
-            setDayGrid(newDayGrid);
-        }
-    }, [lessonPerDay, selectedClassTypeId, fixedRows, selectedClassTypeCount]);
-
-    const changeDay = (newDay: number) => {
-        setWeekday(newDay); // Set the new current day
-        let i: number = 0;
-        if (newDay == 0 || newDay == 6) {
-            i = 1;
-        } else if (newDay >= 1 && newDay <= 5) {
-            i = 0;
-        } else {
-            console.error("Invalid day selected!");
-            return;
-        }
-
-        const epic = selectedTimetable?.schedules[i]?.periods;
-
-        if (!epic) {
-            console.error(`No schedule data available for day ${newDay}`);
-            setFixedRows(0); // Or handle the error in a user-friendly way
-            return;
-        }
-
-        setFixedRows(epic.length);
-    };
-
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) return;
@@ -413,12 +486,11 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
         const fromCol = active.data.current?.y;
 
         let [toRow, toCol] = toId.split('_').map(Number);
-        if (toId.includes('ugabuga')) {
+        if (toId.includes('subjectsDroppable')) {
             toRow = -1;
             toCol = -1;
         }
 
-        // indexes are not valid numbers
         if (
             isNaN(fromRow)
             || isNaN(fromCol)
@@ -428,30 +500,36 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
             return;
         }
 
-        if (fromRow === toRow && fromCol === toCol) {
-            console.log("same place noobie");
-            return;
-        }
-
         const newGrid: Array<Array<SubjectPopup | null>> = grid.map(row => [...row]);
         let draggedItem: SubjectPopup | undefined;
 
         if (lessons.length === 0) {
             draggedItem = lessonsBackup.find(item => item.id === active.id);
-        }else {
+        } else {
             draggedItem = lessons.find(item => item.id === active.id);
+            if (!draggedItem) {
+                draggedItem = lessonsBackup.find(item => item.id === active.id);
+            }
+        }
+
+        if (fromRow === toRow && fromCol === toCol) {
+            const updatedItem = { ...draggedItem, x: toRow, y: toCol };
+            // @ts-ignore
+            setSubjectPopup(updatedItem);
+            setPopup(true);
+            return;
         }
 
         if (!draggedItem) return;
 
-        if (!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('ugabuga')) {
+        if (!draggedItem.name.includes((toCol+1).toString()) && !toId.includes('subjectsDroppable')) {
             return
         }
 
-        if (!draggedItem.isset || toId.includes('ugabuga')) {
+        if (!draggedItem.isset || toId.includes('subjectsDroppable')) {
             const newDayGrid: Array<Array<Array<SubjectPopup | null>>> = dayGrid.map(row => [...row]);
 
-            if (toId.includes('ugabuga')) {
+            if (toId.includes('subjectsDroppable')) {
                 // putting items in the sidebar
 
                 setLessonsBackup(prevLessons =>
@@ -463,7 +541,9 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                 );
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 newDayGrid[weekday] = newGrid;
+                // @ts-ignore
                 setDayGridNew(newDayGrid);
+                // @ts-ignore
                 setDayGrid(newDayGrid);
             } else if (!draggedItem.isset) {
                 // moving items out of the sidebar
@@ -480,14 +560,16 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                 );
                 newGrid[toRow][toCol] = updatedItem;
                 newDayGrid[weekday] = newGrid;
-                setDayGridNew(newDayGrid)
-                setDayGrid(newDayGrid)
+                // @ts-ignore
+                setDayGridNew(newDayGrid);
+                // @ts-ignore
+                setDayGrid(newDayGrid);
             }
         } else {
             const newDayGrid: Array<Array<Array<SubjectPopup | null>>> = dayGrid.map(row => [...row]);
             if (grid[toRow][toCol] === null) {
                 const updatedItem = { ...draggedItem, x: toRow, y: toCol };
-                setSubjectPopup(updatedItem)
+                setSubjectPopup(updatedItem);
                 setPopup(true);
                 setLessonsBackup(prevLessons =>
                     prevLessons.map(item =>
@@ -498,32 +580,16 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                 newGrid[toRow][toCol] = updatedItem;
                 newGrid[draggedItem.x][draggedItem.y] = null;
                 newDayGrid[weekday] = newGrid;
+                // @ts-ignore
                 setDayGridNew(newDayGrid);
+                // @ts-ignore
                 setDayGrid(newDayGrid);
             }
         }
 
+        // @ts-ignore
         setGrid(newGrid);
     };
-
-    useEffect(() => {
-        if (selectedTimetable && selectedClassTypeId) {
-            // Assuming the data is in a variable called `data`
-            const filterClasses = (weekday: number, classTypeId: string) => {
-                return selectedTimetable.classes.filter(
-                    (cls) => cls.weekday === weekday && cls.classType._id === classTypeId
-                );
-            };
-
-            let filteredClassesWeek: ClassPopulated[][] = []
-            for (let i: number = 0; i < 7; i++) {
-                filteredClassesWeek[i] = filterClasses(i, selectedClassTypeId);
-            }
-
-            setLessonPerDay(filteredClassesWeek);
-        }
-    }, [selectedTimetable, weekday, selectedClassTypeId]);
-
     const handleSubjectChange = (updatedSubject: SubjectPopup) => {
         const newLessons = lessons.map(lesson => ({ ...lesson }));
         const updatedLessons = newLessons.map(lesson =>
@@ -531,86 +597,50 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                 ? { ...lesson, ...updatedSubject } // Update teacher property
                 : lesson
         );
-        if (updatedSubject.setday == weekday){
-            setLessons(updatedLessons)
-            setLessonsBackup(updatedLessons)
+        if (updatedSubject.setday == weekday) {
+            setLessons(updatedLessons);
+            // setLessonsBackup(updatedLessons)
         }
         setSubjectPopup(updatedSubject); // Update the parent's state or perform other actions
+
         const newGrid: Array<Array<SubjectPopup | null>> = grid.map(row => [...row]);
         newGrid[updatedSubject.x][updatedSubject.y] = updatedSubject;
+
         const newDayGrid: Array<Array<Array<SubjectPopup | null>>> = dayGrid.map(row => [...row]);
-            if (selectedTimetable?.schedules && dayGridNew.length <= 0){
-                let arr : number[] = []
-                selectedTimetable.schedules.forEach((schedule) => {
-                    schedule.weekdays.forEach((day) => {
-                        arr[day] = schedule.periods.length
-                    })
+        if (selectedTimetable?.schedules && dayGridNew.length <= 0){
+            let arr: number[] = [];
+            selectedTimetable.schedules.forEach(schedule => {
+                schedule.weekdays.forEach((day) => {
+                    arr[day] = schedule.periods.length
                 })
-                    newDayGrid.forEach((item, index) => {
-                        if (item.length > arr[index]) {
-                            item.splice(index, item.length - arr[index])
-                        }
-                    })
-                newDayGrid[updatedSubject.setday]=newGrid;
-            } else {
-                newDayGrid[updatedSubject.setday]=newGrid;
-            }
+            });
+            newDayGrid.forEach((item, index) => {
+                if (item.length > arr[index]) {
+                    item.splice(index, item.length - arr[index])
+                }
+            });
+        }
+
+        newDayGrid[updatedSubject.setday] = newGrid;
+        // @ts-ignore
         setDayGridNew(newDayGrid);
     };
 
-    const confirmSchedule = () => {
-        const rdyToSend: Omit<ClassUnpopulated, '_id'>[] = [];
-        const subjectsToSend: SubjectPopup[] = [];
+    const location = useLocation();
 
-        if (dayGridNew.length > 0) {
-            for (let i = 0; i < dayGridNew.length; i++) {
-                for (let j = 0; j < dayGridNew[i].length; j++) {
-                    for (let k = 0; k < dayGridNew[i][j].length; k++) {
-                        const element = dayGridNew[i][j][k];
-                        if (element !== null) {
-                            subjectsToSend.push(element)
-                        }
-                    }
-                }
-            }
-        } else if (dayGrid.length > 0){
-            for (let i = 0; i < dayGrid.length; i++) {
-                for (let j = 0; j < dayGrid[i].length; j++) {
-                    for (let k = 0; k < dayGrid[i][j].length; k++) {
-                        const element = dayGrid[i][j][k];
-                        if (element !== null) {
-                            subjectsToSend.push(element)
-                        }
-                    }
-                }
-            }
-        }
+    if (isUserOnMobile) {
+        setNotificationData({
+            message: t('maker_mobile_warning'),
+            severity: 'warning',
+        });
 
-        // console.log(subjectsToSend);
-        if (subjectsToSend.length > 0) {
-            subjectsToSend.forEach((subject) => {
-                const id: string = subject.id.split('_')[0];
-                const subjectHelper: Omit<ClassUnpopulated, '_id'> = {
-                    organizer: subject.teacher,
-                    subject: id,
-                    classType: subject.type,
-                    weekday: subject.setday,
-                    periodBlocks: [subject.x + 1],
-                    room: subject.room,
-                    semester: selectedSemesterId,
-                    studentGroups: [subject.groups]
-                }
-                rdyToSend.push(subjectHelper)
-            })
-        }
-        console.log(rdyToSend);
+        return <Navigate to="/" replace state={{ from: location }}/>;
     }
 
-    // TODO: zmienić wyświetlanie dni na dynamiczne bazujące na weekdays
     return (<>
         <Accordion expanded={ accordionExpanded } onChange={ handleAccordionChange }>
             <AccordionSummary expandIcon={ <ArrowDropDownRounded/> }>
-                <Typography>{ accordionTitle }</Typography>
+                <Typography><DesignServicesRounded sx={{ mr: 1 }}/>{ accordionTitle }</Typography>
             </AccordionSummary>
             <AccordionDetails>
                 <Stack spacing={ 2 }>
@@ -636,58 +666,53 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                     </FormControl>
 
                     { selectedFacultyId && (
-                        selectedFaculty?.courses ? (
-                            <FormControl>
-                                <InputLabel>Kierunek</InputLabel>
-                                <Select
-                                    label="Kierunek"
-                                    value={ selectedCourseId }
-                                    onChange={ handleCourseChange }
-                                >
-                                    { facultyCourses.sort((a, b) => a.name.localeCompare(b.name, 'pl'))
-                                        .map(course =>
-                                            <MenuItem
-                                                key={ course._id }
-                                                value={ course._id }
-                                            >
-                                                <ListItemText
-                                                    primary={ course.name + (course.specialization ? ` (${ course.specialization })` : '') }
-                                                    secondary={ course.code }
-                                                />
-                                            </MenuItem>
-                                        )
-                                    }
-                                </Select>
-                            </FormControl>
-                        ) : (
-                            'Wydział nie posiada przypisanych kierunków'
-                        )
-                    ) }
-                    {selectedFacultyId && selectedCourseId && (
-                        selectedCourse?.semesters && selectedFaculty?.courses ? (
-                            <FormControl>
-                                <InputLabel>Semestr</InputLabel>
-                                <Select
-                                    label="Semestr"
-                                    value={ selectedSemesterId }
-                                    onChange={ handleSemesterChange }
-                                >
-                                    { semesterList.map((semester) => (
+                        <FormControl>
+                            <InputLabel>Kierunek</InputLabel>
+                            <Select
+                                label="Kierunek"
+                                value={ selectedCourseId }
+                                onChange={ handleCourseChange }
+                            >
+                                { facultyCourses.sort((a, b) => a.name.localeCompare(b.name, 'pl'))
+                                    .map(course =>
                                         <MenuItem
-                                            key={ semester._id }
-                                            value={ semester._id }
+                                            key={ course._id }
+                                            value={ course._id }
+                                            disabled={ course.semesters.length === 0 }
                                         >
-                                            { "Semestr " + semester.index }
+                                            <ListItemText
+                                                primary={ course.name + (course.specialization ? ` (${ course.specialization })` : '') }
+                                                secondary={ course.code }
+                                            />
                                         </MenuItem>
-                                    )) }
-                                </Select>
-                            </FormControl>
-                        ) : (
-                            'Kierunek nie ma przypisanych semestrów'
-                        )
-                    )}
-                    {selectedSemesterId && (
-                        classTypesList.length > 0 ? (
+                                    )
+                                }
+                            </Select>
+                        </FormControl>
+                    ) }
+
+                    { selectedFacultyId && selectedCourseId && (
+                        <FormControl>
+                            <InputLabel>Semestr</InputLabel>
+                            <Select
+                                label="Semestr"
+                                value={ selectedSemesterId }
+                                onChange={ handleSemesterChange }
+                            >
+                                { semesterList.map(semester => (
+                                    <MenuItem
+                                        key={ semester._id }
+                                        value={ semester._id }
+                                    >
+                                        { 'Semestr ' + semester.index }
+                                    </MenuItem>
+                                )) }
+                            </Select>
+                        </FormControl>
+                    ) }
+
+                    { selectedSemesterId && (
+                        classTypesList.length !== 0 ? (
                             <FormControl>
                                 <InputLabel>Typ zajęć</InputLabel>
                                 <Select
@@ -706,74 +731,79 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                                 </Select>
                             </FormControl>
                         ) : (
-                            'Brak grup do wyświetlenia'
+                            <Typography>Semestr nie ma przypisanych typów zajęć</Typography>
                         )
                     )}
                 </Stack>
             </AccordionDetails>
         </Accordion>
-        <div className='d-flex flex-row p-3 mx-3'>
-            <RoomPopup
-                trigger={popup}
-                setTrigger={setPopup}
-                pickedFaculty={selectedFaculty}
-                subject={subjectPopup}
-                onSubjectChange={handleSubjectChange}
-            />
-            <div className="mb-1 bg-secondary ms-5 d-flex flex-row w-100">
-                { selectedClassTypeId && (
-                    <DndContext
-                        collisionDetection={ closestCenter }
-                        onDragEnd={ handleDragEnd }
-                    >
-                        <Table className="table table-striped table-hover table-bordered border-primary table-fixed-height w-100">
-                            <TableBody style={{ height: '100%' }}>
-                                {/* DAYS OF THE WEEK */}
-                                <TableRow className="table-dark text-center">
-                                    <TableCell
-                                        colSpan={selectedClassTypeCount + 1}
-                                        className="table-dark text-center fw-bolder fs-5"
-                                    >
-                                        <div className="d-flex justify-content-center">
-                                            { Object.entries(StringUtils.day)
-                                                .filter(([key]) => key !== '0')
-                                                .map(([key, value]) => (
-                                                    <div
-                                                        key={key}
-                                                        className="flex-fill text-center me-2" // Flex item
-                                                    >
-                                                        { key === weekday.toString() ? (
-                                                            <div className="fw-bold" role="button">{value}</div>
-                                                        ) : (
-                                                            <div className="fw-light" role="button"
-                                                                 onClick={() => changeDay(parseInt(key))}>{value}</div>
-                                                        ) }
-                                                    </div>
-                                                ))
-                                            }
 
-                                            { StringUtils.day['0'] && (
+        <RoomPopup
+            trigger={ popup }
+            setTrigger={ setPopup }
+            pickedFaculty={ selectedFaculty }
+            subject={ subjectPopup }
+            onSubjectChange={ handleSubjectChange }
+        />
+
+        <div className="d-flex">
+            { selectedClassTypeId && (
+                // TODO: try to fix the horizontal scrolling
+                <DndContext
+                    // modifiers={ [restrictToWindowEdges] }
+                    autoScroll={{ acceleration: 100 }}
+                    collisionDetection={ closestCenter }
+                    onDragEnd={ handleDragEnd }
+                >
+                    <Table className="table-bordered border-primary table-fixed-height">
+                        <TableBody style={{ height: '100%' }}>
+                            {/* DAYS OF THE WEEK */}
+                            <TableRow className="table-dark text-center">
+                                <TableCell
+                                    colSpan={ selectedClassTypeCount + 1 }
+                                    className="table-dark text-center fw-bolder fs-5"
+                                >
+                                    <div className="d-flex justify-content-center">
+                                        { Object.entries(StringUtils.day)
+                                            .filter(([key]) => key !== '0')
+                                            .map(([key, value]) => (
                                                 <div
-                                                    key="0"
+                                                    key={key}
                                                     className="flex-fill text-center me-2" // Flex item
                                                 >
-                                                    { weekday.toString() === '0' ? (
-                                                        <div className="fw-bold" role="button">{StringUtils.day['0']}</div>
+                                                    { key === weekday.toString() ? (
+                                                        <div className="fw-bold" role="button">{value}</div>
                                                     ) : (
-                                                        <div
-                                                            role="button"
-                                                            className="fw-light"
-                                                            onClick={() => changeDay(0)}
-                                                        >
-                                                            { StringUtils.day['0'] }
-                                                        </div>
+                                                        <div className="fw-light" role="button"
+                                                             onClick={() => changeDay(parseInt(key))}>{value}</div>
                                                     ) }
                                                 </div>
-                                            ) }
+                                            ))
+                                        }
 
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
+                                        { StringUtils.day['0'] && (
+                                            <div
+                                                key="0"
+                                                className="flex-fill text-center me-2" // Flex item
+                                            >
+                                                { weekday.toString() === '0' ? (
+                                                    <div className="fw-bold" role="button">{StringUtils.day['0']}</div>
+                                                ) : (
+                                                    <div
+                                                        role="button"
+                                                        className="fw-light"
+                                                        onClick={() => changeDay(0)}
+                                                    >
+                                                        { StringUtils.day['0'] }
+                                                    </div>
+                                                ) }
+                                            </div>
+                                        ) }
+
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+
                             <TableRow className="table-dark text-center">
                                 <TableCell className="fw-bold">
                                     Godzina
@@ -785,6 +815,7 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                                     </TableCell>
                                 )) }
                             </TableRow>
+
                             { grid.map((row, rowIndex) => (
                                 <TableRow key={ rowIndex } className="table-dark w-100">
                                     <TableCell scope="col" className="col-1 text-nowrap">
@@ -800,29 +831,30 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                                             <p>Loading...</p>
                                         )}
                                     </TableCell>
+
                                     { row.map((item, colIndex) => (
-                                        <TableCell key={colIndex} className="col-3 text-center" scope="col">
+                                        <TableCell key={ colIndex } className="col-3 text-center" scope="col">
                                             <Droppable id={`${rowIndex}_${colIndex}`}>
                                                 { item && (
                                                     <Draggable
-                                                        id={item.id}
-                                                        name={item.name}
-                                                        x={item.x}
-                                                        y={item.y}
-                                                        type={item.type}
-                                                        color={item.color}
-                                                        group={item.groups}
-                                                        isset={item.isset}
+                                                        id={ item.id }
+                                                        name={ item.name }
+                                                        x={ item.x }
+                                                        y={ item.y }
+                                                        type={ item.type }
+                                                        color={ item.color }
+                                                        group={ item.groups }
+                                                        isset={ item.isset }
                                                         teacher={ (() => {
-                                                            const teacher = users?.find(user => user._id === item.teacher);
+                                                            const teacher = users?.find(user => user._id === item.organizerId);
                                                             if (teacher) {
-                                                                return `${ teacher.names } ${ teacher.surnames }`;
+                                                                return `${ teacher.title } ${ teacher.names } ${ teacher.surnames }`;
                                                             } else {
                                                                 return 'Unknown teacher';
                                                             }
                                                         })() }
                                                         room={ (() => {
-                                                            const room = rooms?.find(room => room._id === item.room);
+                                                            const room = rooms?.find(room => room._id === item.roomId);
                                                             if (room) {
                                                                 return `${ room.roomNumber } `;
                                                             } else {
@@ -838,46 +870,50 @@ const TimetableMaker: React.FC<TimetableMakerProps> = ({ setDocumentTitle, setCu
                                     ))}
                                 </TableRow>
                             ))}
-                            </TableBody>
-                        </Table>
-                        <div className='flex-sm-grow-1 ms-5 w-15 border border-black'>
-                            <Droppable id='ugabuga'>
-                                { lessonsAvailable.filter(item => !item.isset)
-                                    .map(item => (
-                                        <Draggable
-                                            id={ item.id }
-                                            name={ item.name }
-                                            x={ item.x }
-                                            y={ item.y }
-                                            isset={ item.isset }
-                                            type={ item.type }
-                                            color={ item.color }
-                                            group={ item.group }
-                                            key={ item.id }
-                                            setday={ item.setday }
-                                        >
-                                            { item.name }
-                                        </Draggable>
-                                    ))
-                                }
-                            </Droppable>
-                        </div>
-                    </DndContext>
-                ) }
-            </div>
+                        </TableBody>
+                    </Table>
+
+                    {/* SIDEBAR */}
+                    <div className="w-15 border border-black">
+                        {/* SAVE BUTTON */}
+                        { selectedClassTypeId && (
+                            <div className="text-center">
+                                <Button
+                                    variant="contained"
+                                    sx={{ m: 3 }}
+                                    onClick={ confirmSchedule }
+                                >
+                                    Zapisz plan
+                                </Button>
+                            </div>
+                        ) }
+
+                        <Droppable id="subjectsDroppable">
+                            { lessonsAvailable.filter(item => !item.isset)
+                                .map(item => (
+                                    <Draggable
+                                        id={ item.id }
+                                        name={ item.name }
+                                        x={ item.x }
+                                        y={ item.y }
+                                        isset={ item.isset }
+                                        type={ item.type }
+                                        color={ item.color }
+                                        group={ item.groups }
+                                        key={ item.id }
+                                        setday={ item.setday }
+                                    >
+                                        { item.name }
+                                    </Draggable>
+                                ))
+                            }
+                        </Droppable>
+                    </div>
+                </DndContext>
+            ) }
         </div>
 
-        { selectedClassTypeId && (
-            <div className="text-center">
-                {/* TODO: add the prompt "Are you sure?" */}
-                <Button
-                    variant="contained"
-                    onClick={ confirmSchedule }
-                >
-                    Zapisz
-                </Button>
-            </div>
-        ) }
+
     </>);
 };
 

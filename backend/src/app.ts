@@ -4,10 +4,8 @@ import express, { Express } from 'express';
 import methodOverride from 'method-override';
 
 const app: Express = express();
-export default app;
-
 app.use(cors({
-    origin: 'http://127.0.0.1:5173',
+    origin: `http://${ process.env.CLIENT_IP ?? '127.0.0.1' }:${ process.env.CLIENT_PORT ?? '5173' }`,
     methods: 'GET,POST,PATCH,DELETE,HEAD,OPTIONS',
     credentials: true,
 }));
@@ -15,3 +13,5 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 // app.use(mongoSanitize({ allowDots: true }));
+
+export default app;

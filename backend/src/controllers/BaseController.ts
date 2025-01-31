@@ -2,8 +2,8 @@ import { Response } from 'express';
 import { DeleteResult, UpdateResult } from 'mongodb';
 import { Document, FilterQuery } from 'mongoose';
 
-import EHttpStatusCode from '../enums/EHttpStatusCode';
 import Base from '../models/Base';
+import EHttpStatusCode from '../enums/EHttpStatusCode';
 
 export default abstract class BaseController<T extends Document> {
     private readonly _base: Base<T>;
@@ -23,26 +23,30 @@ export default abstract class BaseController<T extends Document> {
             });
     };
 
-    // PATCH /documents
-    patchByFilter = (
-        response: Response,
-        filter: FilterQuery<T>,
-        update: Partial<T>
-    ): void => {
-        this._base.update(filter, update)
-            .then((result): void => {
-                this.patch(response, result);
+    // POST /documents
+    post(response: Response, documents: T | T[]) {
+        this._base.create(documents)
+            .then((result) => {
+                response.status(EHttpStatusCode.Created).json(result);
             })
             .catch(err => {
                 response.status(EHttpStatusCode.InternalServerError).json(err)
             });
     }
 
+    // PATCH /documents
+    patchByFilter = (response: Response, filter: FilterQuery<T>, update: Partial<T>): void => {
+        this._base.update(filter, update)
+            .then((result): void => {
+                this.patch(response, result);
+            })
+            .catch(err => {
+                response.status(EHttpStatusCode.InternalServerError).json(err);
+            });
+    }
+
     // DELETE /documents
-    deleteByFilter = (
-        response: Response,
-        filter: FilterQuery<T>
-    ): void => {
+    deleteByFilter = (response: Response, filter: FilterQuery<T>): void => {
         this._base.delete(filter)
             .then((result: DeleteResult): void => {
                 this.delete(response, result);
@@ -85,17 +89,6 @@ export default abstract class BaseController<T extends Document> {
             });
     }
 
-    // POST /documents
-    post(response: Response, documents: T | T[]) {
-        this._base.create(documents)
-            .then((result) => {
-                response.status(EHttpStatusCode.Created).json(result);
-            })
-            .catch(err => {
-                response.status(EHttpStatusCode.InternalServerError).json(err)
-            });
-    }
-
     protected patch(response: Response, result: UpdateResult): void {
         if (!result.acknowledged || result.matchedCount !== result.modifiedCount) {
             response.status(EHttpStatusCode.InternalServerError).json(result);
@@ -105,7 +98,6 @@ export default abstract class BaseController<T extends Document> {
             response.status(EHttpStatusCode.Ok).json(result);
         }
     }
-
     protected delete(response: Response, result: DeleteResult): void {
         if (!result.acknowledged) {
             response.status(EHttpStatusCode.InternalServerError).json(result);

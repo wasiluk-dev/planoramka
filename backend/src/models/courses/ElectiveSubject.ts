@@ -10,6 +10,7 @@ export const ElectiveSubjectSchema = new Schema({
     subjects: [{
         type: Schema.Types.ObjectId,
         ref: new Subject().name,
+        autopopulate: true,
     }],
 });
 

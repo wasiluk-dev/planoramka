@@ -23,7 +23,7 @@ export const FacultySchema = new Schema({
         ref: new Course().name,
         autopopulate: {
             select: '_id code name specialization semesters',
-            maxDepth: 4, // TODO: decide if needed
+            maxDepth: 4,
         },
     }],
 });

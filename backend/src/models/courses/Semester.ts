@@ -10,7 +10,8 @@ function indexValidator(index: number) {
 export const SemesterSchema = new Schema({
     academicYear: {
         type: String,
-        // match: '^[0-9][0-9][0-9][0-9]\/[0-9][0-9][0-9][0-9]$', TODO: fix the regexp
+        // TODO: decide on a better regexp, or if it's even needed
+        // match: '^[0-9][0-9][0-9][0-9]\/[0-9][0-9][0-9][0-9]$',
     },
     academicYearIndex: {
         type: Number,
