@@ -64,8 +64,7 @@ const UserPanel: React.FC<UserPanelProps> = ({ isUserOnMobile, setDocumentTitle,
             case 'surnames': value = surnames; break;
             case 'password': value = password; break;
         }
-
-        console.log(value);
+        
         setSubmitDisabled(input.value === value);
     }
     const handleSubmit = () => {
