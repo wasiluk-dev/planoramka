@@ -13,4 +13,26 @@ export default class StringUtils {
         5: t('friday'),
         6: t('saturday'),
     };
+    static dayShort: { [key: number]: string } = {
+        0: t('sunday_short'),
+        1: t('monday_short'),
+        2: t('tuesday_short'),
+        3: t('wednesday_short'),
+        4: t('thursday_short'),
+        5: t('friday_short'),
+        6: t('saturday_short'),
+    }
+
+    static cycles: { [key: number]: string } = {
+        0: t('timetables_details_cycle_Long'),
+        1: t('timetables_details_cycle_First'),
+        2: t('timetables_details_cycle_Second'),
+        3: t('timetables_details_cycle_Third'),
+        4: t('timetables_details_cycle_Postgraduate'),
+    }
+    static modes: { [key: number]: string } = {
+        0: t('timetables_details_mode_FullTime'),
+        1: t('timetables_details_mode_PartTime'),
+        2: t('timetables_details_mode_Online'),
+    }
 }

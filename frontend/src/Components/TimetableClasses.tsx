@@ -133,26 +133,27 @@ const TimetableClasses: React.FC<TimetableClassesProps> = ({ setAccordionExpande
                 states.timetable.set(pickedTimetable);
                 states.semesterClasses.set(pickedTimetable.classes);
                 states.groupTypes.set(pickedTimetable.groups);
-                for (let i: number = 0; i < 7; i++) {
-                    if (pickedTimetable.schedules[i].weekdays.includes(showCurrentDay)){
-                        setFixedRows(pickedTimetable.schedules[i].periods.length);
-                        break;
-                    }
-                }
+                // for (let i: number = 0; i < 7; i++) {
+                //     if (pickedTimetable.schedules[i].weekdays.includes(showCurrentDay)){
+                //         setFixedRows(pickedTimetable.schedules[i].periods.length);
+                //         break;
+                //     }
+                // }
             } else {
                 states.timetable.set(undefined);
             }
 
-            updateTableData();
+            // updateTableData();
         }
     }
 
     return (
         <Stack spacing={ 2 }>
             <FormControl>
-                <InputLabel>{ t('timetables_details_faculty') }</InputLabel>
+                <InputLabel id="timetables-faculty-label">{ t('timetables_details_faculty') }</InputLabel>
                 <Select
                     label={ t('timetables_details_faculty') }
+                    labelId="timetables-faculty-label"
                     value={ selectedFacultyId }
                     onChange={ event => handleFacultyChange(event.target.value) }
                 >

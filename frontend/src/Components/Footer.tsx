@@ -13,14 +13,14 @@ await i18nPromise;
 type FooterProps = {
     isUserOnMobile: boolean;
     mode: 'light' | 'dark' | 'system' | undefined;
-    setMode: (mode: ('light' | 'dark' | 'system' | null)) => void
+    setMode: (mode: ('light' | 'dark' | 'system' | null)) => void;
+    bottomNavigationValue: number | false;
+    setBottomNavigationValue: React.Dispatch<React.SetStateAction<number | false>>;
 }
 
-const Footer: React.FC<FooterProps> = ({ isUserOnMobile, /* mode, setMode */ }) => {
+const Footer: React.FC<FooterProps> = ({ isUserOnMobile, /* mode, setMode, */ bottomNavigationValue, setBottomNavigationValue }) => {
     const navigate = useNavigate();
     const appVersion: string = pkg.version;
-
-    const [value, setValue] = React.useState(0);
 
     // const handleMode = (_e: React.MouseEvent<HTMLElement>, newMode: 'light' | 'dark' | 'system') => {
     //     setMode(newMode);
@@ -50,10 +50,10 @@ const Footer: React.FC<FooterProps> = ({ isUserOnMobile, /* mode, setMode */ }) 
             <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100 }} elevation={ 3 }>
                 <BottomNavigation
                     showLabels
-                    value={ value }
+                    value={ bottomNavigationValue }
                     onChange={ (_, newValue) => {
-                                      setValue(newValue);
-                                  } }
+                        setBottomNavigationValue(newValue);
+                    } }
                 >
                     { Object.keys(Navigation).map(key => {
                         const nav = Navigation[key];

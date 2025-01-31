@@ -7,9 +7,7 @@ import * as https from 'node:https';
 
 import app from './app';
 import routes from './routes/.index';
-// import './init';
 
-// TODO: create a Mongo account for the app and switch it it .env for production
 const dbUri: string = `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_IP}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=${process.env.DB_AUTH}`;
 const dbClient: Promise<MongoClient> = MongoClient.connect(dbUri);
 const srvOptions = {
@@ -19,7 +17,6 @@ const srvOptions = {
 
 // sessions
 app.use(session({
-    // TODO: switch to process.env.SESSION_SECRET and make a script to generate new secrets
     secret: 'secret',
     resave: false,
     saveUninitialized: false,
@@ -53,5 +50,5 @@ Object.keys(routes).forEach(key => {
             throw err;
         });
 
-    // db.set('debug', true);
+    db.set('debug', String(process.env.DEBUG).toLowerCase() === 'true');
 })();

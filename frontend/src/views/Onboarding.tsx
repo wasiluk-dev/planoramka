@@ -1,14 +1,14 @@
 import React, { JSX, useEffect, useState } from 'react';
 import { Box, Button, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 
-import BuildingForm from '../Components/Forms/Faculty/BuildingForm.tsx';
-import ClassTypeForm from '../Components/Forms/Timetables/ClassTypeForm.tsx';
-import CourseForm from '../Components/Forms/Courses/CourseForm.tsx';
-import FacultyForm from '../Components/Forms/Faculty/FacultyForm.tsx';
-import RoomForm from '../Components/Forms/Faculty/RoomForm.tsx';
-import SemesterForm from '../Components/Forms/Courses/SemesterForm.tsx';
-import SubjectForm from '../Components/Forms/Courses/SubjectForm.tsx';
-import SubjectDetailsForm from '../Components/Forms/Courses/SubjectDetailsForm.tsx';
+import BuildingForm from '../components/Forms/Faculty/BuildingForm.tsx';
+import ClassTypeForm from '../components/Forms/Timetables/ClassTypeForm.tsx';
+import CourseForm from '../components/Forms/Courses/CourseForm.tsx';
+import FacultyForm from '../components/Forms/Faculty/FacultyForm.tsx';
+import RoomForm from '../components/Forms/Faculty/RoomForm.tsx';
+import SemesterForm from '../components/Forms/Courses/SemesterForm.tsx';
+import SubjectForm from '../components/Forms/Courses/SubjectForm.tsx';
+import SubjectDetailsForm from '../components/Forms/Courses/SubjectDetailsForm.tsx';
 
 import ENavTabs from '../enums/ENavTabs.ts'
 import i18n, { i18nPromise } from '../i18n';
@@ -32,7 +32,6 @@ type OnboardingProps = {
     setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
 }
-
 const Onboarding: React.FC<OnboardingProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
     const [activeStep, setActiveStep] = useState(0);
     const [skipped, setSkipped] = useState(new Set<number>());

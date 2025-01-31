@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 enum ECourseCycle {
     Long, // jednolite studia magisterskie
     First, // studia I stopnia (licencjackie / inżynierskie)

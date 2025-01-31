@@ -1,0 +1,7 @@
+User-agent: Googlebot
+Disallow: /admin/
+Disallow: /onboarding/
+Disallow: /profile/
+
+User-agent: *
+Allow: /

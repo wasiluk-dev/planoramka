@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 
 import BaseForm, { BaseFormProps } from '../BaseForm.tsx';
-import { BuildingPopulated, CoursePopulated } from '../../../../services/DBTypes.ts';
+
 import APIService from '../../../../services/APIService.ts';
+import { BuildingPopulated, CoursePopulated } from '../../../../services/DBTypes.ts';
 
 type FacultyFormProps = {
     activeStep: number;
     refresh: number;
     setRefresh: React.Dispatch<React.SetStateAction<number>>;
 };
-
 const FacultyForm: React.FC<FacultyFormProps> = ({ activeStep, refresh, setRefresh }) => {
+    const [created, setCreated] = useState<boolean>(false);
+
     const [name, setName] = useState<string>('');
     const [acronym, setAcronym] = useState<string>('');
 
@@ -19,15 +21,6 @@ const FacultyForm: React.FC<FacultyFormProps> = ({ activeStep, refresh, setRefre
 
     const [selectedBuildingIds, setSelectedBuildingIds] = useState<string[]>([]);
     const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
-
-    useEffect(() => {
-        const fetchData = async() => {
-            setBuildings(await APIService.getBuildings());
-            setCourses(await APIService.getCourses());
-        }
-
-        fetchData().then();
-    }, []);
 
     const fields: BaseFormProps['fields'] = [
         {
@@ -63,6 +56,48 @@ const FacultyForm: React.FC<FacultyFormProps> = ({ activeStep, refresh, setRefre
             },
         },
     ];
+
+    const fetchData = async() => {
+        setBuildings(await APIService.getBuildings());
+        setCourses(await APIService.getCourses());
+    }
+
+    useEffect(() => {
+        fetchData().then();
+    }, []);
+    useEffect(() => {
+        fetchData().then();
+    }, [refresh]);
+    useEffect(() => {
+        if (
+            created
+            || name === ''
+            || acronym === ''
+        ) return;
+
+        const postData = async() => {
+            const formData = new URLSearchParams();
+            formData.append('name', name);
+            formData.append('acronym', acronym);
+            if (selectedBuildingIds.length > 0) {
+                selectedBuildingIds.forEach(id => {
+                    formData.append('buildings[]', id);
+                });
+            }
+            if (selectedCourseIds.length > 0) {
+                selectedCourseIds.forEach(id => {
+                    formData.append('courses[]', id);
+                });
+            }
+
+            return await APIService.saveFaculties(formData);
+        }
+
+        postData().then(() => {
+            setCreated(true);
+            setRefresh(prev => prev + 1);
+        });
+    }, [activeStep]);
 
     return (<>
         <BaseForm

@@ -19,9 +19,7 @@ export const SubjectSchema = new Schema({
     classTypes: [{
         type: Schema.Types.ObjectId,
         ref: new ClassType().name,
-        autopopulate: {
-            select: '-color',
-        },
+        autopopulate: true,
     }],
 });
 

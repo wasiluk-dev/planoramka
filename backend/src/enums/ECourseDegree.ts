@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 enum ECourseDegree {
     Licentiate, // licencjackie
     Engineers, // inżynierskie

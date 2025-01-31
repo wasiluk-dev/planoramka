@@ -59,13 +59,9 @@ const PersonalTimetableOptions: React.FC<PersonalTimetableOptionsProps> = ({ set
 
     useEffect(() => {
         const fetchData = async () => {
-            const coursesPopulated = await APIService.getCourses();
-            const facultiesPopulated = await APIService.getFaculties();
-            const timetablesPopulated = await APIService.getTimetables();
-
-            setCourses(coursesPopulated);
-            setFaculties(facultiesPopulated);
-            setTimetables(timetablesPopulated);
+            setCourses(await APIService.getCourses());
+            setFaculties(await APIService.getFaculties());
+            setTimetables(await APIService.getTimetables());
         };
 
         fetchData().then();

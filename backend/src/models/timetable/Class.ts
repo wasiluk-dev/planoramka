@@ -16,12 +16,11 @@ function biggerThanZeroValidator(periodBlock: number) {
 }
 
 export const ClassSchema = new Schema({
-    // TODO: add error message to required fields
     organizer: {
         type: Schema.Types.ObjectId,
         ref: new User().name,
         autopopulate: {
-            select: '_id title names surnames', // TODO: add title later
+            select: '_id title names surnames fullNameReversed',
         },
     },
     subject: {
@@ -60,6 +59,7 @@ export const ClassSchema = new Schema({
     semester: {
         type: Schema.Types.ObjectId,
         ref: new Semester().name,
+        autopopulate: true,
     },
     studentGroups: {
         type: [{

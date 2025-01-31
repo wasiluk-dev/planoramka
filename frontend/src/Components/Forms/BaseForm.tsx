@@ -19,10 +19,14 @@ export type BaseFormProps = {
         type?: React.HTMLInputTypeAttribute;
         required?: boolean;
         select?: {
-            value: string[];
+            value: number | string[];
             setter: React.Dispatch<React.SetStateAction<string[]>>;
-            items: BuildingPopulated[] | ClassTypePopulated[] | CoursePopulated[] | RoomPopulated[] | SemesterPopulated[] | SubjectPopulated[];
+            items?: BuildingPopulated[] | ClassTypePopulated[] | CoursePopulated[] | RoomPopulated[] | SemesterPopulated[] | SubjectPopulated[];
             multiple?: boolean;
+            enumData?: {
+                keys: string[];
+                values: { [key: number]: string; };
+            };
         };
     }[];
 }
@@ -38,29 +42,39 @@ const BaseForm: React.FC<BaseFormProps> = ({ fields }) => {
                         value={ field.select.value }
                         multiple={ field.select.multiple }
                         onChange={ (event: any) => field.select?.setter(event.target.value) }
-                        renderValue={
-                            selected => field.select?.items
-                                .filter(item => selected.includes(item._id))
-                                .map(item => {
-                                    if ('roomNumber' in item) {
-                                        return item.roomNumber;
-                                    } else if ('index' in item) {
-                                        return item.index;
-                                    } else if ('code' in item) {
-                                        if (field.select?.multiple) {
-                                            return item.code;
-                                        } else {
-                                            return `[${ item.code }] ${ item.name }`;
+                        renderValue={ selected => {
+                            if (field.select?.enumData && typeof selected === 'number') {
+                                return field.select.enumData.values[selected];
+                            }
+
+                            if (field.select?.items && Array.isArray(selected)) {
+                                return field.select?.items
+                                    .filter(item =>
+                                        selected.includes(item._id)
+                                    )
+                                    .map(item => {
+                                        if ('roomNumber' in item) {
+                                            return item.roomNumber;
+                                        } else if ('index' in item) {
+                                            return item.index;
+                                        } else if ('code' in item) {
+                                            if (field.select?.multiple) {
+                                                return item.code;
+                                            } else {
+                                                return `[${item.code}] ${item.name}`;
+                                            }
+                                        } else if ('name' in item) {
+                                            return item.name;
                                         }
-                                    } else if ('name' in item) {
-                                        return item.name;
-                                    }
-                                })
-                                .join(', ')
-                        }
+                                    })
+                                    .join(', ');
+                            }
+                        } }
                     >
-                        { field.select.items
+                        { field.select.items && field.select.items
                             .sort((a, b) => {
+                                if (typeof a !== 'object' || typeof b !== 'object') return 0;
+
                                 if ('roomNumber' in a && 'roomNumber' in b) {
                                     return a.roomNumber.localeCompare(b.roomNumber);
                                 } else if ('index' in a && 'index' in b) {
@@ -73,11 +87,11 @@ const BaseForm: React.FC<BaseFormProps> = ({ fields }) => {
                             })
                             .map(item =>
                                 <MenuItem key={ item._id } value={ item._id }>
-                                    { field.select?.multiple && (
+                                    { field.select?.multiple && Array.isArray(field.select?.value) && (
                                         <Checkbox checked={ field.select?.value?.includes(item._id) }/>
                                     ) }
                                     <ListItemText
-                                        primary={<>
+                                        primary={ <>
                                             { 'number' in item && (
                                                 item.number
                                             ) }
@@ -87,19 +101,23 @@ const BaseForm: React.FC<BaseFormProps> = ({ fields }) => {
                                             { 'name' in item && (
                                                 item.name
                                             ) }
-                                        </>}
-                                        secondary={<>
+                                        </> }
+                                        secondary={ <>
                                             { 'numberSecondary' in item && (
                                                 item.numberSecondary
                                             ) }
                                             { 'code' in item && (
                                                 item.code
                                             ) }
-                                        </>}
+                                        </> }
                                     />
                                 </MenuItem>
                             )
                         }
+
+                        { field.select.enumData && Object.values(field.select.enumData.values).map((v, i) =>
+                            <MenuItem key={ i } value={ i }>{ v }</MenuItem>
+                        ) }
                     </Select>
                 </>) : (
                     <TextField

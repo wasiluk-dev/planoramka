@@ -14,3 +14,72 @@ a {
     text-decoration: none;
     color: white;
 }
+
+/*noinspection CssUnusedSymbol*/
+#subjectsDroppable {
+    background-color: black;
+}
+
+.table-fixed-height td,
+.table-fixed-height th {
+    min-height: 54px; /* Set the desired height */
+    vertical-align: middle; /* Center content vertically */
+}
+
+.table-fixed-height td,
+.table-fixed-height th {
+    font-size: 0.9rem; /* Adjust font size if needed */
+}
+
+.w-15 {
+    width: 15%;
+}
+
+.table-equal-rows {
+    display: flex;
+    flex-direction: column;
+    /*height: 100%; !* Ensure the table container has full height *!*/
+}
+
+.table-equal-rows tbody {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.table-equal-rows tbody tr {
+    flex-grow: 1; /* Each row will take up an equal amount of available height */
+    display: flex; /* Apply Flexbox to each row */
+}
+
+.table-equal-rows tbody tr td {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    flex-grow: 1; /* Ensure cells within each row expand equally */
+    text-align: center;
+}
+
+.table-equal-rows tbody tr td .cell-content {
+    height: 100%; /* Fill the entire cell height */
+    width: 100%; /* Fill the entire cell width */
+    display: flex; /* Use flexbox to center text */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+
+.table-combo-child {
+    background-color: rgba(0,0,0,0.5);
+    grid-row-start: 1;
+    grid-column-start: 1;
+    height: 100%;
+    border-spacing: 0; /* Remove gaps between cells */
+    border-collapse: collapse; /* Combine borders for a compact look */
+}
+
+@media (max-width: 768px) {
+    .table-combo-child {
+        width: 100%;
+        height: 100%; /* Ensure full width */
+    }
+}

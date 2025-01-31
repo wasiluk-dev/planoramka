@@ -9,10 +9,10 @@ export type NotificationProps = {
     }
     isUserOnMobile: boolean;
     isNotificationVisible: boolean;
-    setIsNotificationVisible: React.Dispatch<React.SetStateAction<boolean>>;
+    setNotificationVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Notification: React.FC<NotificationProps> = ({ data, isUserOnMobile, isNotificationVisible, setIsNotificationVisible } ) => {
+const Notification: React.FC<NotificationProps> = ({ data, isUserOnMobile, isNotificationVisible, setNotificationVisible } ) => {
     const style = {
         marginTop: !isUserOnMobile ? '66px' : 'unset',
         marginBottom: isUserOnMobile ? '56px' : 'unset',
@@ -23,15 +23,17 @@ const Notification: React.FC<NotificationProps> = ({ data, isUserOnMobile, isNot
     };
 
     return (
-        <Snackbar style={ style }
-                  autoHideDuration={ 5000 }
-                  anchorOrigin={ anchorOrigin }
-                  open={ isNotificationVisible }
-                  onClose={ () => setIsNotificationVisible(false) }
+        <Snackbar
+            style={ style }
+            autoHideDuration={ 5000 }
+            anchorOrigin={ anchorOrigin }
+            open={ isNotificationVisible }
+            onClose={ () => setNotificationVisible(false) }
         >
-            <Alert sx={{ width: '100%' }}
-                   severity={ data.severity }
-                   onClose={ () => setIsNotificationVisible(false) }
+            <Alert
+                sx={{ width: '100%' }}
+                severity={ data.severity }
+                onClose={ () => setNotificationVisible(false) }
             >
                 { data.title ? <AlertTitle>{ data.title }</AlertTitle> : null }
                 { data.message }

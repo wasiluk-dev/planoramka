@@ -37,13 +37,13 @@ export const CourseSchema = new Schema({
     electiveSubjects: [{
         type: Schema.Types.ObjectId,
         ref: new ElectiveSubject().name,
+        autopopulate: true,
     }],
 });
 
 CourseSchema.path('code').required(true, 'db_course_code_required');
 CourseSchema.path('name').required(true, 'db_course_name_required');
 CourseSchema.path('specialization').default(null);
-// TODO: decide if the field should be required
 CourseSchema.path('degree').default(null); // .required(true, 'db_course_degree_required');
 CourseSchema.path('cycle').required(true, 'db_course_cycle_required');
 CourseSchema.path('mode').required(true, 'db_course_mode_required');

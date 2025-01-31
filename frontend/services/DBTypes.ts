@@ -11,10 +11,11 @@ export type UserPopulated = {
     names: string;
     surnames: string;
     title: string | null;
-    // TODO: uncomment after implementing
-    // email: string;
     courses: string[];
     role: EUserRole;
+    fullName: string;
+    fullNameReversed: string;
+    fullNameWithTitle: string;
 }
 
 // courses
@@ -23,22 +24,22 @@ export type CoursePopulated = {
     code: string;
     name: string;
     specialization: string | null;
-    degree: ECourseDegree | null; // TODO: remove null?
+    degree: ECourseDegree | null;
     cycle: ECourseCycle;
     mode: ECourseMode;
     semesters: SemesterPopulated[];
-    electiveSubjects: string[];
+    electiveSubjects: ElectiveSubjectPopulated[];
 }
 export type ElectiveSubjectPopulated = {
     _id: string;
     name: string;
-    subjects: string[];
+    subjects: SubjectPopulated[];
 }
 export type SemesterPopulated = {
     _id: string;
     academicYear: string;
     index: number;
-    subjects: Pick<SubjectPopulated, '_id' | 'classTypes'>[];
+    subjects: Pick<SubjectPopulated, '_id' | 'code' | 'name' | 'classTypes'>[];
 }
 export type SubjectPopulated = {
     _id: string;
@@ -46,12 +47,11 @@ export type SubjectPopulated = {
     name: string;
     acronym: string | null;
     isElective: boolean;
-    targetedSemesters: number[];
-    classTypes: Omit<ClassTypePopulated, 'color'>[];
+    classTypes: ClassTypePopulated[];
 }
 export type SubjectDetailsPopulated = {
     _id: string;
-    course: string;
+    course: Pick<CoursePopulated, '_id' | 'code' | 'name' | 'specialization'>;
     subject: Omit<SubjectPopulated, 'classTypes'>;
     details: {
         classType: ClassTypePopulated;
@@ -65,8 +65,6 @@ export type BuildingPopulated = {
     name: string;
     acronym: string | null;
     address: string | null;
-    // hasDeanOffice: boolean;
-    // hasRectorOffice: boolean;
     rooms: RoomPopulated[];
 }
 export type FacultyPopulated = {
@@ -87,13 +85,13 @@ export type RoomPopulated = {
 // timetable
 export type ClassPopulated = {
     _id: string;
-    organizer: Pick<UserPopulated, '_id' | 'title' | 'names' | 'surnames'> | null;
+    organizer: Pick<UserPopulated, '_id' | 'title' | 'names' | 'surnames' | 'fullNameReversed'> | null;
     subject: Pick<SubjectPopulated, '_id' | 'code' | 'name' | 'acronym'> | null;
     classType: ClassTypePopulated;
     weekday: number;
     periodBlocks: number[];
     room: RoomPopulated;
-    semester: string | null;
+    semester: SemesterPopulated | null;
     studentGroups: number[];
 }
 export type ClassUnpopulated = {
@@ -123,7 +121,7 @@ export type PeriodPopulated = {
 export type SchedulePopulated = {
     _id: string;
     weekdays: EDayOfTheWeek[];
-    periods: Omit<PeriodPopulated, '_id' | 'weekdays'>[];
+    periods: Omit<PeriodPopulated, 'weekdays'>[];
     active: boolean;
 }
 export type TimetablePopulated = {
@@ -132,7 +130,7 @@ export type TimetablePopulated = {
     weekdays: EDayOfTheWeek[];
     schedules: SchedulePopulated[];
     groups: {
-        classType: Omit<ClassTypePopulated, 'color'>;
+        classType: ClassTypePopulated;
         groupCount: number;
     }[];
     classes: ClassPopulated[];

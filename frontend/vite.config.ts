@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [
         react(),
     ],
-    // TODO: change on release
+    // TODO: change as needed
     server: {
         host: '127.0.0.1',
         port: 5173,
@@ -14,4 +14,4 @@ export default defineConfig({
     build: {
         target: 'esnext',
     },
-})
+});

@@ -9,9 +9,9 @@ export const ClassTypeSchema = new Schema({
     acronym: {
         type: String,
     },
-    // TODO: add a validation error message
     color: {
         type: String,
+        // TODO: add a validation error message
         validation: /#[0-9A-Fa-f]{6}/,
     },
 });

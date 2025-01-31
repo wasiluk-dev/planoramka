@@ -1,7 +1,10 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {
     BuildingPopulated,
     ClassPopulated,
     ClassTypePopulated,
+    ClassUnpopulated,
     CoursePopulated,
     ElectiveSubjectPopulated,
     FacultyPopulated,
@@ -16,12 +19,12 @@ import {
 } from './DBTypes.ts';
 
 // TODO: replace url with .env variable
-const dbUrl: string = 'https://127.0.0.1:3000';
+const dbUrl: string = `https://127.0.0.1:3000`;
 const headers = new Headers();
 headers.append('Content-Type', 'application/x-www-form-urlencoded');
 
 export default class APIService {
-    private static async fetchDBResources(resourceName: string) {
+    private static async getDBResources(resourceName: string) {
         const response: Response = await fetch(dbUrl + resourceName);
 
         if (!response.ok) {
@@ -51,25 +54,48 @@ export default class APIService {
             return undefined;
         }
     }
+    private static async patchDBResources(resourceName: string, formData: URLSearchParams) {
+        try {
+            const response: Response = await fetch(dbUrl + resourceName, {
+                method: 'PATCH',
+                headers: headers,
+                body: formData.toString(),
+            });
+
+            if (!response.ok) {
+                // TODO?: replace with a throw?
+                console.error(response.clone().json());
+                return undefined;
+            }
+
+            return response;
+        } catch (err) {
+            console.error(err);
+            return undefined;
+        }
+    }
 
     // courses
     static async getCourses(): Promise<CoursePopulated[]> {
-        return this.fetchDBResources('/courses');
+        return this.getDBResources('/courses');
     }
     static async getElectiveSubjects(): Promise<ElectiveSubjectPopulated[]> {
-        return this.fetchDBResources('/elective-subjects');
+        return this.getDBResources('/elective-subjects');
     }
     static async getSemesters(): Promise<SemesterPopulated[]> {
-        return this.fetchDBResources('/semesters');
+        return this.getDBResources('/semesters');
     }
     static async getSubjects(): Promise<SubjectPopulated[]> {
-        return this.fetchDBResources('/subjects');
+        return this.getDBResources('/subjects');
     }
     static async getSubjectDetails(): Promise<SubjectDetailsPopulated[]> {
-        return this.fetchDBResources('/subject-details');
+        return this.getDBResources('/subject-details');
     }
     static async saveCourses(formData: URLSearchParams) {
         return this.postDBResources('/courses', formData);
+    }
+    static async saveElectiveSubjects(formData: URLSearchParams) {
+        return this.postDBResources('/elective-subjects', formData);
     }
     static async saveSemesters(formData: URLSearchParams) {
         return this.postDBResources('/semesters', formData);
@@ -83,16 +109,19 @@ export default class APIService {
 
     // faculty
     static async getBuildings(): Promise<BuildingPopulated[]> {
-        return this.fetchDBResources('/buildings');
+        return this.getDBResources('/buildings');
     }
     static async getFaculties(): Promise<FacultyPopulated[]> {
-        return this.fetchDBResources('/faculties');
+        return this.getDBResources('/faculties');
     }
     static async getRooms(): Promise<RoomPopulated[]> {
-        return this.fetchDBResources('/rooms');
+        return this.getDBResources('/rooms');
     }
     static async saveBuildings(formData: URLSearchParams) {
         return this.postDBResources('/buildings', formData);
+    }
+    static async saveFaculties(formData: URLSearchParams) {
+        return this.postDBResources('/faculties', formData);
     }
     static async saveRooms(formData: URLSearchParams) {
         return this.postDBResources('/rooms', formData);
@@ -100,27 +129,59 @@ export default class APIService {
 
     // timetable
     static async getClasses(): Promise<ClassPopulated[]> {
-        return this.fetchDBResources('/classes');
+        return this.getDBResources('/classes');
     }
     static async getClassTypes(): Promise<ClassTypePopulated[]> {
-        return this.fetchDBResources('/class-types');
+        return this.getDBResources('/class-types');
     }
     static async getPeriods(): Promise<PeriodPopulated[]> {
-        return this.fetchDBResources('/periods');
+        return this.getDBResources('/periods');
     }
     static async getSchedules(): Promise<SchedulePopulated[]> {
-        return this.fetchDBResources('/schedules');
+        return this.getDBResources('/schedules');
     }
     static async getTimetables(): Promise<TimetablePopulated[]> {
-        return this.fetchDBResources('/timetables');
+        return this.getDBResources('/timetables');
+    }
+    static async saveClasses(formData: URLSearchParams) {
+        return this.postDBResources('/classes', formData);
     }
     static async saveClassTypes(formData: URLSearchParams) {
         return this.postDBResources('/class-types', formData);
     }
+    static async savePeriods(formData: URLSearchParams) {
+        return this.postDBResources('/periods', formData);
+    }
+    static async saveSchedules(formData: URLSearchParams) {
+        return this.postDBResources('/schedules', formData);
+    }
+    static async saveTimetables(formData: URLSearchParams) {
+        return this.postDBResources('/timetables', formData);
+    }
+    static async updateClassesById(classes: ClassUnpopulated[]) {
+        for (const c of classes) {
+            const classData = await this.getClasses();
+            const dbClass = classData.find(dbClass => dbClass._id === c._id)
+
+            if (dbClass) {
+                const updatedData = (({ _id, ...object }) => object)(c);
+
+                const formData = new URLSearchParams();
+                formData.append('filter', JSON.stringify({ _id: c._id }));
+                formData.append('update', JSON.stringify(updatedData));
+
+                this.patchDBResources('/classes', formData).then(response => {
+                    console.log('response', response);
+                });
+            }
+        }
+
+        return true;
+    }
 
     // user
     static async getUsers(): Promise<UserPopulated[]> {
-        return this.fetchDBResources('/users');
+        return this.getDBResources('/users');
     }
     static async registerUser(registerData: Pick<Omit<UserPopulated, 'password'> & { password: string }, 'username' | 'password' | 'names' | 'surnames'>) {
         const body = new URLSearchParams();
@@ -184,7 +245,14 @@ export default class APIService {
             console.error(err);
         }
     }
-    static async isUserLoggedIn() {
+    static async updateUserById(userId: string, updatedData: Partial<UserPopulated>) {
+        const formData = new URLSearchParams();
+        formData.append('filter', JSON.stringify({ _id: userId }));
+        formData.append('update', JSON.stringify(updatedData));
+
+        return this.patchDBResources('/users', formData);
+    }
+    static async getLoggedInUser() {
         try {
             const response: Response = await fetch(dbUrl + '/auth/session', {
                 method: 'GET',
@@ -194,12 +262,12 @@ export default class APIService {
 
             const json = await response.json();
             if (!response.ok) {
-                return false;
+                return undefined;
             }
 
             return json;
         } catch (err) {
-            return false;
+            return undefined;
         }
     }
 }

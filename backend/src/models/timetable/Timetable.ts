@@ -31,9 +31,7 @@ export const TimetableSchema = new Schema({
             classType: {
                 type: Schema.Types.ObjectId,
                 ref: new ClassType().name,
-                autopopulate: {
-                    select: '-color',
-                },
+                autopopulate: true,
             },
             groupCount: {
                 type: Number,

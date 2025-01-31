@@ -1,9 +1,8 @@
-import { CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
+import { CallbackError, CallbackWithoutResultAndOptionalError, HydratedDocumentFromSchema, Schema } from 'mongoose';
 
+import Base from './Base';
 import EUserRole from '../enums/EUserRole';
 import StringUtils from '../utils/StringUtils';
-import Base from './Base';
-import Course from './courses/Course';
 
 function usernameValidator(username: string) {
     return username.length >= 3;
@@ -37,19 +36,6 @@ export const UserDefinition = {
     title: {
         type: String,
     },
-    // email: {
-    //     type: String,
-    //     required: true,
-    //     index: {
-    //         unique: true,
-    //         sparse: true,
-    //     },
-    //     // match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, TODO: choose a sensible regex
-    // },
-    courses: [{
-        type: Schema.Types.ObjectId,
-        ref: new Course().name,
-    }],
     role: {
         type: Number,
         enum: EUserRole,
@@ -62,8 +48,19 @@ UserSchema.path('password').required(true, 'db_user_password_required');
 UserSchema.path('names').required(true, 'db_user_names_required');
 UserSchema.path('surnames').required(true, 'db_user_surnames_required');
 UserSchema.path('title').default(null);
-UserSchema.path('courses').default([]);
 UserSchema.path('role').default(EUserRole.Student);
+UserSchema.virtual('fullName')
+    .get(function(): string {
+        return `${ this.names } ${ this.surnames }`;
+    });
+UserSchema.virtual('fullNameReversed')
+    .get(function(): string {
+        return `${ this.surnames } ${ this.names }`;
+    });
+UserSchema.virtual('fullNameWithTitle')
+    .get(function(): string {
+        return `${ this.title } ${ this.names } ${ this.surnames }`;
+    });
 
 UserSchema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
     if (!this.password || !this.isModified('password')) return next();
@@ -75,6 +72,22 @@ UserSchema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
         })
         .catch(err => next(err));
 });
+UserSchema.pre('updateMany', async function(next) {
+    const update = this.getUpdate();
+
+    if (update && typeof update === 'object' && 'password' in update) {
+        try {
+            const updateObj = update as Record<string, any>;
+            updateObj.password = await StringUtils.hash(updateObj.password);
+            this.setUpdate(updateObj);
+        } catch (err) {
+            return next(err as CallbackError);
+        }
+    }
+    next();
+});
+
+
 
 export default class User extends Base<HydratedDocumentFromSchema<typeof UserSchema>> {
     constructor() {

@@ -1,367 +1,761 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Tabs } from '@mui/material';
-import { DeleteForeverRounded, EditRounded } from '@mui/icons-material';
+import React, { JSX, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    Checkbox,
+    Chip,
+    Divider,
+    Grid2,
+    SpeedDial, SpeedDialAction, SpeedDialIcon,
+    Stack,
+    Tab, Tabs,
+    Tooltip,
+} from '@mui/material';
+import { DataGrid, gridClasses, GridColDef, GridRowsProp, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
+import {
+    AccountBalanceRounded,
+    AddRounded,
+    AltRouteRounded,
+    BiotechRounded,
+    CalendarMonthRounded,
+    CategoryRounded,
+    DashboardCustomizeRounded,
+    DateRangeRounded,
+    DeleteRounded,
+    EditRounded,
+    HistoryEduRounded,
+    ListRounded,
+    LocationCityRounded,
+    MeetingRoomRounded,
+    NotificationsRounded,
+    ScheduleRounded,
+    SchoolRounded,
+} from '@mui/icons-material';
+
+import Loading from '../components/Loading.tsx';
 
 import APIService from '../../services/APIService.ts';
 import ENavTabs from '../enums/ENavTabs.ts';
+import StringUtils from '../utils/StringUtils.ts';
+import {
+    BuildingPopulated,
+    ClassPopulated,
+    ClassTypePopulated,
+    CoursePopulated,
+    ElectiveSubjectPopulated,
+    PeriodPopulated,
+    RoomPopulated,
+    SchedulePopulated,
+    SemesterPopulated,
+    SubjectDetailsPopulated,
+    SubjectPopulated,
+    TimetablePopulated,
+} from '../../services/DBTypes.ts';
 import i18n, { i18nPromise } from '../i18n';
 
 const { t } = i18n;
 await i18nPromise;
 
+type GridData = {
+    name: string;
+    icon: JSX.Element;
+    getData: () => Promise<any>;
+    sortModel?: GridSortModel,
+    fields: string[],
+};
+type TableData = {
+    name: string;
+    rows: GridRowsProp;
+    columns: GridColDef[];
+    sortModel: GridSortModel;
+};
+
 type AdminPanelProps = {
     setDocumentTitle: React.Dispatch<React.SetStateAction<string>>;
     setCurrentTabValue: React.Dispatch<React.SetStateAction<number | false>>;
 }
-
 const AdminPanel: React.FC<AdminPanelProps> = ({ setDocumentTitle, setCurrentTabValue }) => {
-    const [tableData, setTableData] = useState([]);
-    const [tableColumns, setTableColumns] = useState<string[]>([]);
-    const [tableColumnsNoId, setTableColumnsNoId] = useState([]);
-    const [tablePopupData, setTablePopupData] = useState({});
-    const [tableTitle, setTableTitle] = useState("Budynki");
+    const apiRef = useGridApiRef();
+    const navigate = useNavigate();
+    const isInitializedRef = useRef<boolean>(false);
 
-    const [showEditPopup, setShowEditPopup] = useState(false);
-    const [selectedObjectId, setSelectedObjectId] = useState("");
-    const [isCreate, setIsCreate] = useState(false);
+    const [currentAdminTabValue, setCurrentAdminTabValue] = useState<number>(0);
+    const [currentTable, setCurrentTable] = useState<TableData | undefined>(undefined);
+    const [dataLoading, setDataLoading] = useState<boolean>(true);
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+
+    const addData = () => {
+
+    }
+    const editData = () => {
+
+    }
+    const deleteData = () => {
+
+    }
+
+    const actions = [
+        {
+            icon: <AddRounded/>,
+            name: 'Dodaj',
+            handler: addData,
+        },
+        {
+            icon: <EditRounded/>,
+            name: 'Edytuj',
+            handler: editData,
+        },
+        {
+            icon: <DeleteRounded/>,
+            name: 'Usuń',
+            handler: deleteData,
+        },
+    ];
+    const data: GridData[] = [
+        // faculties
+        {
+            name: 'faculties',
+            icon: <AccountBalanceRounded/>,
+            getData: () => APIService.getFaculties(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'acronym',
+                'name',
+                'buildings',
+                'courses',
+            ],
+        },
+        {
+            name: 'buildings',
+            icon: <LocationCityRounded/>,
+            getData: () => APIService.getBuildings(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'acronym',
+                'name',
+                'address',
+                'rooms',
+            ],
+        },
+        {
+            name: 'rooms',
+            icon: <MeetingRoomRounded/>,
+            getData: () => APIService.getRooms(),
+            sortModel: [{ field: 'number', sort: 'asc' }],
+            fields: [
+                '_id',
+                'number',
+                'numberSecondary',
+                'capacity',
+            ],
+        },
+
+        // courses
+        {
+            name: 'courses',
+            icon: <SchoolRounded/>,
+            getData: () => APIService.getCourses(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'code',
+                'name',
+                'specialization',
+                'degree',
+                'cycle',
+                'mode',
+                'semesters',
+                'electiveSubjects',
+            ],
+        },
+        {
+            name: 'semesters',
+            icon: <DateRangeRounded/>,
+            getData: () => APIService.getSemesters(),
+            fields: [
+                '_id',
+                'academicYear',
+                'index',
+                'subjects',
+            ],
+        },
+        {
+            name: 'subjects',
+            icon: <BiotechRounded/>,
+            getData: () => APIService.getSubjects(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'code',
+                'name',
+                'acronym',
+                'isElective',
+                'classTypes',
+            ],
+        },
+        {
+            name: 'subjectDetails',
+            icon: <ListRounded/>,
+            getData: () => APIService.getSubjectDetails(),
+            sortModel: [{ field: 'subject', sort: 'asc' }],
+            fields: [
+                '_id',
+                'course',
+                'subject',
+                'details',
+            ],
+        },
+        {
+            name: 'electiveSubjects',
+            icon: <AltRouteRounded/>,
+            getData: () => APIService.getElectiveSubjects(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'name',
+                'subjects',
+            ],
+        },
+
+        // timetables
+        {
+            name: 'timetables',
+            icon: <CalendarMonthRounded/>,
+            getData: () => APIService.getTimetables(),
+            fields: [
+                '_id',
+                'semesters',
+                'weekdays',
+                'schedules',
+                'groups',
+                'classes',
+            ],
+        },
+        {
+            name: 'classes',
+            icon: <HistoryEduRounded/>,
+            getData: () => APIService.getClasses(),
+            sortModel: [{ field: 'weekday', sort: 'asc' }],
+            fields: [
+                '_id',
+                'organizer',
+                'subject',
+                'classType',
+                'weekday',
+                'periodBlocks',
+                'room',
+                'semester',
+                'studentGroups',
+            ],
+        },
+        {
+            name: 'classTypes',
+            icon: <CategoryRounded/>,
+            getData: () => APIService.getClassTypes(),
+            sortModel: [{ field: 'name', sort: 'asc' }],
+            fields: [
+                '_id',
+                'acronym',
+                'name',
+                'color',
+            ],
+        },
+        {
+            name: 'schedules',
+            icon: <ScheduleRounded/>,
+            getData: () => APIService.getSchedules(),
+            fields: [
+                '_id',
+                'weekdays',
+                'periods',
+                'active',
+            ],
+        },
+        {
+            name: 'periods',
+            icon: <NotificationsRounded/>,
+            getData: () => APIService.getPeriods(),
+            sortModel: [{ field: 'weekdays', sort: 'asc' }],
+            fields: [
+                '_id',
+                'weekdays',
+                'order',
+                'startTime',
+                'endTime',
+            ],
+        },
+        // {
+        //     name: 'personalTimetables',
+        //     icon: <PermContactCalendarRounded/>,
+        //     getData: () => APIService.getPersonalTimetables,
+        // },
+    ];
 
     useEffect(() => {
         setDocumentTitle(t('nav_route_admin_panel'));
         setCurrentTabValue(ENavTabs.AdminPanel);
 
-        fetchBuildings().then();
+        const initTable = async () => {
+            fetchData(
+                await data[currentAdminTabValue].getData(),
+                data[currentAdminTabValue].name,
+                data[currentAdminTabValue].fields,
+                data[currentAdminTabValue].sortModel ?? [{ field: 'id', sort: 'asc' }],
+            );
+        }
+
+        initTable().then();
     }, []);
-
-    function handleListButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
-        switch (e.currentTarget.id) {
-            case "buildings":
-                fetchBuildings();
-                setTableTitle("Budynki");
-                break;
-            case "rooms":
-                fetchRooms();
-                setTableTitle("Sale");
-                break;
-            case "courses":
-                fetchCourses();
-                setTableTitle("Kursy");
-                break;
-            case "users":
-                fetchUsers();
-                setTableTitle("Użytkownicy");
-                break;
-            case "classtypes":
-                fetchClassTypes();
-                setTableTitle("Typy zajęć");
-                break;
-            case "electivesubjects":
-                fetchElectiveSubjects();
-                setTableTitle("Przedmioty obieralne");
-                break;
-            case "faculties":
-                fetchFaculties();
-                setTableTitle("Wydziały");
-                break;
-            case "periods":
-                fetchPeriods();
-                setTableTitle("Okresy");
-                break;
-            default:
-                break;
+    useEffect(() => {
+        if (currentTable) {
+            setTimeout(() => {
+                autosizeAndSort();
+                setDataLoading(false);
+            }, 20);
         }
-    }
+    }, [currentTable]);
+    useEffect(() => {
+        if (currentTable && apiRef.current) {
+            const handleStateChange = () => {
+                if (!isInitializedRef.current) {
+                    isInitializedRef.current = true;
 
-    async function fetchBuildings() {
-        const data = await APIService.getBuildings();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]).filter(column => column);
-        let table_data = data.map(building => {
-            return Object.values(building);
-        });
+                    apiRef.current.autosizeColumns({
+                        expand: true,
+                        includeHeaders: true,
+                        includeOutliers: true,
+                        outliersFactor: 1.5,
+                    }).then(() => {
+                        apiRef.current.applySorting();
+                    });
+                }
+            };
 
-        table_data.forEach((row) => {
-            try {
-                row[4] = row[4].map(room => room.number || room.numberSecondary).join(', ');
-            } catch (err) {
-                row[4] = "";
-            }
-        });
+            const unsubscribeStateChange = apiRef.current.subscribeEvent(
+                "stateChange",
+                handleStateChange
+            );
 
-        setTableColumns(table_columns);
-        setTableData(table_data);
-
-        let tableColumnsNoId = table_columns;
-        tableColumnsNoId = tableColumnsNoId.filter(column => column !== '_id');
-        console.log(tableColumnsNoId);
-
-        setTableColumnsNoId(tableColumnsNoId)
-    }
-
-    async function fetchRooms() {
-        const data = await APIService.getRooms();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(room => {
-            return Object.values(room);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchCourses() {
-        const data = await APIService.getCourses();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(course => {
-            return Object.values(course);
-        });
-
-        table_data.forEach((row) => {
-            try {
-                row[7] = row[7].map(course => course.academicYear).join(", ");
-            } catch (err) {
-                row[7] = "";
-            }
-        })
-
-        table_data.forEach((row) => {
-            try {
-                console.log(row)
-                row[8] = row[8].map(course => course.name).join(", ");
-            } catch (err) {
-                row[8] = "";
-            }
-        })
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchUsers() {
-        const data = await APIService.getUsers();
-        console.log(data)
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(user => {
-            return Object.values(user);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchClasses() {
-        const data = await APIService.getClasses();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(row => {
-            return Object.values(row);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchClassTypes() {
-        const data = await APIService.getClassTypes();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(classType => {
-            return Object.values(classType);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchElectiveSubjects() {
-        const data = await APIService.getElectiveSubjects();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(electiveSubject => {
-            return Object.values(electiveSubject);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchFaculties() {
-        const data = await APIService.getFaculties();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(faculty => {
-            return Object.values(faculty);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-
-    async function fetchPeriods() {
-        const data = await APIService.getPeriods();
-        setTablePopupData(data);
-        let table_columns = Object.keys(data[0]);
-        let table_data = data.map(period => {
-            return Object.values(period);
-        });
-
-        setTableColumns(table_columns);
-        setTableData(table_data);
-    }
-    function handleActionElementEditClick(e: React.MouseEventHandler<HTMLButtonElement>) {
-        console.log(e.currentTarget.parentElement?.parentElement?.parentElement.id);
-        setSelectedObjectId(e.currentTarget.parentElement?.parentElement?.parentElement.id);
-        setIsCreate(false);
-        setShowEditPopup(true);
-    }
-
-    function handleActionAddElementClick() {
-        setIsCreate(true);
-        setShowEditPopup(true);
-    }
-
-    function handleActionDeleteElementClick(e: React.MouseEventHandler<HTMLButtonElement>) {
-        let id = e.currentTarget.parentElement?.parentElement?.parentElement.id;
-        let obj = {};
-        obj.id = id;
-        console.log(obj);
-        switch (tableTitle) {
-            case "Budynki":
-                APIService.deleteBuildingAdmin(obj);
-                break;
-            case "Sale":
-                //APIService.deleteRoomAdmin(selectedObjectId);
-                break;
-            case "Kursy":
-                APIService.deleteCourseAdmin(obj);
-                break;
-            case "Użytkownicy":
-                //APIService.deleteUserAdmin(selectedObjectId);
-                break;
-            case "Typy Zajęć":
-                //APIService.deleteClassTypeAdmin(selectedObjectId);
-                break;
-            case "Przedmioty Obieralne":
-                //APIService.deleteElectiveSubjectAdmin(selectedObjectId);
-                break;
-            case "Wydziały":
-                //APIService.deleteFacultyAdmin(selectedObjectId);
-                break;
-            case "Okresy":
-                //APIService.deletePeriodAdmin(selectedObjectId);
-                break;
-            default:
-                break
+            return () => {
+                unsubscribeStateChange();
+            };
         }
+    }, [currentTable, apiRef]);
+    useEffect(() => {
+        if (isInitializedRef.current && currentTable) {
+            if (apiRef.current) {
+                apiRef.current.autosizeColumns({
+                    expand: true,
+                    includeHeaders: true,
+                    includeOutliers: true,
+                    outliersFactor: 1.5,
+                }).then(() => {
+                    apiRef.current.applySorting();
+                });
+            }
+        }
+    }, [currentTable?.rows, currentTable?.columns, apiRef]);
+
+    const fetchData = <T extends { _id: string }>(
+        data: T[],
+        modelName: string,
+        fields: string[],
+        sortModel: GridSortModel,
+    ) => {
+        let rows: GridRowsProp;
+        let columns: GridColDef[];
+        if (data.length === 0) {
+            rows = {} as GridRowsProp;
+            columns = [];
+        }
+
+        rows = data.map(({ _id, ...fields }) => ({
+            id: _id,
+            ...fields,
+        }));
+
+        columns = fields
+            .filter(field => field !== '_id')
+            .map(field => ({
+                field,
+                headerName: t(`dataGrid_${ modelName }_${ String(field) }`),
+                renderCell: params => renderCustomCell(field, params.value),
+            }));
+
+        setCurrentTable({
+            name: t(`dataGrid_${ modelName }`),
+            rows,
+            columns,
+            sortModel,
+        });
+        setDataLoading(false);
+    };
+
+    const autosizeAndSort = () => {
+        if (apiRef.current) {
+            apiRef.current.autosizeColumns({
+                expand: true,
+                includeHeaders: true,
+                includeOutliers: true,
+                outliersFactor: 1.5,
+            }).then(() => {
+                apiRef.current.applySorting();
+            });
+        }
+    };
+    const packToGrid = (element: React.ReactNode) => {
+        return <Grid2
+            container
+            spacing={ 1 }
+            direction="row"
+            alignItems="center"
+            component="span"
+            height="100%"
+        >
+            { element }
+        </Grid2>
     }
+    const renderCustomCell = <T,>(field: keyof T, value: any) => {
+        if (!value) return '';
+        console.log(value);
+
+        switch (field) {
+            case 'classType': {
+                return <Chip
+                    label={ String(value.name) }
+                    sx={{
+                        color: 'black',
+                        backgroundColor: value.color,
+                    }}
+                />;
+            }
+            case 'color': {
+                return <Chip
+                    label={ String(value).toUpperCase() }
+                    sx={{
+                        color: 'black',
+                        backgroundColor: value,
+                    }}
+                />
+            }
+            case 'course': {
+                return <Tooltip title={`${ value.name }` + (value.specialization ? ` (${ value.specialization })` : '')}>
+                    <Chip label={ value.code }/>
+                </Tooltip>;
+            }
+            case 'cycle': return StringUtils.cycles[value];
+            case 'mode': return StringUtils.modes[value];
+            case 'organizer': return `${ value.surnames } ${ value.names }`;
+            case 'room': return value.roomNumber;
+            case 'semester': {
+                return <Tooltip title={ value.academicYear }>
+                    <Chip
+                        key={ value._id }
+                        label={ `${ t('dataGrid_classes_semester') } ${ value.index }` }
+                    />
+                </Tooltip>
+            }
+            case 'subject': return value.name;
+            case 'weekday': return StringUtils.day[value];
+            case 'weekdays': {
+                return Object.values(value as number[])
+                    .map(day => StringUtils.dayShort[day])
+                    .join(' | ');
+            }
+        }
+
+        if (Array.isArray(value)) {
+            switch (field) {
+                case 'buildings': {
+                    return packToGrid(Object.values(value as BuildingPopulated[])
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(building =>
+                            <Chip
+                                key={ building._id }
+                                label={ building.name }
+                            />
+                        )
+                    );
+                }
+                case 'classes': {
+                    return packToGrid(Object.values(value as ClassPopulated[])
+                        .map(c =>
+                            <Chip
+                                key={ c._id }
+                                label={ `${ StringUtils.dayShort[c.weekday] }, ${ c.classType.acronym }, ${ c.organizer?.surnames } ${ c.organizer?.names[0] }.` }
+                                sx={{
+                                    color: 'black',
+                                    backgroundColor: c.classType.color,
+                                }}
+                            />
+                        )
+                    );
+                }
+                case 'classTypes': {
+                    return packToGrid(Object.values(value as ClassTypePopulated[])
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(classType =>
+                            <Chip
+                                key={ classType._id }
+                                label={ classType.name }
+                                sx={{
+                                    color: 'black',
+                                    backgroundColor: classType.color,
+                                }}
+                            />
+                        )
+                    );
+                }
+                case 'courses': {
+                    return packToGrid(Object.values(value as CoursePopulated[])
+                        .sort((a, b) => a.code.localeCompare(b.code))
+                        .map(course =>
+                            <Tooltip title={ `${ course.name }` + (course.specialization ? ` (${ course.specialization })` : '') }>
+                                <Chip
+                                    key={ course._id }
+                                    label={ course.code }
+                                />
+                            </Tooltip>
+                        )
+                    );
+                }
+                case 'details': {
+                    return packToGrid(Object.values(value as SubjectDetailsPopulated['details'])
+                        .sort((a, b) => a.classType.name.localeCompare(b.classType.name))
+                        .map(subjectDetails =>
+                            <Chip
+                                key={ subjectDetails.classType._id }
+                                label={ `${ subjectDetails.weeklyBlockCount }x ${ subjectDetails.classType.name }` }
+                                sx={{
+                                    color: 'black',
+                                    backgroundColor: subjectDetails.classType.color,
+                                }}
+                            />
+                        )
+                    );
+                }
+                case 'electiveSubjects': {
+                    return packToGrid(Object.values(value as ElectiveSubjectPopulated[])
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(electiveSubject =>
+                            <Chip
+                                key={ electiveSubject._id }
+                                label={ electiveSubject.name }
+                            />
+                        )
+                    );
+                }
+                case 'groups': {
+                    return packToGrid(Object.values(value as TimetablePopulated['groups'])
+                        .map(group =>
+                            <Chip
+                                key={ group.classType._id }
+                                label={ `${ group.classType.name } x${ group.groupCount }` }
+                                sx={{
+                                    color: 'black',
+                                    backgroundColor: group.classType.color,
+                                }}
+                            />
+                        )
+                    );
+                }
+                case 'periods': {
+                    return packToGrid(Object.values(value as PeriodPopulated[])
+                        .sort((a, b) => a.order - b.order)
+                        .map(period =>
+                            <Chip
+                                key={ period._id }
+                                label={ `${ period.startTime } – ${ period.endTime }` }
+                            />
+                        )
+                    );
+                }
+                case 'rooms': {
+                    return packToGrid(Object.values(value as RoomPopulated[])
+                        .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber))
+                        .map(room =>
+                            <Chip
+                                key={ room._id }
+                                label={ room.roomNumber }
+                            />
+                        )
+                    );
+                }
+                case 'schedules': {
+                    return packToGrid(Object.values(value as SchedulePopulated[])
+                        .map(schedule => {
+                            const label = Object.values(schedule.periods as SchedulePopulated['periods'])
+                                .map(period => {
+                                    return `${period.startTime} – ${period.endTime}`;
+                                })
+                                .join(', ');
+
+                            return <Tooltip title={ label }>
+                                <Chip
+                                    key={ schedule._id }
+                                    label={ label }
+                                />
+                            </Tooltip>
+                        })
+                    );
+                }
+                case 'semesters': {
+                    return packToGrid(Object.values(value as SemesterPopulated[])
+                        .sort((a, b) => a.academicYear.localeCompare(b.academicYear))
+                        .map(semester =>
+                            <Tooltip title={ semester.academicYear }>
+                                <Chip
+                                    key={ semester._id }
+                                    label={ `${ t('dataGrid_classes_semester') } ${ semester.index }` }
+                                />
+                            </Tooltip>
+                        )
+                    );
+                }
+                case 'subjects': {
+                    return packToGrid(Object.values(value as SubjectPopulated[])
+                        .sort((a, b) => a.code.localeCompare(b.code))
+                        .map(subject =>
+                            <Tooltip title={ subject.name }>
+                                <Chip
+                                    key={ subject._id }
+                                    label={ subject.code }
+                                />
+                            </Tooltip>
+                        )
+                    );
+                }
+            }
+
+            return value.map(item => (typeof item === 'object' ? (item.name ?? item._id) : item)).join(', ');
+        }
+        if (typeof value === 'boolean') {
+            return <Checkbox checked={ value } disabled/>;
+        }
+        if (typeof value === 'object') {
+            return value._id;
+        }
+
+        return value;
+    };
+
+    const handleAdminTabChange = async (_e: React.SyntheticEvent, value: number) => {
+        if (value === data.length + 1) {
+            navigate('/onboarding');
+            return;
+        }
+
+        setDataLoading(true);
+        setCurrentAdminTabValue(value);
+        fetchData(await data[value].getData(), data[value].name, data[value].fields ?? ['_id'], data[value].sortModel ?? [{
+            field: 'id',
+            sort: 'asc',
+        }]);
+    };
 
     return (
-        <div className="container-fluid main">
-            { (() => {
-                switch (tableTitle) {
-                    case "Budynki":
-                        return showEditPopup ? <BuildingEditPopup onClose={() => setShowEditPopup(false)} tableData={tablePopupData} tableColumns={tableColumns} object_id={selectedObjectId} isCreate={isCreate}/> : null;
-                    // Add other cases for different popups here
-                    case "Sale":
-                        return null;
-                    case "Kursy":
-                        return showEditPopup ? <CourseEditPopup onClose={() => setShowEditPopup(false)} tableData={tablePopupData} tableColumns={tableColumns} object_id={selectedObjectId} isCreate={isCreate}/> : null;
-                    default:
-                        return null;
-                }
-            })() }
-            <Tabs>
+        // TODO: choose a good maxHeight, so the table doesn't overflow
+        <Stack spacing={ 2 } sx={{ maxHeight: '86.3vh' }}>
+            <Tabs
+                variant="fullWidth"
+                textColor="primary"
+                indicatorColor="primary"
+                value={ currentAdminTabValue }
+                onChange={ handleAdminTabChange }
+            >
+                { data.map(tab =>
+                    <Tab
+                        key={ tab.name }
+                        icon={ tab.icon }
+                        label={ t(`dataGrid_${ tab.name }`) }
+                    />
+                ) }
 
+                <Tab icon={ <Divider/> } disabled/>
+
+                <Tab
+                    key={ t('nav_route_onboarding') }
+                    icon={ <DashboardCustomizeRounded/> }
+                    label={ t('nav_route_onboarding') }
+                />
             </Tabs>
-            <ul className="button_list">
-                <Button id="buildings" onClick={handleListButtonClick}>
-                    Budynki
-                </Button>
-                {/*<button id="classes" className="d-flex justify-content-between align-items-center button" onClick={handleListButtonClick}>*/}
-                {/*    Zajęcia*/}
-                {/*    <span className="badge bg-primary rounded-pill">{entryCount["classes"]}</span>*/}
-                {/*</button>*/}
-                <Button id="classtypes" onClick={handleListButtonClick}>
-                    Typy zajęć
-                </Button>
-                <Button id="courses" onClick={handleListButtonClick}>
-                    Kierunki
-                </Button>
-                <Button id="electivesubjects" onClick={handleListButtonClick}>
-                    Przedmioty obieralne
-                </Button>
-                <Button id="faculties" onClick={handleListButtonClick}>
-                    Wydziały
-                </Button>
-                <Button id="periods" onClick={handleListButtonClick}>
-                    Okresy
-                </Button>
-                <Button id="rooms" onClick={handleListButtonClick}>
-                    Sale
-                </Button>
-                <Button id="users" onClick={handleListButtonClick}>
-                    Użytkownicy
-                    {/*<span className="badge bg-primary rounded-pill">{entryCount["users"]}</span>*/}
-                </Button>
-            </ul>
-            <div id="table_container">
-                <div>
-                    <h1 className="table_title p-2 pb-0">{tableTitle}</h1>
-                    <div className="p-2">
-                        <button className="btn btn-primary mx-1" onClick={() => handleActionAddElementClick()}>
-                            Dodaj
-                        </button>
-                        <button className="btn btn-danger mx-1">
-                            Usuń wybrane
-                        </button>
-                        <button className="btn btn-primary mx-1">
-                            Filtry
-                        </button>
-                    </div>
-                </div>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            { tableColumns.map(column => {
-                                if (column === '_id') return;
-                                return <TableCell key={column}>{t(`admin_column_${column}`)}</TableCell>;
-                            }) }
-                            <TableCell className="fixed_width">Akcje</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                    { tableData.map((row, i) =>
-                        <TableRow key={ i } id={ row.toString().split(',')[0] }>
-                            { row.map((cell, j) => {
-                                if (j === 0) return;
-                                return <td key={ j }>{ cell }</td>
-                            }) }
-                            <TableCell>
-                                <div>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={ <EditRounded/> }
-                                        onClick={ handleActionElementEditClick }
-                                    >
-                                        Edytuj
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={ <DeleteForeverRounded/> }
-                                        onClick={handleActionDeleteElementClick}
-                                    >
-                                        Usuń
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ) }
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
+
+            { currentTable ? (<>
+                <DataGrid
+                    // styling
+                    sx={{
+                        margin: 0,
+                        [`& .${ gridClasses.cell }`]: {
+                            py: 1,
+                        },
+                    }}
+                    autosizeOptions={{
+                        expand: true,
+                        includeHeaders: true,
+                        includeOutliers: true,
+                        outliersFactor: 1.5,
+                    }}
+                    getRowHeight={ () => 'auto' }
+
+                    // paging
+                    pageSizeOptions={ [25, 50, 100] }
+
+                    // loading overlay
+                    loading={ dataLoading }
+                    slotProps={{
+                        loadingOverlay: {
+                            variant: 'skeleton',
+                            noRowsVariant: 'skeleton',
+                        },
+                    }}
+
+                    // selection
+                    checkboxSelection
+                    onRowSelectionModelChange={ selection => setSelectedRows(selection as number[]) }
+
+                    // data
+                    apiRef={ apiRef }
+                    rows={ currentTable.rows ?? [] }
+                    columns={ currentTable.columns ?? [] }
+                    initialState={{
+                        sorting: { sortModel: currentTable.sortModel },
+                        pagination: { paginationModel: { pageSize: 25, page: 0 } },
+                    }}
+                    onStateChange={ () => {
+                        if (!isInitializedRef.current) {
+                            isInitializedRef.current = true;
+                            autosizeAndSort();
+                        }
+                    } }
+                />
+
+                <SpeedDial
+                    ariaLabel="Akcje"
+                    icon={ <SpeedDialIcon/> }
+                    sx={{
+                        position: 'absolute',
+                        bottom: '-3%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                    }}
+                >
+                    { actions.map(action => {
+                        if (action.name === 'Edytuj' && selectedRows.length !== 1) return;
+                        if (action.name === 'Usuń' && selectedRows.length === 0) return;
+
+                        return <SpeedDialAction
+                            key={ action.name }
+                            icon={ action.icon }
+                            tooltipTitle={ action.name }
+                            onClick={ action.handler }
+                        />;
+                    }) }
+                </SpeedDial>
+            </>) : (
+                <Loading/>
+            ) }
+        </Stack>
     );
 };
 

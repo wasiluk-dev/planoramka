@@ -40,7 +40,7 @@ const StudentClasses: React.FC<StudentClassesProps> = ({ setDialogData, setDialo
                     <PeriodBlock
                         setDialogData={ setDialogData }
                         setDialogOpen={ setDialogOpen }
-                        variant="small"
+                        variant="infoLess"
                         classType={ block.classType }
                         subject={ block.subject }
                         room={ block.room }

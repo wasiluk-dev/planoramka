@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 enum ECourseMode {
     FullTime, // stacjonarne
     PartTime, // niestacjonarne

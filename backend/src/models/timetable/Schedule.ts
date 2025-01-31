@@ -13,7 +13,7 @@ export const ScheduleSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: new Period().name,
         autopopulate: {
-            select: '-_id -weekdays',
+            select: '-weekdays',
         },
     }],
     active: {
